@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS vector;
 
 -- Create message_type enum
 DO $$ BEGIN
-    CREATE TYPE message_type AS ENUM ('text', 'photo', 'video', 'document', 'other');
+    CREATE TYPE message_type AS ENUM ('text', 'photo', 'video', 'document', 'sticker', 'other');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS messages (
     type message_type NOT NULL DEFAULT 'text',
     content TEXT,
     embedding vector(1536),
+    media_info JSONB,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     from_id BIGINT,
     reply_to_id BIGINT,
@@ -35,3 +36,12 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS messages_embedding_idx ON messages 
 USING ivfflat (embedding vector_cosine_ops)
 WITH (lists = 100);
+
+-- Create index for chat_id and created_at
+CREATE INDEX IF NOT EXISTS messages_chat_id_created_at_idx ON messages (chat_id, created_at DESC);
+
+-- Create index for type
+CREATE INDEX IF NOT EXISTS messages_type_idx ON messages (type);
+
+-- Create index for created_at
+CREATE INDEX IF NOT EXISTS messages_created_at_idx ON messages (created_at DESC);

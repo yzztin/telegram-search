@@ -360,80 +360,68 @@ export class ClientAdapter implements TelegramAdapter {
    * Get all folders
    */
   async getAllFolders(): Promise<Folder[]> {
-    const folders: Folder[] = []
+    // Add "All Messages" as the first option
+    const folders: Folder[] = [{
+      id: 0,
+      title: '全部消息',
+    }]
 
-    try {
-      // Get all folders
-      const result = await this.client.invoke(new Api.messages.GetDialogFilters())
-
-      // Convert to our format
-      if (Array.isArray(result)) {
-        for (const folder of result) {
-          if (folder.className === 'DialogFilter') {
-            folders.push({
-              id: folder.id,
-              title: folder.title,
-              customId: folder.id,
-            })
-          }
-        }
-      }
-
-      // Add default folder
-      folders.unshift({
-        id: 0,
-        title: '全部消息',
-      })
-
-      // Add saved messages folder
-      folders.push({
-        id: -1,
-        title: '常用消息',
-      })
-    }
-    catch (error) {
-      this.logger.log('获取文件夹失败:', String(error))
+    // Get custom folders from Telegram
+    const customFolders = await this.client.invoke(new Api.messages.GetDialogFilters())
+    if (customFolders && Array.isArray(customFolders)) {
+      folders.push(...customFolders.map((folder: any) => ({
+        id: folder.id + 1, // Add 1 to avoid conflict with "All Messages"
+        title: folder.title,
+        customId: folder.id,
+      })))
     }
 
     return folders
   }
 
   /**
-   * Get dialogs in a folder
+   * Get dialogs in folder
    */
-  async getDialogsInFolder(folderId: number, offset = 0, limit = 10): Promise<DialogsResult> {
+  async getDialogsInFolder(folderId: number): Promise<DialogsResult> {
+    // If folderId is 0, return all dialogs
+    if (folderId === 0) {
+      return this.getDialogs(0, 100)
+    }
+
+    // Get custom folder
+    const customFolders = await this.client.invoke(new Api.messages.GetDialogFilters())
+    if (!customFolders || !Array.isArray(customFolders)) {
+      return { dialogs: [], total: 0 }
+    }
+
+    const customFolder = customFolders.find((f: any) => f.id === folderId - 1)
+    if (!customFolder || !customFolder.includePeers) {
+      return { dialogs: [], total: 0 }
+    }
+
     // Get all dialogs first
-    const dialogs = await this.client.getDialogs({
-      limit: limit + 1, // Get one extra to check if there are more
+    const allDialogs = await this.client.getDialogs({
+      limit: 100,
       offsetDate: undefined,
       offsetId: 0,
       offsetPeer: undefined,
       ignorePinned: false,
-      folder: folderId === -1 ? undefined : folderId, // -1 is for Saved Messages
     })
 
-    const hasMore = dialogs.length > limit
-    const dialogsToReturn = hasMore ? dialogs.slice(0, limit) : dialogs
+    // Filter dialogs by folder
+    const filteredDialogs = allDialogs.filter((dialog) => {
+      // Check if dialog matches folder's include rules
+      // This is a simplified implementation
+      return customFolder.includePeers.some((peer: any) => {
+        const peerId = peer.userId?.value || peer.chatId?.value || peer.channelId?.value
+        return dialog.entity?.id?.toJSNumber() === peerId
+      })
+    })
 
-    // Get current user for Saved Messages
-    const me = await this.client.getMe()
-
-    // Convert dialogs to our format, handle Saved Messages specially
-    const convertedDialogs = dialogsToReturn.map((dialog) => {
+    // Convert dialogs to our format
+    const convertedDialogs = filteredDialogs.map((dialog) => {
       const entity = dialog.entity
       const { type, name } = this.getEntityInfo(entity)
-
-      // If this is the current user (Saved Messages), mark it as saved type
-      if (entity?.id?.toJSNumber() === me?.id?.toJSNumber()) {
-        return {
-          id: entity.id.toJSNumber(),
-          name: '常用',
-          type: 'saved' as const,
-          unreadCount: dialog.unreadCount,
-          lastMessage: dialog.message?.message,
-          lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : undefined,
-        }
-      }
 
       return {
         id: entity?.id.toJSNumber() || 0,
@@ -445,24 +433,9 @@ export class ClientAdapter implements TelegramAdapter {
       }
     })
 
-    // For Saved Messages folder, only show the Saved Messages dialog
-    if (folderId === -1) {
-      return {
-        dialogs: [{
-          id: me.id.toJSNumber(),
-          name: '常用',
-          type: 'saved' as const,
-          unreadCount: 0,
-          lastMessage: undefined,
-          lastMessageDate: undefined,
-        }],
-        total: 1,
-      }
-    }
-
     return {
       dialogs: convertedDialogs,
-      total: dialogs.length,
+      total: convertedDialogs.length,
     }
   }
 }

@@ -3,9 +3,10 @@ import type { ClientAdapter } from '../adapter/client'
 import * as input from '@inquirer/prompts'
 import { initLogger, useLogger } from '@tg-search/common'
 import { config } from 'dotenv'
+import { eq } from 'drizzle-orm'
 
 import { createAdapter } from '../adapter/factory'
-import { createMessage } from '../db'
+import { createMessage, db, syncState } from '../db'
 
 // Load environment variables
 config()
@@ -19,60 +20,6 @@ process.on('unhandledRejection', (error) => {
   logger.log('Unhandled promise rejection:', String(error))
 })
 
-async function displayDialogs(adapter: ClientAdapter, page = 1, pageSize = 10) {
-  const result = await adapter.getDialogs((page - 1) * pageSize, pageSize)
-  const dialogs = result.dialogs
-
-  logger.log('\n对话列表：')
-  logger.log('----------------------------------------')
-  for (const dialog of dialogs) {
-    logger.log(`[${dialog.type}] ${dialog.name}`)
-    logger.log(`ID: ${dialog.id}`)
-    logger.log(`未读消息: ${dialog.unreadCount}`)
-    if (dialog.lastMessage) {
-      logger.log(`最新消息: ${dialog.lastMessage.slice(0, 50)}${dialog.lastMessage.length > 50 ? '...' : ''}`)
-      logger.log(`时间: ${dialog.lastMessageDate?.toLocaleString()}`)
-    }
-    logger.log('----------------------------------------')
-  }
-
-  const hasMore = result.total > (page - 1) * pageSize + pageSize
-  const hasPrev = page > 1
-
-  const action = await input.select({
-    message: '请选择操作：',
-    choices: [
-      ...(hasPrev ? [{ name: '上一页', value: 'prev' }] : []),
-      ...(hasMore ? [{ name: '下一页', value: 'next' }] : []),
-      { name: '选择对话', value: 'select' },
-      { name: '退出', value: 'exit' },
-    ],
-  })
-
-  if (action === 'prev') {
-    return displayDialogs(adapter, page - 1, pageSize)
-  }
-  else if (action === 'next') {
-    return displayDialogs(adapter, page + 1, pageSize)
-  }
-  else if (action === 'exit') {
-    return 0
-  }
-
-  // Let user select a dialog
-  const chatId = await input.input({
-    message: '请输入要导出的对话 ID：',
-    validate: (value) => {
-      const id = Number(value)
-      if (Number.isNaN(id))
-        return '请输入有效的数字 ID'
-      return true
-    },
-  })
-
-  return Number(chatId)
-}
-
 async function exportMessages(adapter: ClientAdapter, chatId: number) {
   // Get dialog info
   const result = await adapter.getDialogs(0, 100)
@@ -82,11 +29,30 @@ async function exportMessages(adapter: ClientAdapter, chatId: number) {
     return
   }
 
-  logger.log(`\n开始导出 "${selectedDialog.name}" 的消息...`)
+  // Get last sync state
+  const lastSync = await db.select().from(syncState).where(eq(syncState.chatId, chatId)).limit(1)
+  const lastMessageId = lastSync[0]?.lastMessageId ?? 0
+
+  // Ask if incremental update
+  const isIncremental = await input.confirm({
+    message: '是否增量更新？',
+    default: true,
+  })
+
+  logger.log(`\n开始${isIncremental ? '增量' : '全量'}导出 "${selectedDialog.name}" 的消息...`)
+  if (isIncremental && lastMessageId > 0) {
+    logger.log(`从消息 ID ${lastMessageId} 开始导出...`)
+  }
   let count = 0
+  let maxMessageId = lastMessageId
 
   // Get messages and save to database
   for await (const message of adapter.getMessages(chatId, 1000)) {
+    // Skip old messages in incremental mode
+    if (isIncremental && message.id <= lastMessageId) {
+      continue
+    }
+
     try {
       await createMessage({
         id: message.id,
@@ -104,10 +70,29 @@ async function exportMessages(adapter: ClientAdapter, chatId: number) {
       count++
       if (count % 100 === 0)
         logger.log(`已保存 ${count} 条消息...`)
+      if (message.mediaInfo?.localPath)
+        logger.log(`已下载媒体文件: ${message.mediaInfo.localPath}`)
+
+      // Update max message ID
+      maxMessageId = Math.max(maxMessageId, message.id)
     }
     catch (error) {
       logger.log('保存消息失败:', String(error))
     }
+  }
+
+  // Update sync state
+  if (count > 0) {
+    await db.insert(syncState).values({
+      chatId,
+      lastMessageId: maxMessageId,
+    }).onConflictDoUpdate({
+      target: syncState.chatId,
+      set: {
+        lastMessageId: maxMessageId,
+        lastSyncTime: new Date(),
+      },
+    })
   }
 
   logger.log(`\n完成！共保存了 ${count} 条消息。`)
@@ -137,28 +122,51 @@ async function main() {
     await adapter.connect()
     logger.log('已连接！')
 
-    while (true) {
-      // Display dialogs and get selected chat ID
-      const chatId = await displayDialogs(adapter)
-      if (chatId === 0) {
-        logger.log('再见！')
-        break
-      }
+    // First, get all folders
+    const folders = await adapter.getAllFolders()
+    const folderChoices = folders.map(folder => ({
+      name: folder.title,
+      value: folder.id,
+    }))
 
-      // Export messages
-      await exportMessages(adapter, chatId)
+    // Let user select a folder
+    const folderId = await input.select({
+      message: '请选择要导出的文件夹：',
+      choices: folderChoices,
+    })
 
-      // Ask if continue
-      const shouldContinue = await input.confirm({
-        message: '是否继续导出其他对话？',
-        default: true,
-      })
-
-      if (!shouldContinue) {
-        logger.log('再见！')
-        break
-      }
+    // Then, get dialogs in the selected folder
+    const selectedFolder = folders.find(f => f.id === folderId)
+    if (!selectedFolder) {
+      logger.log('找不到该文件夹')
+      process.exit(1)
     }
+
+    const result = await adapter.getDialogsInFolder(folderId)
+    const dialogs = result.dialogs
+
+    // Let user select a dialog
+    const choices = dialogs.map(dialog => ({
+      name: `[${dialog.type}] ${dialog.name}${dialog.unreadCount > 0 ? ` (${dialog.unreadCount})` : ''}`,
+      value: dialog.id,
+    }))
+
+    const chatId = await input.select({
+      message: '请选择要导出的对话：',
+      choices,
+    })
+
+    // Export messages
+    await exportMessages(adapter, chatId)
+
+    // Ask if continue
+    const shouldContinue = await input.confirm({
+      message: '是否继续导出其他对话？',
+      default: true,
+    })
+
+    if (shouldContinue)
+      return main()
 
     await adapter.disconnect()
     process.exit(0)
