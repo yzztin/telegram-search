@@ -1,24 +1,25 @@
 {
-  "name": "tg-search",
+  "name": "telegram-search",
+  "private": true,
   "type": "module",
-  "version": "1.0.0",
-  "packageManager": "pnpm@9.15.4",
-  "author": "RainbowBird <rbxin2003@outlook.com>",
-  "license": "MIT",
   "scripts": {
+    "build": "pnpm -r build",
     "dev": "pnpm -r dev",
-    "dev:core": "pnpm -F core dev",
     "lint": "pnpm -r lint",
-    "lint:fix": "pnpm -r lint:fix"
-  },
-  "dependencies": {
-    "@guiiai/logg": "^1.0.7"
+    "lint:fix": "pnpm -r lint:fix",
+    "format": "prettier --write .",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "db:clean": "docker compose down -v"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.1.1",
-    "eslint": "^9.19.0",
-    "eslint-plugin-format": "^1.0.1",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
-  }
+    "@types/node": "^20.11.17",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "packageManager": "pnpm@9.15.4+sha512.b2dc20e2fc72b3e18848459b37359a32064663e5627a51e4c74b2c29dd8e8e0491483c3abb40789cfd578bf362fb6ba8261b05f0387d76792ed6e23ea3b1b6a0"
 }
