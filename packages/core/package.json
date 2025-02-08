@@ -1,0 +1,14 @@
+{
+  "name": "@tg-search/core",
+  "type": "module",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
+  },
+  "dependencies": {
+    "@tg-search/common": "workspace:*"
+  }
+}
