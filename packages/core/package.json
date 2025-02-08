@@ -21,10 +21,10 @@
     "db:generate": "drizzle-kit generate:pg",
     "db:push": "drizzle-kit push:pg",
     "db:studio": "drizzle-kit studio",
-    "test:db": "tsx src/db/test.ts",
-    "test:bot": "tsx src/adapter/test.ts",
-    "test:client": "tsx src/adapter/test-client.ts",
-    "watch": "tsx src/adapter/watch.ts"
+    "db:test": "tsx src/db/test.ts",
+    "bot": "tsx src/bin/bot.ts",
+    "export": "tsx src/bin/export.ts",
+    "watch": "tsx src/bin/watch.ts"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.3.1",

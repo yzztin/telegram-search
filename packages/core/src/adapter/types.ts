@@ -1,4 +1,4 @@
-import { MediaInfo } from '../db/schema/message'
+import type { MediaInfo } from '../db/schema/message'
 
 /**
  * Telegram adapter type
@@ -40,22 +40,22 @@ export interface TelegramAdapter {
   /**
    * Connect to Telegram
    */
-  connect(): Promise<void>
+  connect: () => Promise<void>
 
   /**
    * Disconnect from Telegram
    */
-  disconnect(): Promise<void>
+  disconnect: () => Promise<void>
 
   /**
    * Get messages from chat
    */
-  getMessages(chatId: number, limit?: number): AsyncGenerator<TelegramMessage>
+  getMessages: (chatId: number, limit?: number) => AsyncGenerator<TelegramMessage>
 
   /**
    * Listen for new messages
    */
-  onMessage(callback: (message: TelegramMessage) => Promise<void>): void
+  onMessage: (callback: (message: TelegramMessage) => Promise<void>) => void
 }
 
 export interface Dialog {

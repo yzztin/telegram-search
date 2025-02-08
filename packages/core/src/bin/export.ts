@@ -1,9 +1,11 @@
+import type { ClientAdapter } from '../adapter/client'
+
 import * as input from '@inquirer/prompts'
 import { initLogger, useLogger } from '@tg-search/common'
 import { config } from 'dotenv'
+
+import { createAdapter } from '../adapter/factory'
 import { createMessage } from '../db'
-import { ClientAdapter } from './client'
-import { createAdapter } from './factory'
 
 // Load environment variables
 config()
@@ -18,10 +20,9 @@ process.on('unhandledRejection', (error) => {
 })
 
 async function displayDialogs(adapter: ClientAdapter, page = 1, pageSize = 10) {
-  const offset = (page - 1) * pageSize
-  const result = await adapter.getDialogs(offset, pageSize)
+  const result = await adapter.getDialogs((page - 1) * pageSize, pageSize)
   const dialogs = result.dialogs
-  
+
   logger.log('\n对话列表：')
   logger.log('----------------------------------------')
   for (const dialog of dialogs) {
@@ -35,7 +36,7 @@ async function displayDialogs(adapter: ClientAdapter, page = 1, pageSize = 10) {
     logger.log('----------------------------------------')
   }
 
-  const hasMore = result.total > offset + pageSize
+  const hasMore = result.total > (page - 1) * pageSize + pageSize
   const hasPrev = page > 1
 
   const action = await input.select({
@@ -50,9 +51,11 @@ async function displayDialogs(adapter: ClientAdapter, page = 1, pageSize = 10) {
 
   if (action === 'prev') {
     return displayDialogs(adapter, page - 1, pageSize)
-  } else if (action === 'next') {
+  }
+  else if (action === 'next') {
     return displayDialogs(adapter, page + 1, pageSize)
-  } else if (action === 'exit') {
+  }
+  else if (action === 'exit') {
     return 0
   }
 
@@ -61,9 +64,10 @@ async function displayDialogs(adapter: ClientAdapter, page = 1, pageSize = 10) {
     message: '请输入要导出的对话 ID：',
     validate: (value) => {
       const id = Number(value)
-      if (isNaN(id)) return '请输入有效的数字 ID'
+      if (Number.isNaN(id))
+        return '请输入有效的数字 ID'
       return true
-    }
+    },
   })
 
   return Number(chatId)
@@ -98,10 +102,10 @@ async function exportMessages(adapter: ClientAdapter, chatId: number) {
         createdAt: message.createdAt,
       })
       count++
-      if (count % 100 === 0) {
+      if (count % 100 === 0)
         logger.log(`已保存 ${count} 条消息...`)
-      }
-    } catch (error) {
+    }
+    catch (error) {
       logger.log('保存消息失败:', String(error))
     }
   }
@@ -147,7 +151,7 @@ async function main() {
       // Ask if continue
       const shouldContinue = await input.confirm({
         message: '是否继续导出其他对话？',
-        default: true
+        default: true,
       })
 
       if (!shouldContinue) {
@@ -158,7 +162,8 @@ async function main() {
 
     await adapter.disconnect()
     process.exit(0)
-  } catch (error) {
+  }
+  catch (error) {
     logger.log('错误:', String(error))
     await adapter.disconnect()
     process.exit(1)

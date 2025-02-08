@@ -1,5 +1,7 @@
-import { Bot, BotError, GrammyError, HttpError } from 'grammy'
-import { TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
+import type { TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
+
+import { Bot, GrammyError, HttpError } from 'grammy'
+
 import { getChatStats } from '../db'
 
 export class BotAdapter implements TelegramAdapter {
@@ -15,20 +17,22 @@ export class BotAdapter implements TelegramAdapter {
       console.error(`Error while handling update ${ctx.update.update_id}:`)
       const e = err.error
       if (e instanceof GrammyError) {
-        console.error("Error in request:", e.description)
-      } else if (e instanceof HttpError) {
-        console.error("Could not contact Telegram:", e)
-      } else {
-        console.error("Unknown error:", e)
+        console.error('Error in request:', e.description)
+      }
+      else if (e instanceof HttpError) {
+        console.error('Could not contact Telegram:', e)
+      }
+      else {
+        console.error('Unknown error:', e)
       }
     })
 
     // Setup commands
-    this.bot.command('start', (ctx) => ctx.reply(
-      '你好！我是一个消息存档机器人。\n' +
-      '请把我加入群组并设置为管理员，我就会开始记录消息。\n' +
-      '支持的命令：\n' +
-      '/stats - 显示当前群组的消息统计'
+    this.bot.command('start', ctx => ctx.reply(
+      '你好！我是一个消息存档机器人。\n'
+      + '请把我加入群组并设置为管理员，我就会开始记录消息。\n'
+      + '支持的命令：\n'
+      + '/stats - 显示当前群组的消息统计',
     ))
 
     this.bot.command('stats', async (ctx) => {
@@ -36,7 +40,7 @@ export class BotAdapter implements TelegramAdapter {
       try {
         const msg = await ctx.reply('正在统计...')
         const stats = await getChatStats(chatId)
-        
+
         const typeStats = Object.entries(stats.byType)
           .map(([type, count]) => `${type}: ${count}`)
           .join('\n')
@@ -44,11 +48,12 @@ export class BotAdapter implements TelegramAdapter {
         await ctx.api.editMessageText(
           ctx.chat.id,
           msg.message_id,
-          `📊 消息统计\n\n` +
-          `总消息数：${stats.total}\n\n` +
-          `类型统计：\n${typeStats}`
+          `📊 消息统计\n\n`
+          + `总消息数：${stats.total}\n\n`
+          + `类型统计：\n${typeStats}`,
         )
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Error getting stats:', error)
         await ctx.reply('获取统计信息失败')
       }
@@ -63,10 +68,14 @@ export class BotAdapter implements TelegramAdapter {
    * Convert message type from Grammy to our type
    */
   private getMessageType(message: any): TelegramMessageType {
-    if (message.text) return 'text'
-    if (message.photo) return 'photo'
-    if (message.video) return 'video'
-    if (message.document) return 'document'
+    if (message.text)
+      return 'text'
+    if (message.photo)
+      return 'photo'
+    if (message.video)
+      return 'video'
+    if (message.document)
+      return 'document'
     return 'other'
   }
 
@@ -91,19 +100,21 @@ export class BotAdapter implements TelegramAdapter {
 
   async connect() {
     console.log('Setting up bot handlers...')
-    
+
     // Setup message handler for all types of messages
     this.bot.on(['message', 'edited_message'], async (ctx) => {
       const message = ctx.message || ctx.editedMessage
-      if (!message) return
+      if (!message)
+        return
 
       console.log(`Received message from chat ${ctx.chat.id} (${ctx.chat.type}):`, message)
-      
+
       if (this.messageCallback) {
         try {
           const convertedMessage = this.convertMessage(message)
           await this.messageCallback(convertedMessage)
-        } catch (error) {
+        }
+        catch (error) {
           console.error('Error handling message:', error)
         }
       }
@@ -117,7 +128,8 @@ export class BotAdapter implements TelegramAdapter {
           console.log('Bot started as:', botInfo.username)
         },
       })
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Failed to start bot:', error)
       throw error
     }

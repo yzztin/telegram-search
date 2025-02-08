@@ -1,12 +1,15 @@
-import { TelegramClient } from 'telegram'
-import { StringSession } from 'telegram/sessions'
-import { NewMessage, NewMessageEvent } from 'telegram/events'
-import { TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
+import type { NewMessageEvent } from 'telegram/events'
+import type { TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
+
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 import * as input from '@inquirer/prompts'
-import * as fs from 'fs/promises'
-import * as path from 'path'
-import { MediaService } from '../services/media'
 import { useLogger } from '@tg-search/common'
+import { Api, TelegramClient } from 'telegram'
+import { NewMessage } from 'telegram/events'
+import { StringSession } from 'telegram/sessions'
+
+import { MediaService } from '../services/media'
 
 export interface ClientAdapterConfig {
   apiId: number
@@ -29,6 +32,13 @@ export interface DialogsResult {
   total: number
 }
 
+export interface Folder {
+  id: number
+  title: string
+  // Custom folder ID from Telegram
+  customId?: number
+}
+
 export class ClientAdapter implements TelegramAdapter {
   private client: TelegramClient
   private messageCallback?: (message: TelegramMessage) => Promise<void>
@@ -41,14 +51,14 @@ export class ClientAdapter implements TelegramAdapter {
   constructor(config: ClientAdapterConfig) {
     this.config = config
     this.sessionFile = path.join(process.cwd(), '.session')
-    
+
     // Create client with session
     this.session = new StringSession('')
     this.client = new TelegramClient(
       this.session,
       config.apiId,
       config.apiHash,
-      { connectionRetries: 5 }
+      { connectionRetries: 5 },
     )
     this.mediaService = new MediaService(this.client)
   }
@@ -63,7 +73,8 @@ export class ClientAdapter implements TelegramAdapter {
   private async loadSession(): Promise<string> {
     try {
       return await fs.readFile(this.sessionFile, 'utf-8')
-    } catch {
+    }
+    catch {
       return ''
     }
   }
@@ -78,15 +89,15 @@ export class ClientAdapter implements TelegramAdapter {
   /**
    * Get entity type and name
    */
-  private getEntityInfo(entity: any): { type: 'user' | 'group' | 'channel'; name: string } {
+  private getEntityInfo(entity: any): { type: 'user' | 'group' | 'channel', name: string } {
     // 检查是否是用户
     if ('firstName' in entity || 'lastName' in entity || ('username' in entity && !('title' in entity))) {
       return {
         type: 'user',
-        name: [entity.firstName, entity.lastName].filter(Boolean).join(' ') || entity.username || 'Unknown User'
+        name: [entity.firstName, entity.lastName].filter(Boolean).join(' ') || entity.username || 'Unknown User',
       }
     }
-    
+
     // 检查是否是群组或频道
     if ('title' in entity) {
       // 检查是否是超级群组
@@ -104,7 +115,7 @@ export class ClientAdapter implements TelegramAdapter {
     // 默认情况
     return {
       type: 'user',
-      name: 'Unknown'
+      name: 'Unknown',
     }
   }
 
@@ -112,15 +123,7 @@ export class ClientAdapter implements TelegramAdapter {
    * Get all dialogs (chats) with pagination
    */
   async getDialogs(offset = 0, limit = 10): Promise<DialogsResult> {
-    // First get the Saved Messages dialog
-    const me = await this.client.getMe()
-    const savedMessages = {
-      entity: me,
-      unreadCount: 0,
-      message: null,
-    }
-
-    // Then get other dialogs
+    // Get all dialogs first
     const dialogs = await this.client.getDialogs({
       limit: limit + 1, // Get one extra to check if there are more
       offsetDate: undefined,
@@ -132,24 +135,52 @@ export class ClientAdapter implements TelegramAdapter {
     const hasMore = dialogs.length > limit
     const dialogsToReturn = hasMore ? dialogs.slice(0, limit) : dialogs
 
-    // Combine Saved Messages with other dialogs
-    const allDialogs = [savedMessages, ...dialogsToReturn]
+    // Get current user for Saved Messages
+    const me = await this.client.getMe()
 
-    return {
-      dialogs: allDialogs.map(dialog => {
-        const entity = dialog.entity
-        const { type, name } = this.getEntityInfo(entity)
+    // Convert dialogs to our format, handle Saved Messages specially
+    const convertedDialogs = dialogsToReturn.map((dialog) => {
+      const entity = dialog.entity
+      const { type, name } = this.getEntityInfo(entity)
 
+      // If this is the current user (Saved Messages), mark it as saved type
+      if (entity?.id?.toJSNumber() === me?.id?.toJSNumber()) {
         return {
-          id: entity?.id.toJSNumber() || 0,
-          name: entity?.id?.toJSNumber() === me?.id?.toJSNumber() ? '常用' : name,
-          type: entity?.id?.toJSNumber() === me?.id?.toJSNumber() ? 'saved' : type,
+          id: entity.id.toJSNumber(),
+          name: '常用',
+          type: 'saved' as const,
           unreadCount: dialog.unreadCount,
           lastMessage: dialog.message?.message,
           lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : undefined,
         }
-      }),
-      total: dialogs.length + 1 // Include Saved Messages in total
+      }
+
+      return {
+        id: entity?.id.toJSNumber() || 0,
+        name,
+        type,
+        unreadCount: dialog.unreadCount,
+        lastMessage: dialog.message?.message,
+        lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : undefined,
+      }
+    })
+
+    // If Saved Messages is not in the list, add it at the beginning
+    const hasSavedMessages = convertedDialogs.some(d => d.type === 'saved')
+    if (!hasSavedMessages) {
+      convertedDialogs.unshift({
+        id: me.id.toJSNumber(),
+        name: '常用',
+        type: 'saved' as const,
+        unreadCount: 0,
+        lastMessage: undefined,
+        lastMessageDate: undefined,
+      })
+    }
+
+    return {
+      dialogs: convertedDialogs,
+      total: dialogs.length + (hasSavedMessages ? 0 : 1), // Add 1 to total if we added Saved Messages
     }
   }
 
@@ -158,13 +189,18 @@ export class ClientAdapter implements TelegramAdapter {
    */
   private getMessageType(message: any): TelegramMessageType {
     if (message.media) {
-      if ('photo' in message.media) return 'photo'
-      if ('document' in message.media) return 'document'
-      if ('video' in message.media) return 'video'
-      if ('sticker' in message.media) return 'sticker'
+      if ('photo' in message.media)
+        return 'photo'
+      if ('document' in message.media)
+        return 'document'
+      if ('video' in message.media)
+        return 'video'
+      if ('sticker' in message.media)
+        return 'sticker'
       return 'other'
     }
-    if (message.message) return 'text'
+    if (message.message)
+      return 'text'
     return 'other'
   }
 
@@ -173,7 +209,7 @@ export class ClientAdapter implements TelegramAdapter {
    */
   private async convertMessage(message: any): Promise<TelegramMessage> {
     const type = this.getMessageType(message)
-    let mediaInfo = undefined
+    let mediaInfo
 
     // Handle media files
     if (message.media) {
@@ -216,7 +252,7 @@ export class ClientAdapter implements TelegramAdapter {
         this.session,
         this.config.apiId,
         this.config.apiHash,
-        { connectionRetries: 5 }
+        { connectionRetries: 5 },
       )
       this.mediaService = new MediaService(this.client)
     }
@@ -226,16 +262,18 @@ export class ClientAdapter implements TelegramAdapter {
       password: async () => {
         this.logger.log('需要输入两步验证密码')
         const password = await input.password({ message: '请输入两步验证密码：' })
-        if (!password) throw new Error('需要两步验证密码')
+        if (!password)
+          throw new Error('需要两步验证密码')
         return password
       },
       phoneCode: async () => {
         this.logger.log('需要输入验证码')
         const code = await input.input({ message: '请输入你收到的验证码：' })
-        if (!code) throw new Error('需要验证码')
+        if (!code)
+          throw new Error('需要验证码')
         return code
       },
-      onError: (err) => this.logger.log('连接错误:', String(err)),
+      onError: err => this.logger.log('连接错误:', String(err)),
     })
 
     // Save session
@@ -266,5 +304,165 @@ export class ClientAdapter implements TelegramAdapter {
 
   onMessage(callback: (message: TelegramMessage) => Promise<void>) {
     this.messageCallback = callback
+  }
+
+  /**
+   * Get folders from a dialog
+   */
+  async getFolders(chatId: number): Promise<Folder[]> {
+    const folders: Folder[] = []
+
+    try {
+      // Get dialog entity
+      const dialog = await this.client.getEntity(chatId)
+      if (!dialog)
+        return folders
+
+      // Get all folders
+      const result = await this.client.invoke(new Api.messages.GetDialogFilters())
+
+      // Convert to our format
+      if (Array.isArray(result)) {
+        for (const folder of result) {
+          if (folder.className === 'DialogFilter') {
+            folders.push({
+              id: folder.id,
+              title: folder.title,
+              customId: folder.id,
+            })
+          }
+        }
+      }
+
+      // Add default folder
+      folders.unshift({
+        id: 0,
+        title: '全部消息',
+      })
+
+      // Add saved messages folder
+      const me = await this.client.getMe()
+      if (dialog.id.eq(me.id)) {
+        folders.push({
+          id: -1,
+          title: '常用消息',
+        })
+      }
+    }
+    catch (error) {
+      this.logger.log('获取文件夹失败:', String(error))
+    }
+
+    return folders
+  }
+
+  /**
+   * Get all folders
+   */
+  async getAllFolders(): Promise<Folder[]> {
+    const folders: Folder[] = []
+
+    try {
+      // Get all folders
+      const result = await this.client.invoke(new Api.messages.GetDialogFilters())
+
+      // Convert to our format
+      if (Array.isArray(result)) {
+        for (const folder of result) {
+          if (folder.className === 'DialogFilter') {
+            folders.push({
+              id: folder.id,
+              title: folder.title,
+              customId: folder.id,
+            })
+          }
+        }
+      }
+
+      // Add default folder
+      folders.unshift({
+        id: 0,
+        title: '全部消息',
+      })
+
+      // Add saved messages folder
+      folders.push({
+        id: -1,
+        title: '常用消息',
+      })
+    }
+    catch (error) {
+      this.logger.log('获取文件夹失败:', String(error))
+    }
+
+    return folders
+  }
+
+  /**
+   * Get dialogs in a folder
+   */
+  async getDialogsInFolder(folderId: number, offset = 0, limit = 10): Promise<DialogsResult> {
+    // Get all dialogs first
+    const dialogs = await this.client.getDialogs({
+      limit: limit + 1, // Get one extra to check if there are more
+      offsetDate: undefined,
+      offsetId: 0,
+      offsetPeer: undefined,
+      ignorePinned: false,
+      folder: folderId === -1 ? undefined : folderId, // -1 is for Saved Messages
+    })
+
+    const hasMore = dialogs.length > limit
+    const dialogsToReturn = hasMore ? dialogs.slice(0, limit) : dialogs
+
+    // Get current user for Saved Messages
+    const me = await this.client.getMe()
+
+    // Convert dialogs to our format, handle Saved Messages specially
+    const convertedDialogs = dialogsToReturn.map((dialog) => {
+      const entity = dialog.entity
+      const { type, name } = this.getEntityInfo(entity)
+
+      // If this is the current user (Saved Messages), mark it as saved type
+      if (entity?.id?.toJSNumber() === me?.id?.toJSNumber()) {
+        return {
+          id: entity.id.toJSNumber(),
+          name: '常用',
+          type: 'saved' as const,
+          unreadCount: dialog.unreadCount,
+          lastMessage: dialog.message?.message,
+          lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : undefined,
+        }
+      }
+
+      return {
+        id: entity?.id.toJSNumber() || 0,
+        name,
+        type,
+        unreadCount: dialog.unreadCount,
+        lastMessage: dialog.message?.message,
+        lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : undefined,
+      }
+    })
+
+    // For Saved Messages folder, only show the Saved Messages dialog
+    if (folderId === -1) {
+      return {
+        dialogs: [{
+          id: me.id.toJSNumber(),
+          name: '常用',
+          type: 'saved' as const,
+          unreadCount: 0,
+          lastMessage: undefined,
+          lastMessageDate: undefined,
+        }],
+        total: 1,
+      }
+    }
+
+    return {
+      dialogs: convertedDialogs,
+      total: dialogs.length,
+    }
   }
 }

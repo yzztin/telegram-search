@@ -1,23 +1,31 @@
+import type { TelegramMessage } from '../adapter/types'
+
+import { initLogger, useLogger } from '@tg-search/common'
 import { config } from 'dotenv'
-import { createAdapter } from './factory'
-import { TelegramMessage } from './types'
+
+import { createAdapter } from '../adapter/factory'
 import { createMessage } from '../db'
 
 // Load environment variables
 config()
 
+// Initialize logger
+initLogger()
+
+const logger = useLogger()
+
 process.on('unhandledRejection', (error) => {
-  console.error('Unhandled promise rejection:', error)
+  logger.log('Unhandled promise rejection:', String(error))
 })
 
 async function main() {
   const token = process.env.BOT_TOKEN
   if (!token) {
-    console.error('BOT_TOKEN is required')
+    logger.log('BOT_TOKEN is required')
     process.exit(1)
   }
 
-  // Create adapter (you can change this to 'client' type if needed)
+  // Create adapter
   const adapter = createAdapter({
     type: 'bot',
     token,
@@ -25,8 +33,8 @@ async function main() {
 
   // Message handler
   const handleMessage = async (message: TelegramMessage) => {
-    console.log('Received message:', message)
-    
+    logger.log('收到消息:', message)
+
     try {
       // Save to database
       const result = await createMessage({
@@ -42,31 +50,33 @@ async function main() {
         forwards: message.forwards,
         createdAt: message.createdAt,
       })
-      console.log('Message saved to database:', result)
-    } catch (error) {
-      console.error('Failed to save message:', error)
+      logger.log('消息已保存到数据库:', result)
+    }
+    catch (error) {
+      logger.log('保存消息失败:', String(error))
     }
   }
 
   // Connect and start listening
   try {
-    console.log('Connecting to Telegram...')
+    logger.log('连接到 Telegram...')
     await adapter.connect()
-    console.log('Connected!')
+    logger.log('已连接！')
 
     // Setup message handler
     adapter.onMessage(handleMessage)
 
     // Keep the process running
     process.on('SIGINT', async () => {
-      console.log('Shutting down...')
+      logger.log('正在关闭...')
       await adapter.disconnect()
       process.exit(0)
     })
 
     await new Promise(() => {})
-  } catch (error) {
-    console.error('Error:', error)
+  }
+  catch (error) {
+    logger.log('错误:', String(error))
     await adapter.disconnect()
     process.exit(1)
   }

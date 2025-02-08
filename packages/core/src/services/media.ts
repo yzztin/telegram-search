@@ -1,7 +1,8 @@
-import { TelegramClient } from 'telegram'
-import * as path from 'path'
-import * as fs from 'fs/promises'
-import { MediaInfo } from '../db/schema/message'
+import type { TelegramClient } from 'telegram'
+import type { MediaInfo } from '../db/schema/message'
+
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 import { useLogger } from '@tg-search/common'
 
 export class MediaService {
@@ -20,7 +21,8 @@ export class MediaService {
   async init() {
     try {
       await fs.mkdir(this.mediaDir, { recursive: true })
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.log('Failed to create media directory:', String(error))
     }
   }
@@ -32,7 +34,8 @@ export class MediaService {
     if (message.media) {
       const media = message.media
       const type = this.getMediaType(media)
-      if (!type) return undefined
+      if (!type)
+        return undefined
 
       const info: MediaInfo = {
         fileId: media.id?.toString() || '',
@@ -40,9 +43,12 @@ export class MediaService {
       }
 
       // Add common properties
-      if ('mimeType' in media) info.mimeType = media.mimeType
-      if ('size' in media) info.fileSize = media.size
-      if ('fileName' in media) info.fileName = media.fileName
+      if ('mimeType' in media)
+        info.mimeType = media.mimeType
+      if ('size' in media)
+        info.fileSize = media.size
+      if ('fileName' in media)
+        info.fileName = media.fileName
 
       // Add image/video specific properties
       if ('w' in media && 'h' in media) {
@@ -71,10 +77,14 @@ export class MediaService {
    * Get media type from message
    */
   private getMediaType(media: any): string | undefined {
-    if ('photo' in media) return 'photo'
-    if ('document' in media) return 'document'
-    if ('video' in media) return 'video'
-    if ('sticker' in media) return 'sticker'
+    if ('photo' in media)
+      return 'photo'
+    if ('document' in media)
+      return 'document'
+    if ('video' in media)
+      return 'video'
+    if ('sticker' in media)
+      return 'sticker'
     return undefined
   }
 
@@ -99,7 +109,8 @@ export class MediaService {
 
       // Return relative path
       return path.relative(process.cwd(), filePath)
-    } catch (error) {
+    }
+    catch (error) {
       this.logger.log('Failed to download media:', String(error))
       return undefined
     }
@@ -130,4 +141,4 @@ export class MediaService {
     }
     return ''
   }
-} 
+}

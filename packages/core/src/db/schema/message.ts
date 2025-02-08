@@ -1,5 +1,4 @@
-import { pgTable, bigint, text, timestamp, integer, pgEnum, jsonb } from 'drizzle-orm/pg-core'
-import { sql } from 'drizzle-orm'
+import { bigint, integer, jsonb, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 // Message type enum
 export const messageTypeEnum = pgEnum('message_type', ['text', 'photo', 'video', 'document', 'sticker', 'other'])
@@ -50,4 +49,4 @@ export const messages = pgTable('messages', {
   views: integer('views'),
   // Forwards count
   forwards: integer('forwards'),
-}) 
+})

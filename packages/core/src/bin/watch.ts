@@ -1,15 +1,18 @@
-import type { ClientAdapter } from './client'
-import type { TelegramMessage } from './types'
+import type { ClientAdapter } from '../adapter/client'
+import type { TelegramMessage } from '../adapter/types'
 
 import * as input from '@inquirer/prompts'
-import { useLogger } from '@tg-search/common'
+import { initLogger, useLogger } from '@tg-search/common'
 import { config } from 'dotenv'
 
+import { createAdapter } from '../adapter/factory'
 import { createMessage } from '../db'
-import { createAdapter } from './factory'
 
 // Load environment variables
 config()
+
+// Initialize logger
+initLogger()
 
 const logger = useLogger()
 
@@ -17,7 +20,7 @@ process.on('unhandledRejection', (error) => {
   logger.log('Unhandled promise rejection:', String(error))
 })
 
-async function watchChat(adapter: ClientAdapter, chatId: number) {
+async function watchChat(adapter: ClientAdapter, chatId: number, folderTitle: string) {
   // Get dialog info
   const result = await adapter.getDialogs(0, 100)
   const selectedDialog = result.dialogs.find(d => d.id === chatId)
@@ -26,25 +29,7 @@ async function watchChat(adapter: ClientAdapter, chatId: number) {
     return
   }
 
-  // Get folders
-  const folders = await adapter.getFolders(chatId)
-  if (folders.length === 0) {
-    logger.log('该对话没有文件夹')
-    return
-  }
-
-  // Let user select a folder
-  const folderChoices = folders.map(folder => ({
-    name: folder.title,
-    value: folder.id,
-  }))
-
-  const folderId = await input.select({
-    message: '请选择要监听的文件夹：',
-    choices: folderChoices,
-  })
-
-  logger.log(`\n开始监听 "${selectedDialog.name}" 的 "${folders.find(f => f.id === folderId)?.title}" 文件夹...`)
+  logger.log(`\n开始监听 "${selectedDialog.name}" 的 "${folderTitle}" 文件夹...`)
   let count = 0
 
   // Setup message handler
@@ -69,9 +54,8 @@ async function watchChat(adapter: ClientAdapter, chatId: number) {
       })
       count++
       logger.log(`[${new Date().toLocaleString()}] 已保存 ${count} 条新消息`)
-      if (message.mediaInfo?.localPath) {
+      if (message.mediaInfo?.localPath)
         logger.log(`已下载媒体文件: ${message.mediaInfo.localPath}`)
-      }
     }
     catch (error) {
       logger.log('保存消息失败:', String(error))
@@ -110,13 +94,32 @@ async function main() {
     await adapter.connect()
     logger.log('已连接！')
 
-    // Display dialogs and get selected chat ID
-    const result = await adapter.getDialogs(0, 100)
+    // First, get all folders
+    const folders = await adapter.getAllFolders()
+    const folderChoices = folders.map(folder => ({
+      name: folder.title,
+      value: folder.id,
+    }))
+
+    // Let user select a folder
+    const folderId = await input.select({
+      message: '请选择要监听的文件夹：',
+      choices: folderChoices,
+    })
+
+    // Then, get dialogs in the selected folder
+    const selectedFolder = folders.find(f => f.id === folderId)
+    if (!selectedFolder) {
+      logger.log('找不到该文件夹')
+      process.exit(1)
+    }
+
+    const result = await adapter.getDialogsInFolder(folderId)
     const dialogs = result.dialogs
 
     // Let user select a dialog
     const choices = dialogs.map(dialog => ({
-      name: `[${dialog.type}] ${dialog.name}`,
+      name: `[${dialog.type}] ${dialog.name}${dialog.unreadCount > 0 ? ` (${dialog.unreadCount})` : ''}`,
       value: dialog.id,
     }))
 
@@ -126,7 +129,7 @@ async function main() {
     })
 
     // Start watching
-    await watchChat(adapter, chatId)
+    await watchChat(adapter, chatId, selectedFolder.title)
 
     // Keep the process running
     await new Promise(() => {})
@@ -138,4 +141,4 @@ async function main() {
   }
 }
 
-main()
+main() 

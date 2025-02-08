@@ -1,7 +1,8 @@
-import postgres from 'postgres'
+import { count, eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
+import postgres from 'postgres'
+
 import { messages } from './schema/message'
-import { eq, sql, count } from 'drizzle-orm'
 
 // Database connection
 const connectionString = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/tg_search'
@@ -29,13 +30,14 @@ export interface MessageCreateInput {
 /**
  * Create a new message
  */
-export const createMessage = async (data: MessageCreateInput) => {
+export async function createMessage(data: MessageCreateInput) {
   try {
     console.log('Saving message to database:', data)
     const result = await db.insert(messages).values(data).returning()
     console.log('Message saved:', result)
     return result
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Failed to save message:', error)
     throw error
   }
@@ -44,7 +46,7 @@ export const createMessage = async (data: MessageCreateInput) => {
 /**
  * Find similar messages by vector similarity
  */
-export const findSimilarMessages = async (embedding: number[], limit = 10) => {
+export async function findSimilarMessages(embedding: number[], limit = 10) {
   return db.select()
     .from(messages)
     .orderBy(sql`embedding <-> ${JSON.stringify(embedding)}::vector`)
@@ -54,7 +56,7 @@ export const findSimilarMessages = async (embedding: number[], limit = 10) => {
 /**
  * Find messages by chat ID
  */
-export const findMessagesByChatId = async (chatId: number) => {
+export async function findMessagesByChatId(chatId: number) {
   return db.select()
     .from(messages)
     .where(eq(messages.chatId, chatId))
@@ -63,7 +65,7 @@ export const findMessagesByChatId = async (chatId: number) => {
 /**
  * Find message by ID
  */
-export const findMessageById = async (id: number) => {
+export async function findMessageById(id: number) {
   return db.select()
     .from(messages)
     .where(eq(messages.id, id))
@@ -74,7 +76,7 @@ export const findMessageById = async (id: number) => {
 /**
  * Get message statistics for a chat
  */
-export const getChatStats = async (chatId: number) => {
+export async function getChatStats(chatId: number) {
   const [totalResult, typeResult] = await Promise.all([
     // Get total message count
     db.select({ count: count() })
@@ -86,13 +88,13 @@ export const getChatStats = async (chatId: number) => {
     db.select({ type: messages.type, count: count() })
       .from(messages)
       .where(eq(messages.chatId, chatId))
-      .groupBy(messages.type)
+      .groupBy(messages.type),
   ])
 
   return {
     total: Number(totalResult),
     byType: Object.fromEntries(
-      typeResult.map(({ type, count }) => [type, Number(count)])
-    )
+      typeResult.map(({ type, count }) => [type, Number(count)]),
+    ),
   }
-} 
+}
