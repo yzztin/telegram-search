@@ -23,7 +23,8 @@
     "db:studio": "drizzle-kit studio",
     "test:db": "tsx src/db/test.ts",
     "test:bot": "tsx src/adapter/test.ts",
-    "test:client": "tsx src/adapter/test-client.ts"
+    "test:client": "tsx src/adapter/test-client.ts",
+    "watch": "tsx src/adapter/watch.ts"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.3.1",

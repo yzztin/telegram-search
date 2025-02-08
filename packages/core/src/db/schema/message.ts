@@ -1,8 +1,26 @@
-import { pgTable, bigint, text, timestamp, integer, pgEnum } from 'drizzle-orm/pg-core'
+import { pgTable, bigint, text, timestamp, integer, pgEnum, jsonb } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 // Message type enum
-export const messageTypeEnum = pgEnum('message_type', ['text', 'photo', 'video', 'document', 'other'])
+export const messageTypeEnum = pgEnum('message_type', ['text', 'photo', 'video', 'document', 'sticker', 'other'])
+
+// Media file info
+export interface MediaInfo {
+  fileId: string
+  type: string
+  mimeType?: string
+  fileName?: string
+  fileSize?: number
+  width?: number
+  height?: number
+  duration?: number
+  thumbnail?: {
+    fileId: string
+    width: number
+    height: number
+  }
+  localPath?: string
+}
 
 // Messages table
 export const messages = pgTable('messages', {
@@ -16,6 +34,8 @@ export const messages = pgTable('messages', {
   content: text('content'),
   // Message vector embedding
   embedding: text('embedding').$type<`[${string}]`>(),
+  // Media file info
+  mediaInfo: jsonb('media_info').$type<MediaInfo>(),
   // Creation time
   createdAt: timestamp('created_at').notNull().defaultNow(),
   // From user ID

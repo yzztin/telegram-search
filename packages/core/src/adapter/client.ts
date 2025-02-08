@@ -5,6 +5,8 @@ import { TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
 import * as input from '@inquirer/prompts'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { MediaService } from '../services/media'
+import { useLogger } from '@tg-search/common'
 
 export interface ClientAdapterConfig {
   apiId: number
@@ -16,7 +18,7 @@ export interface ClientAdapterConfig {
 export interface Dialog {
   id: number
   name: string
-  type: 'user' | 'group' | 'channel'
+  type: 'user' | 'group' | 'channel' | 'saved'
   unreadCount: number
   lastMessage?: string
   lastMessageDate?: Date
@@ -33,6 +35,8 @@ export class ClientAdapter implements TelegramAdapter {
   private config: ClientAdapterConfig
   private sessionFile: string
   private session: StringSession
+  private mediaService: MediaService
+  private logger = useLogger()
 
   constructor(config: ClientAdapterConfig) {
     this.config = config
@@ -46,6 +50,7 @@ export class ClientAdapter implements TelegramAdapter {
       config.apiHash,
       { connectionRetries: 5 }
     )
+    this.mediaService = new MediaService(this.client)
   }
 
   get type() {
@@ -107,6 +112,15 @@ export class ClientAdapter implements TelegramAdapter {
    * Get all dialogs (chats) with pagination
    */
   async getDialogs(offset = 0, limit = 10): Promise<DialogsResult> {
+    // First get the Saved Messages dialog
+    const me = await this.client.getMe()
+    const savedMessages = {
+      entity: me,
+      unreadCount: 0,
+      message: null,
+    }
+
+    // Then get other dialogs
     const dialogs = await this.client.getDialogs({
       limit: limit + 1, // Get one extra to check if there are more
       offsetDate: undefined,
@@ -118,21 +132,24 @@ export class ClientAdapter implements TelegramAdapter {
     const hasMore = dialogs.length > limit
     const dialogsToReturn = hasMore ? dialogs.slice(0, limit) : dialogs
 
+    // Combine Saved Messages with other dialogs
+    const allDialogs = [savedMessages, ...dialogsToReturn]
+
     return {
-      dialogs: dialogsToReturn.map(dialog => {
+      dialogs: allDialogs.map(dialog => {
         const entity = dialog.entity
         const { type, name } = this.getEntityInfo(entity)
 
         return {
           id: entity?.id.toJSNumber() || 0,
-          name,
-          type,
+          name: entity?.id?.toJSNumber() === me?.id?.toJSNumber() ? '常用' : name,
+          type: entity?.id?.toJSNumber() === me?.id?.toJSNumber() ? 'saved' : type,
           unreadCount: dialog.unreadCount,
           lastMessage: dialog.message?.message,
           lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : undefined,
         }
       }),
-      total: dialogs.length
+      total: dialogs.length + 1 // Include Saved Messages in total
     }
   }
 
@@ -140,22 +157,42 @@ export class ClientAdapter implements TelegramAdapter {
    * Convert message type from Telegram to our type
    */
   private getMessageType(message: any): TelegramMessageType {
+    if (message.media) {
+      if ('photo' in message.media) return 'photo'
+      if ('document' in message.media) return 'document'
+      if ('video' in message.media) return 'video'
+      if ('sticker' in message.media) return 'sticker'
+      return 'other'
+    }
     if (message.message) return 'text'
-    if (message.photo) return 'photo'
-    if (message.video) return 'video'
-    if (message.document) return 'document'
     return 'other'
   }
 
   /**
    * Convert message from Telegram to our format
    */
-  private convertMessage(message: any): TelegramMessage {
+  private async convertMessage(message: any): Promise<TelegramMessage> {
+    const type = this.getMessageType(message)
+    let mediaInfo = undefined
+
+    // Handle media files
+    if (message.media) {
+      mediaInfo = this.mediaService.getMediaInfo(message)
+      if (mediaInfo) {
+        // Download media file
+        const localPath = await this.mediaService.downloadMedia(message, mediaInfo)
+        if (localPath) {
+          mediaInfo.localPath = localPath
+        }
+      }
+    }
+
     return {
       id: message.id,
       chatId: message.chatId?.value || message.peerId?.channelId?.value || message.peerId?.chatId?.value || message.peerId?.userId?.value,
-      type: this.getMessageType(message),
+      type,
       content: message.message,
+      mediaInfo,
       fromId: message.fromId?.userId?.value,
       replyToId: message.replyTo?.replyToMsgId,
       forwardFromChatId: message.fwdFrom?.fromId?.channelId?.value,
@@ -167,10 +204,13 @@ export class ClientAdapter implements TelegramAdapter {
   }
 
   async connect() {
+    // Initialize media service
+    await this.mediaService.init()
+
     // Load session
     const savedSession = await this.loadSession()
     if (savedSession) {
-      console.log('使用已保存的会话...')
+      this.logger.log('使用已保存的会话...')
       this.session = new StringSession(savedSession)
       this.client = new TelegramClient(
         this.session,
@@ -178,23 +218,24 @@ export class ClientAdapter implements TelegramAdapter {
         this.config.apiHash,
         { connectionRetries: 5 }
       )
+      this.mediaService = new MediaService(this.client)
     }
 
     await this.client.start({
       phoneNumber: async () => this.config.phoneNumber,
       password: async () => {
-        console.log('需要输入两步验证密码')
+        this.logger.log('需要输入两步验证密码')
         const password = await input.password({ message: '请输入两步验证密码：' })
         if (!password) throw new Error('需要两步验证密码')
         return password
       },
       phoneCode: async () => {
-        console.log('需要输入验证码')
+        this.logger.log('需要输入验证码')
         const code = await input.input({ message: '请输入你收到的验证码：' })
         if (!code) throw new Error('需要验证码')
         return code
       },
-      onError: (err) => console.error('连接错误:', err),
+      onError: (err) => this.logger.log('连接错误:', String(err)),
     })
 
     // Save session
@@ -204,12 +245,12 @@ export class ClientAdapter implements TelegramAdapter {
     // Setup message handler
     this.client.addEventHandler(async (event: NewMessageEvent) => {
       if (this.messageCallback && event.message) {
-        const message = this.convertMessage(event.message)
+        const message = await this.convertMessage(event.message)
         await this.messageCallback(message)
       }
     }, new NewMessage({}))
 
-    console.log('已连接到 Telegram')
+    this.logger.log('已连接到 Telegram')
   }
 
   async disconnect() {
@@ -219,7 +260,7 @@ export class ClientAdapter implements TelegramAdapter {
   async *getMessages(chatId: number, limit = 100): AsyncGenerator<TelegramMessage> {
     const messages = await this.client.getMessages(chatId, { limit })
     for (const message of messages) {
-      yield this.convertMessage(message)
+      yield await this.convertMessage(message)
     }
   }
 

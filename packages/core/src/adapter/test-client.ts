@@ -1,15 +1,20 @@
-import { config } from 'dotenv'
-import { createAdapter } from './factory'
-import { TelegramMessage } from './types'
-import { createMessage } from '../db'
 import * as input from '@inquirer/prompts'
+import { initLogger, useLogger } from '@tg-search/common'
+import { config } from 'dotenv'
+import { createMessage } from '../db'
 import { ClientAdapter } from './client'
+import { createAdapter } from './factory'
 
 // Load environment variables
 config()
 
+// Initialize logger
+initLogger()
+
+const logger = useLogger()
+
 process.on('unhandledRejection', (error) => {
-  console.error('Unhandled promise rejection:', error)
+  logger.log('Unhandled promise rejection:', String(error))
 })
 
 async function displayDialogs(adapter: ClientAdapter, page = 1, pageSize = 10) {
@@ -17,42 +22,38 @@ async function displayDialogs(adapter: ClientAdapter, page = 1, pageSize = 10) {
   const result = await adapter.getDialogs(offset, pageSize)
   const dialogs = result.dialogs
   
-  console.log('\n对话列表：')
-  console.log('----------------------------------------')
+  logger.log('\n对话列表：')
+  logger.log('----------------------------------------')
   for (const dialog of dialogs) {
-    console.log(`[${dialog.type}] ${dialog.name}`)
-    console.log(`ID: ${dialog.id}`)
-    console.log(`未读消息: ${dialog.unreadCount}`)
+    logger.log(`[${dialog.type}] ${dialog.name}`)
+    logger.log(`ID: ${dialog.id}`)
+    logger.log(`未读消息: ${dialog.unreadCount}`)
     if (dialog.lastMessage) {
-      console.log(`最新消息: ${dialog.lastMessage.slice(0, 50)}${dialog.lastMessage.length > 50 ? '...' : ''}`)
-      console.log(`时间: ${dialog.lastMessageDate?.toLocaleString()}`)
+      logger.log(`最新消息: ${dialog.lastMessage.slice(0, 50)}${dialog.lastMessage.length > 50 ? '...' : ''}`)
+      logger.log(`时间: ${dialog.lastMessageDate?.toLocaleString()}`)
     }
-    console.log('----------------------------------------')
+    logger.log('----------------------------------------')
   }
 
   const hasMore = result.total > offset + pageSize
   const hasPrev = page > 1
 
-  if (hasPrev || hasMore) {
-    console.log('\n导航：')
-    if (hasPrev) console.log('p - 上一页')
-    if (hasMore) console.log('n - 下一页')
-    console.log('q - 选择对话')
+  const action = await input.select({
+    message: '请选择操作：',
+    choices: [
+      ...(hasPrev ? [{ name: '上一页', value: 'prev' }] : []),
+      ...(hasMore ? [{ name: '下一页', value: 'next' }] : []),
+      { name: '选择对话', value: 'select' },
+      { name: '退出', value: 'exit' },
+    ],
+  })
 
-    const action = await input.select({
-      message: '请选择操作：',
-      choices: [
-        ...(hasPrev ? [{ name: '上一页', value: 'prev' }] : []),
-        ...(hasMore ? [{ name: '下一页', value: 'next' }] : []),
-        { name: '选择对话', value: 'select' },
-      ],
-    })
-
-    if (action === 'prev') {
-      return displayDialogs(adapter, page - 1, pageSize)
-    } else if (action === 'next') {
-      return displayDialogs(adapter, page + 1, pageSize)
-    }
+  if (action === 'prev') {
+    return displayDialogs(adapter, page - 1, pageSize)
+  } else if (action === 'next') {
+    return displayDialogs(adapter, page + 1, pageSize)
+  } else if (action === 'exit') {
+    return 0
   }
 
   // Let user select a dialog
@@ -68,6 +69,46 @@ async function displayDialogs(adapter: ClientAdapter, page = 1, pageSize = 10) {
   return Number(chatId)
 }
 
+async function exportMessages(adapter: ClientAdapter, chatId: number) {
+  // Get dialog info
+  const result = await adapter.getDialogs(0, 100)
+  const selectedDialog = result.dialogs.find(d => d.id === chatId)
+  if (!selectedDialog) {
+    logger.log('找不到该对话')
+    return
+  }
+
+  logger.log(`\n开始导出 "${selectedDialog.name}" 的消息...`)
+  let count = 0
+
+  // Get messages and save to database
+  for await (const message of adapter.getMessages(chatId, 1000)) {
+    try {
+      await createMessage({
+        id: message.id,
+        chatId: message.chatId,
+        type: message.type,
+        content: message.content,
+        fromId: message.fromId,
+        replyToId: message.replyToId,
+        forwardFromChatId: message.forwardFromChatId,
+        forwardFromMessageId: message.forwardFromMessageId,
+        views: message.views,
+        forwards: message.forwards,
+        createdAt: message.createdAt,
+      })
+      count++
+      if (count % 100 === 0) {
+        logger.log(`已保存 ${count} 条消息...`)
+      }
+    } catch (error) {
+      logger.log('保存消息失败:', String(error))
+    }
+  }
+
+  logger.log(`\n完成！共保存了 ${count} 条消息。`)
+}
+
 async function main() {
   // Check required environment variables
   const apiId = Number(process.env.API_ID)
@@ -75,7 +116,7 @@ async function main() {
   const phoneNumber = process.env.PHONE_NUMBER
 
   if (!apiId || !apiHash || !phoneNumber) {
-    console.error('API_ID, API_HASH and PHONE_NUMBER are required')
+    logger.log('API_ID, API_HASH and PHONE_NUMBER are required')
     process.exit(1)
   }
 
@@ -88,54 +129,37 @@ async function main() {
   }) as ClientAdapter
 
   try {
-    console.log('连接到 Telegram...')
+    logger.log('连接到 Telegram...')
     await adapter.connect()
-    console.log('已连接！')
+    logger.log('已连接！')
 
-    // Display dialogs and get selected chat ID
-    const chatId = await displayDialogs(adapter)
+    while (true) {
+      // Display dialogs and get selected chat ID
+      const chatId = await displayDialogs(adapter)
+      if (chatId === 0) {
+        logger.log('再见！')
+        break
+      }
 
-    // Get dialog info
-    const result = await adapter.getDialogs(0, 100)
-    const selectedDialog = result.dialogs.find(d => d.id === chatId)
-    if (!selectedDialog) {
-      console.error('找不到该对话')
-      process.exit(1)
-    }
+      // Export messages
+      await exportMessages(adapter, chatId)
 
-    console.log(`\n开始导出 "${selectedDialog.name}" 的消息...`)
-    let count = 0
+      // Ask if continue
+      const shouldContinue = await input.confirm({
+        message: '是否继续导出其他对话？',
+        default: true
+      })
 
-    // Get messages and save to database
-    for await (const message of adapter.getMessages(chatId, 1000)) {
-      try {
-        await createMessage({
-          id: message.id,
-          chatId: message.chatId,
-          type: message.type,
-          content: message.content,
-          fromId: message.fromId,
-          replyToId: message.replyToId,
-          forwardFromChatId: message.forwardFromChatId,
-          forwardFromMessageId: message.forwardFromMessageId,
-          views: message.views,
-          forwards: message.forwards,
-          createdAt: message.createdAt,
-        })
-        count++
-        if (count % 100 === 0) {
-          console.log(`已保存 ${count} 条消息...`)
-        }
-      } catch (error) {
-        console.error('保存消息失败:', error)
+      if (!shouldContinue) {
+        logger.log('再见！')
+        break
       }
     }
 
-    console.log(`\n完成！共保存了 ${count} 条消息。`)
     await adapter.disconnect()
     process.exit(0)
   } catch (error) {
-    console.error('错误:', error)
+    logger.log('错误:', String(error))
     await adapter.disconnect()
     process.exit(1)
   }
