@@ -3,7 +3,7 @@ import { Command } from 'commander'
 import { and, eq, isNull, sql, type SQL } from 'drizzle-orm'
 
 import { db } from '../db'
-import { messages } from '../db/schema/message'
+import { createMessageContentTable, messages } from '../db/schema/message'
 import { EmbeddingService } from '../services/embedding'
 
 interface EmbedOptions {
@@ -16,7 +16,7 @@ interface EmbedOptions {
  * Process messages in parallel batches
  */
 async function processBatch(
-  batch: { id: number; content: string | null }[],
+  batch: { id: number; content: string | null; chatId: number }[],
   embedding: EmbeddingService,
   logger: ReturnType<typeof useLogger>,
 ) {
@@ -34,12 +34,13 @@ async function processBatch(
 
     // 批量更新
     await Promise.all(
-      validBatch.map((msg, idx) =>
-        db
-          .update(messages)
+      validBatch.map((msg, idx) => {
+        const contentTable = createMessageContentTable(msg.chatId)
+        return db
+          .update(contentTable)
           .set({ embedding: embeddings[idx] })
-          .where(eq(messages.id, msg.id))
-      )
+          .where(eq(contentTable.id, msg.id))
+      })
     )
 
     const skipped = batch.length - validBatch.length
@@ -77,17 +78,11 @@ export default async function embed(options: Partial<EmbedOptions> = {}) {
   const concurrency = options.concurrency || 5
 
   try {
-    // 构建查询条件
-    const conditions: SQL[] = [isNull(messages.embedding)]
-    if (options.chatId) {
-      conditions.push(eq(messages.chatId, options.chatId))
-    }
-
     // 获取需要处理的消息总数
     const [{ count }] = await db
-      .select({ count: sql<number>`count(${messages.id})` })
+      .select({ count: sql<number>`count(*)` })
       .from(messages)
-      .where(and(...conditions))
+      .where(options.chatId ? eq(messages.chatId, options.chatId) : undefined)
 
     if (count === 0) {
       logger.log('没有需要处理的消息')
@@ -98,37 +93,52 @@ export default async function embed(options: Partial<EmbedOptions> = {}) {
     let processed = 0
     let failed = 0
 
-    while (processed < count) {
-      // 获取多个批次的消息
-      const batches = await Promise.all(
-        Array.from({ length: concurrency }, () =>
-          db
-            .select({
-              id: messages.id,
-              content: messages.content,
-            })
-            .from(messages)
-            .where(and(...conditions))
-            .limit(batchSize)
+    // 获取所有分区表
+    const partitionTables = await db
+      .select({
+        tableName: messages.partitionTable,
+        chatId: messages.chatId,
+      })
+      .from(messages)
+      .where(options.chatId ? eq(messages.chatId, options.chatId) : undefined)
+      .groupBy(messages.partitionTable, messages.chatId)
+
+    for (const { tableName, chatId } of partitionTables) {
+      const contentTable = createMessageContentTable(chatId)
+
+      while (true) {
+        // 获取多个批次的消息
+        const batches = await Promise.all(
+          Array.from({ length: concurrency }, () =>
+            db
+              .select({
+                id: contentTable.id,
+                content: contentTable.content,
+                chatId: contentTable.chatId,
+              })
+              .from(contentTable)
+              .where(isNull(contentTable.embedding))
+              .limit(batchSize)
+          )
         )
-      )
 
-      // 过滤掉空批次
-      const validBatches = batches.filter(batch => batch.length > 0)
-      if (validBatches.length === 0) break
+        // 过滤掉空批次
+        const validBatches = batches.filter(batch => batch.length > 0)
+        if (validBatches.length === 0) break
 
-      // 并行处理多个批次
-      const results = await Promise.all(
-        validBatches.map(batch => processBatch(batch, embedding, logger))
-      )
+        // 并行处理多个批次
+        const results = await Promise.all(
+          validBatches.map(batch => processBatch(batch, embedding, logger))
+        )
 
-      // 统计处理结果
-      for (const result of results) {
-        processed += result.processed
-        failed += result.failed
+        // 统计处理结果
+        for (const result of results) {
+          processed += result.processed
+          failed += result.failed
+        }
+
+        logger.debug(`已处理 ${processed}/${count} 条消息`)
       }
-
-      logger.debug(`已处理 ${processed}/${count} 条消息`)
     }
 
     logger.log(`处理完成，共处理 ${processed} 条消息，${failed} 条消息失败或被跳过`)

@@ -74,7 +74,7 @@ export const folders = pgTable('folders', {
   lastSyncTime: timestamp('last_sync_time').notNull().defaultNow(),
 })
 
-// Base messages table
+// Base messages table (metadata only)
 export const messages = pgTable('messages', {
   // UUID for external reference
   uuid: uuid('uuid').defaultRandom().primaryKey(),
@@ -84,31 +84,13 @@ export const messages = pgTable('messages', {
   chatId: bigint('chat_id', { mode: 'number' }).notNull(),
   // Message type
   type: messageTypeEnum('type').notNull().default('text'),
-  // Message content
-  content: text('content'),
-  // Message vector embedding (1536 dimensions)
-  embedding: vector('embedding', { dimensions: 1536 }),
-  // Media file info
-  mediaInfo: jsonb('media_info').$type<MediaInfo>(),
   // Creation time
   createdAt: timestamp('created_at').notNull().defaultNow(),
-  // From user ID
-  fromId: bigint('from_id', { mode: 'number' }),
-  // Reply to message ID
-  replyToId: bigint('reply_to_id', { mode: 'number' }),
-  // Forward from chat ID
-  forwardFromChatId: bigint('forward_from_chat_id', { mode: 'number' }),
-  // Forward from message ID
-  forwardFromMessageId: bigint('forward_from_message_id', { mode: 'number' }),
-  // Views count
-  views: integer('views'),
-  // Forwards count
-  forwards: integer('forwards'),
+  // Partition table name
+  partitionTable: text('partition_table').notNull(),
 }, table => ({
   // Unique constraint for chat_id and id
   chatMessageUnique: sql`UNIQUE (chat_id, id)`,
-  // Index for vector similarity search
-  embeddingIdx: sql`CREATE INDEX IF NOT EXISTS messages_embedding_idx ON ${table} USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)`,
   // Index for created_at
   createdAtIdx: sql`CREATE INDEX IF NOT EXISTS messages_created_at_idx ON ${table} (created_at DESC)`,
   // Index for type
@@ -117,83 +99,85 @@ export const messages = pgTable('messages', {
   chatCreatedAtIdx: sql`CREATE INDEX IF NOT EXISTS messages_chat_id_created_at_idx ON ${table} (chat_id, created_at DESC)`,
 }))
 
-// Function to create partition table for a chat
-export function createChatPartition(chatId: number) {
-  return sql`
-    CREATE TABLE IF NOT EXISTS messages_${sql.raw(chatId.toString())} (
-      CHECK (chat_id = ${chatId})
-    ) INHERITS (messages)
-  `
+// Message content table template
+export const createMessageContentTable = (chatId: number | bigint) => {
+  // 使用 n 前缀表示负数，处理 BigInt
+  const absId = chatId < 0 ? -chatId : chatId
+  const tableName = `messages_${chatId < 0 ? 'n' : ''}${absId}`
+  return pgTable(tableName, {
+    // UUID for external reference
+    uuid: uuid('uuid').defaultRandom().primaryKey(),
+    // Message ID from Telegram
+    id: bigint('id', { mode: 'number' }).notNull(),
+    // Chat ID from Telegram
+    chatId: bigint('chat_id', { mode: 'number' }).notNull(),
+    // Message type
+    type: messageTypeEnum('type').notNull().default('text'),
+    // Message content
+    content: text('content'),
+    // Message vector embedding (1536 dimensions)
+    embedding: vector('embedding', { dimensions: 1536 }),
+    // Media file info
+    mediaInfo: jsonb('media_info').$type<MediaInfo>(),
+    // Creation time
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    // From user ID
+    fromId: bigint('from_id', { mode: 'number' }),
+    // Reply to message ID
+    replyToId: bigint('reply_to_id', { mode: 'number' }),
+    // Forward from chat ID
+    forwardFromChatId: bigint('forward_from_chat_id', { mode: 'number' }),
+    // Forward from message ID
+    forwardFromMessageId: bigint('forward_from_message_id', { mode: 'number' }),
+    // Views count
+    views: integer('views'),
+    // Forwards count
+    forwards: integer('forwards'),
+  }, table => ({
+    // Unique constraint for chat_id and id
+    chatMessageUnique: sql`UNIQUE (chat_id, id)`,
+    // Index for vector similarity search
+    embeddingIdx: sql`CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId < 0 ? 'n' : '')}${sql.raw(String(absId))}_embedding_idx ON ${table} USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)`,
+    // Index for created_at
+    createdAtIdx: sql`CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId < 0 ? 'n' : '')}${sql.raw(String(absId))}_created_at_idx ON ${table} (created_at DESC)`,
+    // Index for type
+    typeIdx: sql`CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId < 0 ? 'n' : '')}${sql.raw(String(absId))}_type_idx ON ${table} (type)`,
+  }))
 }
 
-// Function to create indexes for partition table
-export function createChatPartitionIndexes(chatId: number) {
+// Function to create partition table for a chat
+export function createChatPartition(chatId: number | bigint) {
+  // 使用 n 前缀表示负数，处理 BigInt
+  const absId = chatId < 0 ? -chatId : chatId
+  const tableName = `messages_${chatId < 0 ? 'n' : ''}${absId}`
   return sql`
-    CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId.toString())}_embedding_idx 
-    ON messages_${sql.raw(chatId.toString())} 
+    CREATE TABLE IF NOT EXISTS ${sql.raw(tableName)} (
+      uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      id BIGINT NOT NULL,
+      chat_id BIGINT NOT NULL,
+      type message_type NOT NULL DEFAULT 'text',
+      content TEXT,
+      embedding vector(1536),
+      media_info JSONB,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+      from_id BIGINT,
+      reply_to_id BIGINT,
+      forward_from_chat_id BIGINT,
+      forward_from_message_id BIGINT,
+      views INTEGER,
+      forwards INTEGER,
+      UNIQUE (chat_id, id)
+    );
+
+    CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId < 0 ? 'n' : '')}${sql.raw(String(absId))}_embedding_idx
+    ON ${sql.raw(tableName)}
     USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
 
-    CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId.toString())}_created_at_idx 
-    ON messages_${sql.raw(chatId.toString())} (created_at DESC);
+    CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId < 0 ? 'n' : '')}${sql.raw(String(absId))}_created_at_idx
+    ON ${sql.raw(tableName)} (created_at DESC);
 
-    CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId.toString())}_type_idx 
-    ON messages_${sql.raw(chatId.toString())} (type);
-  `
-}
-
-// Function to create trigger for message routing
-export function createMessageRoutingTrigger() {
-  return sql`
-    CREATE OR REPLACE FUNCTION message_insert_trigger()
-    RETURNS TRIGGER AS $$
-    DECLARE
-      partition_name text;
-      embedding_idx_name text;
-      created_at_idx_name text;
-      type_idx_name text;
-    BEGIN
-      partition_name := 'messages_' || NEW.chat_id;
-      embedding_idx_name := 'messages_' || NEW.chat_id || '_embedding_idx';
-      created_at_idx_name := 'messages_' || NEW.chat_id || '_created_at_idx';
-      type_idx_name := 'messages_' || NEW.chat_id || '_type_idx';
-      
-      -- Create partition if not exists
-      EXECUTE format('
-        CREATE TABLE IF NOT EXISTS %I (
-          CHECK (chat_id = %s)
-        ) INHERITS (messages)
-      ', partition_name, NEW.chat_id);
-      
-      -- Create indexes if not exists
-      EXECUTE format('
-        CREATE INDEX IF NOT EXISTS %I 
-        ON %I 
-        USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)
-      ', embedding_idx_name, partition_name);
-      
-      EXECUTE format('
-        CREATE INDEX IF NOT EXISTS %I 
-        ON %I (created_at DESC)
-      ', created_at_idx_name, partition_name);
-      
-      EXECUTE format('
-        CREATE INDEX IF NOT EXISTS %I 
-        ON %I (type)
-      ', type_idx_name, partition_name);
-      
-      -- Insert into partition
-      EXECUTE format('
-        INSERT INTO %I VALUES ($1.*)', partition_name)
-      USING NEW;
-      
-      RETURN NULL;
-    END;
-    $$ LANGUAGE plpgsql;
-
-    DROP TRIGGER IF EXISTS message_insert_trigger ON messages;
-    CREATE TRIGGER message_insert_trigger
-    BEFORE INSERT ON messages
-    FOR EACH ROW EXECUTE FUNCTION message_insert_trigger();
+    CREATE INDEX IF NOT EXISTS messages_${sql.raw(chatId < 0 ? 'n' : '')}${sql.raw(String(absId))}_type_idx
+    ON ${sql.raw(tableName)} (type);
   `
 }
 

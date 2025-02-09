@@ -6,7 +6,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
 import { EmbeddingService } from '../services/embedding'
-import { chats, folders, messages, syncState } from './schema/message'
+import { chats, createChatPartition, createMessageContentTable, folders, messages, syncState } from './schema/message'
 
 type Message = InferModel<typeof messages>
 type NewMessage = InferModel<typeof messages, 'insert'>
@@ -14,6 +14,10 @@ type Chat = InferModel<typeof chats>
 type NewChat = InferModel<typeof chats, 'insert'>
 type Folder = InferModel<typeof folders>
 type NewFolder = InferModel<typeof folders, 'insert'>
+
+// Define message content type
+type MessageContent = InferModel<ReturnType<typeof createMessageContentTable>>
+type NewMessageContent = InferModel<ReturnType<typeof createMessageContentTable>, 'insert'>
 
 // Database connection
 const connectionString = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/tg_search'
@@ -52,38 +56,76 @@ export interface SearchOptions {
   offset?: number
 }
 
+interface MessageWithSimilarity {
+  id: number
+  chatId: number
+  type: string
+  content: string | null
+  createdAt: Date
+  fromId: number | null
+  similarity: number
+}
+
 /**
  * Create a new message
  */
-export async function createMessage(data: NewMessage | NewMessage[]): Promise<Message[]> {
+export async function createMessage(data: MessageCreateInput | MessageCreateInput[]): Promise<Message[]> {
   const messageArray = Array.isArray(data) ? data : [data]
   logger.debug(`正在保存 ${messageArray.length} 条消息到数据库`)
 
   try {
-    // Insert messages without embeddings
-    const result = await db.insert(messages).values(
-      messageArray.map(msg => ({
-        id: msg.id,
-        chatId: msg.chatId,
-        type: msg.type || 'text',
-        content: msg.content || null,
-        embedding: null,
-        mediaInfo: msg.mediaInfo || null,
-        createdAt: msg.createdAt,
-        fromId: msg.fromId || null,
-        replyToId: msg.replyToId || null,
-        forwardFromChatId: msg.forwardFromChatId || null,
-        forwardFromMessageId: msg.forwardFromMessageId || null,
-        views: msg.views || null,
-        forwards: msg.forwards || null,
-      }))
-    ).onConflictDoNothing().returning()
-
-    if (result.length > 0) {
-      logger.debug(`已保存 ${result.length} 条消息`)
+    // Create partition tables if not exist
+    const chatIds = [...new Set(messageArray.map(msg => msg.chatId))]
+    for (const chatId of chatIds) {
+      await db.execute(createChatPartition(chatId))
     }
 
-    return result
+    // Insert messages into partition tables and metadata table
+    const results = await Promise.all(
+      chatIds.map(async chatId => {
+        const chatMessages = messageArray.filter(msg => msg.chatId === chatId)
+        const tableName = `messages_${chatId}`
+        const contentTable = createMessageContentTable(chatId)
+
+        // Insert into partition table
+        await db.insert(contentTable).values(
+          chatMessages.map(msg => ({
+            id: msg.id,
+            chatId: msg.chatId,
+            type: msg.type || 'text',
+            content: msg.content || null,
+            embedding: null,
+            mediaInfo: null,
+            createdAt: msg.createdAt,
+            fromId: msg.fromId || null,
+            replyToId: msg.replyToId || null,
+            forwardFromChatId: msg.forwardFromChatId || null,
+            forwardFromMessageId: msg.forwardFromMessageId || null,
+            views: msg.views || null,
+            forwards: msg.forwards || null,
+          }))
+        ).onConflictDoNothing()
+
+        // Insert metadata into messages table
+        return db.insert(messages)
+          .values(chatMessages.map(msg => ({
+            id: msg.id,
+            chatId: msg.chatId,
+            type: msg.type || 'text',
+            createdAt: msg.createdAt,
+            partitionTable: tableName,
+          })))
+          .onConflictDoNothing()
+          .returning()
+      })
+    )
+
+    const flatResults = results.flat()
+    if (flatResults.length > 0) {
+      logger.debug(`已保存 ${flatResults.length} 条消息`)
+    }
+
+    return flatResults
   }
   catch (error) {
     logger.withError(error).error('保存消息失败')
@@ -94,7 +136,7 @@ export async function createMessage(data: NewMessage | NewMessage[]): Promise<Me
 /**
  * Find similar messages by vector similarity
  */
-export async function findSimilarMessages(embedding: number[], options: SearchOptions = {}) {
+export async function findSimilarMessages(embedding: number[], options: SearchOptions = {}): Promise<MessageWithSimilarity[]> {
   const {
     chatId,
     type,
@@ -104,7 +146,7 @@ export async function findSimilarMessages(embedding: number[], options: SearchOp
     offset = 0,
   } = options
 
-  // Build where conditions
+  // Build where conditions for metadata
   const conditions = []
   if (chatId)
     conditions.push(eq(messages.chatId, chatId))
@@ -115,37 +157,50 @@ export async function findSimilarMessages(embedding: number[], options: SearchOp
   if (endTime)
     conditions.push(lt(messages.createdAt, endTime))
 
-  // Add condition for non-null embedding
-  conditions.push(sql`${messages.embedding} IS NOT NULL`)
-
-  // Convert embedding array to PG array syntax
-  const embeddingStr = `'[${embedding.join(',')}]'`
-
-  const query = db.select({
-    id: messages.id,
-    chatId: messages.chatId,
-    type: messages.type,
-    content: messages.content,
-    createdAt: messages.createdAt,
-    fromId: messages.fromId,
-    similarity: sql<number>`1 - (${messages.embedding}::vector <=> ${sql.raw(embeddingStr)}::vector)`.as('similarity'),
+  // Get relevant partition tables
+  const partitionTables = await db.select({
+    tableName: messages.partitionTable,
   })
     .from(messages)
     .where(and(...conditions))
-    .orderBy(sql`similarity DESC`)
-    .limit(limit)
-    .offset(offset)
+    .groupBy(messages.partitionTable)
 
-  return query
+  // Search in each partition table
+  const results = await Promise.all(
+    partitionTables.map(async ({ tableName }) => {
+      const contentTable = createMessageContentTable(Number(tableName.replace('messages_', '')))
+      const embeddingStr = `'[${embedding.join(',')}]'`
+
+      return db.select({
+        id: contentTable.id,
+        chatId: contentTable.chatId,
+        type: contentTable.type,
+        content: contentTable.content,
+        createdAt: contentTable.createdAt,
+        fromId: contentTable.fromId,
+        similarity: sql<number>`1 - (${contentTable.embedding} <=> ${sql.raw(embeddingStr)}::vector)`.as('similarity'),
+      })
+        .from(contentTable)
+        .where(sql`${contentTable.embedding} IS NOT NULL`)
+        .orderBy(sql`${contentTable.embedding} <=> ${sql.raw(embeddingStr)}::vector`)
+        .limit(limit)
+        .offset(offset)
+    })
+  )
+
+  // Merge and sort results
+  return results
+    .flat()
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, limit)
 }
 
 /**
  * Find messages by chat ID
  */
 export async function findMessagesByChatId(chatId: number) {
-  return db.select()
-    .from(messages)
-    .where(eq(messages.chatId, chatId))
+  const contentTable = createMessageContentTable(chatId)
+  return db.select().from(contentTable).orderBy(contentTable.createdAt)
 }
 
 /**

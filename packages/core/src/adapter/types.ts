@@ -28,6 +28,10 @@ export interface TelegramMessage {
   createdAt: Date
 }
 
+export interface MessageOptions {
+  skipMedia?: boolean
+}
+
 /**
  * Telegram adapter interface
  */
@@ -50,7 +54,7 @@ export interface TelegramAdapter {
   /**
    * Get messages from chat
    */
-  getMessages: (chatId: number, limit?: number) => AsyncGenerator<TelegramMessage>
+  getMessages: (chatId: number, limit?: number, options?: MessageOptions) => AsyncGenerator<TelegramMessage>
 
   /**
    * Listen for new messages

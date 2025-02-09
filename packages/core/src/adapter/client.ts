@@ -1,5 +1,5 @@
 import type { NewMessageEvent } from 'telegram/events'
-import type { TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
+import type { TelegramAdapter, TelegramMessage, TelegramMessageType, MessageOptions } from './types'
 
 import * as input from '@inquirer/prompts'
 import { useLogger } from '@tg-search/common'
@@ -208,12 +208,12 @@ export class ClientAdapter implements TelegramAdapter {
   /**
    * Convert message from Telegram to our format
    */
-  private async convertMessage(message: any): Promise<TelegramMessage> {
+  private async convertMessage(message: any, skipMedia = false): Promise<TelegramMessage> {
     const type = this.getMessageType(message)
     let mediaInfo
 
     // Handle media files
-    if (message.media) {
+    if (message.media && !skipMedia) {
       mediaInfo = this.mediaService.getMediaInfo(message)
       if (mediaInfo) {
         // Download media file
@@ -222,6 +222,10 @@ export class ClientAdapter implements TelegramAdapter {
           mediaInfo.localPath = localPath
         }
       }
+    }
+    else if (message.media) {
+      // 如果跳过媒体下载，只获取基本信息
+      mediaInfo = this.mediaService.getMediaInfo(message)
     }
 
     return {
@@ -311,10 +315,29 @@ export class ClientAdapter implements TelegramAdapter {
     await this.client.disconnect()
   }
 
-  async *getMessages(chatId: number, limit = 100): AsyncGenerator<TelegramMessage> {
-    const messages = await this.client.getMessages(chatId, { limit })
-    for (const message of messages) {
-      yield await this.convertMessage(message)
+  async *getMessages(chatId: number, limit = 100, options?: MessageOptions): AsyncGenerator<TelegramMessage> {
+    let offsetId = 0
+    let hasMore = true
+
+    while (hasMore) {
+      // 获取一批消息
+      const messages = await this.client.getMessages(chatId, {
+        limit: 100, // 每次获取100条
+        offsetId, // 从上一批的最后一条消息开始
+        minId: 0, // 从最早的消息开始
+      })
+
+      // 如果获取的消息数小于请求的数量，说明没有更多消息了
+      hasMore = messages.length === 100
+
+      for (const message of messages) {
+        // 如果是媒体消息，只获取基本信息而不下载文件
+        const converted = await this.convertMessage(message, options?.skipMedia)
+        yield converted
+
+        // 更新 offsetId 为当前消息的 ID
+        offsetId = message.id
+      }
     }
   }
 

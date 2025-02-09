@@ -7,7 +7,7 @@ import { join, resolve } from 'path'
 import { parse as parseDate } from 'date-fns'
 
 import { db } from '../db'
-import { messages, type MessageType } from '../db/schema/message'
+import { messages, type MessageType, createMessageContentTable } from '../db/schema/message'
 import { EmbeddingService } from '../services/embedding'
 
 interface ImportOptions {
@@ -309,12 +309,38 @@ export default async function importMessages(chatId?: string, path?: string, opt
         }
 
         // Insert messages with embeddings
-        await db.insert(messages).values(
+        const contentTable = createMessageContentTable(chatIdNum)
+        const partitionTable = `messages_${chatIdNum}`
+
+        // Insert into content table
+        await db.insert(contentTable).values(
           batch.map((msg, idx) => ({
-            ...msg,
+            id: msg.id,
+            chatId: msg.chatId,
+            type: msg.type,
+            content: msg.content,
             embedding: options.noEmbedding ? undefined : embeddings[idx],
+            mediaInfo: msg.mediaInfo,
+            createdAt: msg.createdAt,
+            fromId: msg.fromId,
+            replyToId: msg.replyToId,
+            forwardFromChatId: msg.forwardFromChatId,
+            forwardFromMessageId: msg.forwardFromMessageId,
+            views: msg.views,
+            forwards: msg.forwards,
           }))
-        )
+        ).onConflictDoNothing()
+
+        // Insert metadata into messages table
+        await db.insert(messages).values(
+          batch.map(msg => ({
+            id: msg.id,
+            chatId: msg.chatId,
+            type: msg.type,
+            createdAt: msg.createdAt,
+            partitionTable,
+          }))
+        ).onConflictDoNothing()
 
         logger.debug(`已处理 ${i + batch.length}/${parsedMessages.length} 条消息`)
       }

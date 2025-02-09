@@ -1,5 +1,5 @@
 {
-  "id": "031a468e-6e4e-4d16-82cb-e000083a7d7d",
+  "id": "e7549c9e-2c27-4144-870d-5ecd8f3d5ca4",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -167,24 +167,6 @@
           "notNull": true,
           "default": "'text'"
         },
-        "content": {
-          "name": "content",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "embedding": {
-          "name": "embedding",
-          "type": "vector(1536)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "media_info": {
-          "name": "media_info",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -192,41 +174,11 @@
           "notNull": true,
           "default": "now()"
         },
-        "from_id": {
-          "name": "from_id",
-          "type": "bigint",
+        "partition_table": {
+          "name": "partition_table",
+          "type": "text",
           "primaryKey": false,
-          "notNull": false
-        },
-        "reply_to_id": {
-          "name": "reply_to_id",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "forward_from_chat_id": {
-          "name": "forward_from_chat_id",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "forward_from_message_id": {
-          "name": "forward_from_message_id",
-          "type": "bigint",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "views": {
-          "name": "views",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "forwards": {
-          "name": "forwards",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         }
       },
       "indexes": {},

@@ -8,7 +8,8 @@ import { eq, asc } from 'drizzle-orm'
 
 import { getConfig } from '../composable/config'
 import { createAdapter } from '../adapter/factory'
-import { createMessage, updateChat, db, messages } from '../db'
+import { createMessage, updateChat, db } from '../db'
+import { messages, createMessageContentTable } from '../db/schema/message'
 
 const logger = useLogger()
 
@@ -98,97 +99,93 @@ async function exportMessages(adapter: ClientAdapter) {
   let skippedCount = 0
 
   if (exportType === 'db') {
-    // Get time range
-    const startDate = await input.input({
-      message: '请输入开始时间（YYYY-MM-DD）：',
-      default: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      validate: (value: string) => {
-        const date = new Date(value)
-        if (isNaN(date.getTime()))
-          return '请输入有效的日期格式（YYYY-MM-DD）'
-        return true
-      },
-    })
-    const endDate = await input.input({
-      message: '请输入结束时间（YYYY-MM-DD）：',
-      default: new Date().toISOString().split('T')[0],
-      validate: (value: string) => {
-        const date = new Date(value)
-        if (isNaN(date.getTime()))
-          return '请输入有效的日期格式（YYYY-MM-DD）'
-        return true
-      },
-    })
-    const limit = await input.number({
-      message: '请输入导出消息数量（0 表示不限制）：',
-      default: 0,
-      validate: (value: number | undefined) => {
-        if (value === undefined || value < 0)
-          return '请输入有效的数字（>= 0）'
-        return true
-      },
-    })
-
     // Get last message ID for incremental update
     const lastMessageId = await getLastMessageId(chatId)
     logger.debug(`上次同步的最后消息 ID: ${lastMessageId}`)
 
-    logger.debug(`开始导出消息，时间范围: ${startDate} - ${endDate}，数量限制: ${limit}`)
-
     // Export to database
-    const messages = []
-    for await (const message of adapter.getMessages(Number(chatId), limit || undefined)) {
-      // 只处理文本消息
-      if (message.type !== 'text') {
-        logger.debug(`跳过非文本消息 ${message.id}，类型: ${message.type}`)
-        continue
-      }
+    const batchSize = 200
+    let currentBatch = []
+    let totalProcessed = 0
+    let messagesByType: Record<string, number> = {}
 
+    logger.log('开始获取所有消息，这可能需要一些时间...')
+    // 修改这里：使用 skipMedia 选项，但不跳过非文本消息
+    for await (const message of adapter.getMessages(Number(chatId), undefined, { skipMedia: true })) {
       // 增量更新：跳过已存在的消息
       if (message.id <= lastMessageId) {
-        logger.debug(`跳过已存在的消息 ${message.id}`)
         skippedCount++
+        if (skippedCount % 100 === 0) {
+          logger.debug(`已跳过 ${skippedCount} 条已存在的消息`)
+        }
         continue
       }
 
-      const date = new Date(message.createdAt)
-      const start = new Date(startDate)
-      start.setHours(0, 0, 0, 0)
-      const end = new Date(endDate)
-      end.setHours(23, 59, 59, 999)
+      // 统计消息类型
+      messagesByType[message.type] = (messagesByType[message.type] || 0) + 1
 
-      if (date.getTime() < start.getTime() || date.getTime() > end.getTime()) {
-        logger.debug(`跳过消息 ${message.id}，不在时间范围内 (${date.toISOString()})`)
-        continue
-      }
-
-      logger.debug(`处理消息 ${message.id}: ${message.content?.slice(0, 50)}`)
-      messages.push(message)
+      currentBatch.push(message)
       count++
+
+      // 当批次达到 200 条时，进行一次导入
+      if (currentBatch.length >= batchSize) {
+        try {
+          await createMessage(currentBatch)
+          totalProcessed += currentBatch.length
+          // 输出详细的进度信息
+          logger.log(`已导入 ${totalProcessed} 条消息`)
+          logger.debug('当前消息类型统计：')
+          for (const [type, typeCount] of Object.entries(messagesByType)) {
+            logger.debug(`- ${type}: ${typeCount} 条`)
+          }
+        }
+        catch (error) {
+          failedCount += currentBatch.length
+          logger.withError(error).error(`导入消息批次失败 (${currentBatch[0].id} - ${currentBatch[currentBatch.length - 1].id})`)
+        }
+        currentBatch = []
+
+        // 每 1000 条消息更新一次会话信息
+        if (totalProcessed % 1000 === 0) {
+          try {
+            await updateChat({
+              ...selectedChat,
+              messageCount: totalProcessed,
+              lastSyncTime: new Date(),
+            })
+            logger.debug('已更新会话消息计数')
+          }
+          catch (error) {
+            logger.withError(error).error('更新会话消息计数失败')
+          }
+        }
+      }
     }
 
-    // Insert messages in batches
-    const batchSize = 100
-    for (let i = 0; i < messages.length; i += batchSize) {
-      const batch = messages.slice(i, i + batchSize)
+    // 处理最后一个不完整的批次
+    if (currentBatch.length > 0) {
       try {
-        const result = await createMessage(batch)
-        for (const msg of result) {
-          logger.debug(`已导入消息 ${msg.id}: ${msg.content?.slice(0, 50)}`)
+        await createMessage(currentBatch)
+        totalProcessed += currentBatch.length
+        // 输出最终的统计信息
+        logger.log('导入完成！')
+        logger.log(`总计导入 ${totalProcessed} 条消息`)
+        logger.log('最终消息类型统计：')
+        for (const [type, typeCount] of Object.entries(messagesByType)) {
+          logger.log(`- ${type}: ${typeCount} 条`)
         }
-        logger.debug(`已导入 ${i + batch.length}/${messages.length} 条消息`)
       }
       catch (error) {
-        failedCount += batch.length
-        logger.withError(error).error('导入消息批次失败')
+        failedCount += currentBatch.length
+        logger.withError(error).error(`导入最后一批消息失败 (${currentBatch[0].id} - ${currentBatch[currentBatch.length - 1].id})`)
       }
     }
 
-    // Update chat message count
+    // 最后更新一次会话信息
     try {
       await updateChat({
         ...selectedChat,
-        messageCount: count,
+        messageCount: totalProcessed,
         lastSyncTime: new Date(),
       })
       logger.debug('已更新会话消息计数')
@@ -219,7 +216,7 @@ async function exportMessages(adapter: ClientAdapter) {
 
     // Export to file
     const messages = []
-    for await (const message of adapter.getMessages(Number(chatId))) {
+    for await (const message of adapter.getMessages(Number(chatId), undefined, { skipMedia: true })) {
       messages.push(message)
       count++
       if (count % 100 === 0) {

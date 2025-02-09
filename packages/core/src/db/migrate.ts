@@ -8,7 +8,7 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 
 import { getConfig, initConfig } from '../composable/config'
-import { createMessageRoutingTrigger } from './schema/message'
+import { chats, folders, messages, syncState } from './schema/message'
 
 initLogger()
 const logger = useLogger()
@@ -32,24 +32,85 @@ async function main() {
   try {
     const db = drizzle(client)
 
-    // Enable vector extension first
-    logger.log('正在启用 vector 扩展...')
+    // Enable pgvector extension
     await db.execute(sql`CREATE EXTENSION IF NOT EXISTS vector`)
-    logger.log('vector 扩展启用完成')
+    logger.log('向量扩展创建完成')
 
-    // Run schema migrations
-    await migrate(db, {
-      migrationsFolder: join(__dirname, '../../drizzle'),
-    })
-    logger.log('数据库迁移完成')
+    // Create enum types
+    await db.execute(sql`
+      DO $$ BEGIN
+        CREATE TYPE message_type AS ENUM ('text', 'photo', 'video', 'document', 'sticker', 'other');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
 
-    // Create message routing trigger
-    logger.log('正在创建消息路由触发器...')
-    await db.execute(createMessageRoutingTrigger())
-    logger.log('消息路由触发器创建完成')
+      DO $$ BEGIN
+        CREATE TYPE chat_type AS ENUM ('user', 'group', 'channel', 'saved');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
+    `)
+    logger.log('枚举类型创建完成')
 
-    // Create vector similarity search function
-    logger.log('正在创建向量相似度搜索函数...')
+    // Create tables
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS chats (
+        uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id BIGINT UNIQUE,
+        name TEXT NOT NULL,
+        type chat_type NOT NULL,
+        last_message TEXT,
+        last_message_date TIMESTAMP,
+        last_sync_time TIMESTAMP NOT NULL DEFAULT NOW(),
+        message_count INTEGER NOT NULL DEFAULT 0,
+        folder_id INTEGER
+      )
+    `)
+    logger.log('聊天表创建完成')
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS folders (
+        uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id INTEGER UNIQUE,
+        title TEXT NOT NULL,
+        emoji TEXT,
+        last_sync_time TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `)
+    logger.log('文件夹表创建完成')
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS messages (
+        uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        id BIGINT NOT NULL,
+        chat_id BIGINT NOT NULL,
+        type message_type NOT NULL DEFAULT 'text',
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        partition_table TEXT NOT NULL,
+        UNIQUE (chat_id, id)
+      )
+    `)
+    logger.log('消息表创建完成')
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS sync_state (
+        uuid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        chat_id BIGINT UNIQUE,
+        last_message_id BIGINT,
+        last_sync_time TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `)
+    logger.log('同步状态表创建完成')
+
+    // Create indexes
+    await db.execute(sql`
+      CREATE INDEX IF NOT EXISTS messages_created_at_idx ON messages (created_at DESC);
+      CREATE INDEX IF NOT EXISTS messages_type_idx ON messages (type);
+      CREATE INDEX IF NOT EXISTS messages_chat_id_created_at_idx ON messages (chat_id, created_at DESC);
+    `)
+    logger.log('索引创建完成')
+
+    // Create similarity search function
     await db.execute(sql`
       CREATE OR REPLACE FUNCTION similarity_search(
         query_embedding vector(1536),
@@ -70,29 +131,48 @@ async function main() {
       )
       LANGUAGE plpgsql
       AS $$
+      DECLARE
+        partition_table text;
+        query text;
       BEGIN
-        RETURN QUERY
-        SELECT
-          m.id,
-          m.chat_id,
-          m.type::text,
-          m.content,
-          m.created_at,
-          1 - (m.embedding <=> query_embedding) as similarity
-        FROM messages m
-        WHERE
-          m.embedding IS NOT NULL
-          AND (filter_chat_id IS NULL OR m.chat_id = filter_chat_id)
-          AND (filter_type IS NULL OR m.type::text = filter_type)
-          AND (filter_start_time IS NULL OR m.created_at >= filter_start_time)
-          AND (filter_end_time IS NULL OR m.created_at <= filter_end_time)
-          AND 1 - (m.embedding <=> query_embedding) > match_threshold
-        ORDER BY m.embedding <=> query_embedding
-        LIMIT match_count;
+        FOR partition_table IN
+          SELECT DISTINCT partition_table
+          FROM messages m
+          WHERE
+            (filter_chat_id IS NULL OR m.chat_id = filter_chat_id)
+            AND (filter_type IS NULL OR m.type::text = filter_type)
+            AND (filter_start_time IS NULL OR m.created_at >= filter_start_time)
+            AND (filter_end_time IS NULL OR m.created_at <= filter_end_time)
+        LOOP
+          query := format('
+            SELECT
+              id,
+              chat_id,
+              type::text,
+              content,
+              created_at,
+              1 - (embedding <=> %L::vector) as similarity
+            FROM %I
+            WHERE
+              embedding IS NOT NULL
+              AND 1 - (embedding <=> %L::vector) > %s
+            ORDER BY embedding <=> %L::vector
+            LIMIT %s
+          ',
+            query_embedding,
+            partition_table,
+            query_embedding,
+            match_threshold,
+            query_embedding,
+            match_count
+          );
+          
+          RETURN QUERY EXECUTE query;
+        END LOOP;
       END;
       $$;
     `)
-    logger.log('向量相似度搜索函数创建完成')
+    logger.log('相似度搜索函数创建完成')
   }
   catch (error) {
     logger.log('数据库迁移失败:', String(error))

@@ -27,16 +27,8 @@ CREATE TABLE "messages" (
 	"id" bigint NOT NULL,
 	"chat_id" bigint NOT NULL,
 	"type" "message_type" DEFAULT 'text' NOT NULL,
-	"content" text,
-	"embedding" vector(1536),
-	"media_info" jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"from_id" bigint,
-	"reply_to_id" bigint,
-	"forward_from_chat_id" bigint,
-	"forward_from_message_id" bigint,
-	"views" integer,
-	"forwards" integer
+	"partition_table" text NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "sync_state" (
