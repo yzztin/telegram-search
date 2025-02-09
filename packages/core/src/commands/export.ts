@@ -1,12 +1,11 @@
 import type { ClientAdapter } from '../adapter/client'
-import type { TelegramMessage } from '../adapter/types'
 
 import * as input from '@inquirer/prompts'
 import { useLogger } from '@tg-search/common'
 
 import { createAdapter } from '../adapter/factory'
-import { createMessage } from '../db'
 import { getConfig } from '../composable/config'
+import { createMessage } from '../db'
 
 const logger = useLogger()
 

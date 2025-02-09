@@ -2,8 +2,9 @@ import type { TelegramClient } from 'telegram'
 import type { MediaInfo } from '../db/schema/message'
 
 import * as fs from 'node:fs/promises'
-import * as path from 'node:path'
 import * as os from 'node:os'
+import * as path from 'node:path'
+import process from 'node:process'
 import { useLogger } from '@tg-search/common'
 
 export class MediaService {

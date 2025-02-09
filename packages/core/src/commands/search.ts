@@ -124,10 +124,7 @@ async function searchMessages(adapter: ClientAdapter) {
   options.chatId = chatId
 
   // Generate embedding for query
-  const embeddingService = new EmbeddingService(
-    process.env.OPENAI_API_KEY ?? '',
-    process.env.OPENAI_API_BASE,
-  )
+  const embeddingService = new EmbeddingService()
   const embedding = await embeddingService.generateEmbedding(query)
 
   // Search messages
@@ -162,7 +159,7 @@ export default async function search() {
   const apiId = Number(config.apiId)
   const apiHash = config.apiHash
   const phoneNumber = config.phoneNumber
-  const apiKey = process.env.OPENAI_API_KEY
+  const apiKey = config.openaiApiKey
 
   if (!apiId || !apiHash || !phoneNumber) {
     logger.log('API_ID, API_HASH and PHONE_NUMBER are required')

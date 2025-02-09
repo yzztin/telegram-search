@@ -1,8 +1,9 @@
-import { bigint, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid, vector } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
+import { bigint, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid, vector } from 'drizzle-orm/pg-core'
 
 // Message type enum
 export const messageTypeEnum = pgEnum('message_type', ['text', 'photo', 'video', 'document', 'sticker', 'other'])
+export type MessageType = (typeof messageTypeEnum.enumValues)[number]
 
 // Media file info
 export interface MediaInfo {
@@ -52,7 +53,7 @@ export const messages = pgTable('messages', {
   views: integer('views'),
   // Forwards count
   forwards: integer('forwards'),
-}, (table) => ({
+}, table => ({
   // Composite primary key
   pk: sql`PRIMARY KEY (chat_id, id)`,
   // Index for vector similarity search

@@ -1,8 +1,9 @@
+import type { InferModel } from 'drizzle-orm'
+
 import { useLogger } from '@tg-search/common'
 import { and, count, eq, gt, lt, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import type { InferModel } from 'drizzle-orm'
 
 import { EmbeddingService } from '../services/embedding'
 import { messages, syncState } from './schema/message'
@@ -201,8 +202,8 @@ export async function getChatStats(chatId: number) {
 }
 
 export {
-  messages,
-  syncState,
   type Message,
+  messages,
   type NewMessage,
+  syncState,
 }

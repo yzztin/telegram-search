@@ -3,7 +3,6 @@ import type { TelegramMessage } from '../adapter/types'
 import { useLogger } from '@tg-search/common'
 
 import { createAdapter } from '../adapter/factory'
-import { getConfig } from '../composable/config'
 import { createMessage } from '../db'
 
 const logger = useLogger()

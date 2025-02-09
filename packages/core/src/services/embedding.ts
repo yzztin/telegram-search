@@ -1,21 +1,20 @@
 import { useLogger } from '@tg-search/common'
 import OpenAI from 'openai'
 
+import { getConfig } from '../composable/config'
+
 /**
  * Service for generating embeddings from text using OpenAI
  */
 export class EmbeddingService {
   private client: OpenAI
   private logger = useLogger()
+  private config = getConfig()
 
-  constructor(apiKey: string, baseURL?: string) {
-    this.client = new OpenAI({ 
-      apiKey,
-      baseURL: baseURL || process.env.OPENAI_API_BASE || 'https://api.openai.com/v1',
-      defaultHeaders: baseURL ? {
-        'HTTP-Referer': 'https://github.com/luoling8192/telegram-search',
-        'X-Title': 'telegram-search',
-      } : undefined,
+  constructor() {
+    this.client = new OpenAI({
+      apiKey: this.config.openaiApiKey,
+      baseURL: this.config.openaiApiBase || 'https://api.openai.com/v1',
     })
   }
 
@@ -57,4 +56,4 @@ export class EmbeddingService {
       throw error
     }
   }
-} 
+}
