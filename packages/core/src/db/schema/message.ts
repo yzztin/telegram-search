@@ -144,8 +144,14 @@ export function createMessageRoutingTrigger() {
     RETURNS TRIGGER AS $$
     DECLARE
       partition_name text;
+      embedding_idx_name text;
+      created_at_idx_name text;
+      type_idx_name text;
     BEGIN
       partition_name := 'messages_' || NEW.chat_id;
+      embedding_idx_name := 'messages_' || NEW.chat_id || '_embedding_idx';
+      created_at_idx_name := 'messages_' || NEW.chat_id || '_created_at_idx';
+      type_idx_name := 'messages_' || NEW.chat_id || '_type_idx';
       
       -- Create partition if not exists
       EXECUTE format('
@@ -156,20 +162,20 @@ export function createMessageRoutingTrigger() {
       
       -- Create indexes if not exists
       EXECUTE format('
-        CREATE INDEX IF NOT EXISTS %I_embedding_idx 
+        CREATE INDEX IF NOT EXISTS %I 
         ON %I 
         USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)
-      ', partition_name, partition_name);
+      ', embedding_idx_name, partition_name);
       
       EXECUTE format('
-        CREATE INDEX IF NOT EXISTS %I_created_at_idx 
+        CREATE INDEX IF NOT EXISTS %I 
         ON %I (created_at DESC)
-      ', partition_name, partition_name);
+      ', created_at_idx_name, partition_name);
       
       EXECUTE format('
-        CREATE INDEX IF NOT EXISTS %I_type_idx 
+        CREATE INDEX IF NOT EXISTS %I 
         ON %I (type)
-      ', partition_name, partition_name);
+      ', type_idx_name, partition_name);
       
       -- Insert into partition
       EXECUTE format('

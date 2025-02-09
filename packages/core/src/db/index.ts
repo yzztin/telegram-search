@@ -26,10 +26,7 @@ export const db = drizzle(client)
 const logger = useLogger()
 
 // Initialize embedding service
-const embeddingService = new EmbeddingService(
-  process.env.OPENAI_API_KEY ?? '',
-  process.env.OPENAI_API_BASE,
-)
+const embeddingService = new EmbeddingService()
 
 // Message operations
 export interface MessageCreateInput {
@@ -58,49 +55,32 @@ export interface SearchOptions {
 /**
  * Create a new message
  */
-export async function createMessage(data: NewMessage): Promise<Message[]> {
-  logger.withFields({
-    id: data.id,
-    chatId: data.chatId,
-    type: data.type,
-    content: data.content,
-  }).log('正在保存消息到数据库')
+export async function createMessage(data: NewMessage | NewMessage[]): Promise<Message[]> {
+  const messageArray = Array.isArray(data) ? data : [data]
+  logger.debug(`正在保存 ${messageArray.length} 条消息到数据库`)
 
   try {
-    // Generate embedding if content is not empty and OpenAI API key is available
-    let embedding: number[] | undefined
-    if (data.content && process.env.OPENAI_API_KEY) {
-      try {
-        embedding = await embeddingService.generateEmbedding(data.content)
-      }
-      catch (error) {
-        logger.withError(error).error('生成向量嵌入失败')
-        // Continue without embedding
-      }
-    }
-
-    // Insert message
-    const result = await db.insert(messages).values({
-      id: data.id,
-      chatId: data.chatId,
-      type: data.type,
-      content: data.content,
-      embedding: embedding ? `[${embedding.join(',')}]` : null,
-      fromId: data.fromId,
-      replyToId: data.replyToId,
-      forwardFromChatId: data.forwardFromChatId,
-      forwardFromMessageId: data.forwardFromMessageId,
-      views: data.views,
-      forwards: data.forwards,
-      createdAt: data.createdAt,
-    }).onConflictDoNothing().returning()
+    // Insert messages without embeddings
+    const result = await db.insert(messages).values(
+      messageArray.map(msg => ({
+        id: msg.id,
+        chatId: msg.chatId,
+        type: msg.type || 'text',
+        content: msg.content || null,
+        embedding: null,
+        mediaInfo: msg.mediaInfo || null,
+        createdAt: msg.createdAt,
+        fromId: msg.fromId || null,
+        replyToId: msg.replyToId || null,
+        forwardFromChatId: msg.forwardFromChatId || null,
+        forwardFromMessageId: msg.forwardFromMessageId || null,
+        views: msg.views || null,
+        forwards: msg.forwards || null,
+      }))
+    ).onConflictDoNothing().returning()
 
     if (result.length > 0) {
-      logger.withFields({
-        id: result[0].id,
-        chatId: result[0].chatId,
-        type: result[0].type,
-      }).log('消息已保存')
+      logger.debug(`已保存 ${result.length} 条消息`)
     }
 
     return result

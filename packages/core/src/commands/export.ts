@@ -7,7 +7,7 @@ import { useLogger } from '@tg-search/common'
 
 import { getConfig } from '../composable/config'
 import { createAdapter } from '../adapter/factory'
-import { createMessage } from '../db'
+import { createMessage, updateChat } from '../db'
 
 const logger = useLogger()
 
@@ -17,6 +17,7 @@ const logger = useLogger()
 async function exportMessages(adapter: ClientAdapter) {
   // Get all folders
   const folders = await adapter.getFolders()
+  logger.debug(`获取到 ${folders.length} 个文件夹`)
   const folderChoices = folders.map(folder => ({
     name: `${folder.emoji || ''} ${folder.title}`,
     value: folder.id,
@@ -30,6 +31,7 @@ async function exportMessages(adapter: ClientAdapter) {
 
   // Get all chats in folder
   const dialogs = await adapter.getDialogs()
+  logger.debug(`获取到 ${dialogs.dialogs.length} 个会话`)
   const chatChoices = dialogs.dialogs.map(dialog => ({
     name: `[${dialog.type}] ${dialog.name} (${dialog.unreadCount} 条未读)`,
     value: dialog.id,
@@ -40,6 +42,31 @@ async function exportMessages(adapter: ClientAdapter) {
     message: '请选择要导出的会话：',
     choices: chatChoices,
   })
+  const selectedChat = dialogs.dialogs.find(d => d.id === chatId)
+  if (!selectedChat) {
+    throw new Error(`找不到会话: ${chatId}`)
+  }
+  logger.debug(`已选择会话: ${selectedChat.name} (ID: ${chatId})`)
+
+  // Sync chat info to database
+  logger.debug('正在同步会话信息到数据库...')
+  try {
+    await updateChat({
+      id: selectedChat.id,
+      name: selectedChat.name,
+      type: selectedChat.type,
+      lastMessage: selectedChat.lastMessage,
+      lastMessageDate: selectedChat.lastMessageDate,
+      lastSyncTime: new Date(),
+      messageCount: 0,
+      folderId: folderId === 0 ? null : folderId,
+    })
+    logger.debug('会话信息已同步')
+  }
+  catch (error) {
+    logger.withError(error).error('同步会话信息失败')
+    throw error
+  }
 
   // Get export type
   const exportType = await input.select({
@@ -57,58 +84,77 @@ async function exportMessages(adapter: ClientAdapter) {
 
   if (exportType === 'db') {
     // Get time range
-    const startTime = await input.input({
+    const startDate = await input.input({
       message: '请输入开始时间（YYYY-MM-DD）：',
       default: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      validate: (value: string) => {
+        const date = new Date(value)
+        if (isNaN(date.getTime()))
+          return '请输入有效的日期格式（YYYY-MM-DD）'
+        return true
+      },
     })
-
-    const endTime = await input.input({
+    const endDate = await input.input({
       message: '请输入结束时间（YYYY-MM-DD）：',
       default: new Date().toISOString().split('T')[0],
+      validate: (value: string) => {
+        const date = new Date(value)
+        if (isNaN(date.getTime()))
+          return '请输入有效的日期格式（YYYY-MM-DD）'
+        return true
+      },
+    })
+    const limit = await input.number({
+      message: '请输入导出消息数量（0 表示不限制）：',
+      default: 0,
+      validate: (value: number | undefined) => {
+        if (value === undefined || value < 0)
+          return '请输入有效的数字（>= 0）'
+        return true
+      },
     })
 
-    // Get limit
-    const limit = await input.input({
-      message: '请输入导出消息数量（0 表示不限制）：',
-      default: '0',
-    })
+    logger.debug(`开始导出消息，时间范围: ${startDate} - ${endDate}，数量限制: ${limit}`)
 
     // Export to database
-    for await (const message of adapter.getMessages(chatId, Number(limit))) {
-      // Check time range
-      if (message.createdAt < new Date(startTime) || message.createdAt > new Date(endTime))
+    const messages = []
+    for await (const message of adapter.getMessages(Number(chatId), limit || undefined)) {
+      // 只处理文本消息
+      if (message.type !== 'text') {
+        logger.debug(`跳过非文本消息 ${message.id}，类型: ${message.type}`)
         continue
+      }
 
+      const date = new Date(message.createdAt)
+      const start = new Date(startDate)
+      start.setHours(0, 0, 0, 0)
+      const end = new Date(endDate)
+      end.setHours(23, 59, 59, 999)
+
+      if (date.getTime() < start.getTime() || date.getTime() > end.getTime()) {
+        logger.debug(`跳过消息 ${message.id}，不在时间范围内 (${date.toISOString()})`)
+        continue
+      }
+
+      logger.debug(`处理消息 ${message.id}: ${message.content?.slice(0, 50)}`)
+      messages.push(message)
+      count++
+    }
+
+    // Insert messages in batches
+    const batchSize = 100
+    for (let i = 0; i < messages.length; i += batchSize) {
+      const batch = messages.slice(i, i + batchSize)
       try {
-        await createMessage({
-          id: message.id,
-          chatId: message.chatId,
-          type: message.type,
-          content: message.content,
-          fromId: message.fromId,
-          replyToId: message.replyToId,
-          forwardFromChatId: message.forwardFromChatId,
-          forwardFromMessageId: message.forwardFromMessageId,
-          views: message.views,
-          forwards: message.forwards,
-          createdAt: message.createdAt,
-        })
-
-        count++
-        if (count % 100 === 0) {
-          logger.debug(`已导出 ${count} 条消息`)
+        const result = await createMessage(batch)
+        for (const msg of result) {
+          logger.debug(`已导入消息 ${msg.id}: ${msg.content?.slice(0, 50)}`)
         }
-
-        if (message.mediaInfo?.localPath) {
-          logger.debug(`已下载媒体文件: ${message.mediaInfo.localPath}`)
-        }
-
-        if (Number(limit) > 0 && count >= Number(limit))
-          break
+        logger.debug(`已导入 ${i + batch.length}/${messages.length} 条消息`)
       }
       catch (error) {
-        failedCount++
-        logger.withError(error).warn('保存消息失败')
+        failedCount += batch.length
+        logger.withError(error).error('导入消息批次失败')
       }
     }
   }
@@ -130,10 +176,11 @@ async function exportMessages(adapter: ClientAdapter) {
 
     // Create export directory
     await fs.mkdir(exportPath, { recursive: true })
+    logger.debug(`已创建导出目录: ${exportPath}`)
 
     // Export to file
     const messages = []
-    for await (const message of adapter.getMessages(chatId)) {
+    for await (const message of adapter.getMessages(Number(chatId))) {
       messages.push(message)
       count++
       if (count % 100 === 0) {
@@ -145,15 +192,25 @@ async function exportMessages(adapter: ClientAdapter) {
     const fileName = `${chatId}_${new Date().toISOString().split('T')[0]}`
     const filePath = path.join(exportPath, `${fileName}.${format}`)
 
-    if (format === 'json') {
-      await fs.writeFile(filePath, JSON.stringify(messages, null, 2))
+    try {
+      if (format === 'json') {
+        await fs.writeFile(filePath, JSON.stringify(messages, null, 2))
+        logger.debug(`已保存 JSON 文件: ${filePath}`)
+      }
+      else {
+        // TODO: 实现 HTML 导出
+        logger.warn('HTML 导出暂未实现')
+        failedCount = count
+      }
     }
-    else {
-      // TODO: 实现 HTML 导出
-      logger.warn('HTML 导出暂未实现')
+    catch (error) {
+      failedCount = count
+      logger.withError(error).error(`保存文件失败: ${filePath}`)
     }
 
-    logger.log(`已导出到文件: ${filePath}`)
+    if (failedCount === 0) {
+      logger.log(`已导出到文件: ${filePath}`)
+    }
   }
 
   const summary = failedCount > 0

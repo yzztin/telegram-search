@@ -245,52 +245,67 @@ export class ClientAdapter implements TelegramAdapter {
     // Initialize media service
     await this.mediaService.init()
 
-    // Load session
-    const savedSession = await this.loadSession()
-    if (savedSession) {
-      this.logger.log('使用已保存的会话...')
-      this.session = new StringSession(savedSession)
-      this.client = new TelegramClient(
-        this.session,
-        this.config.apiId,
-        this.config.apiHash,
-        { connectionRetries: 5 },
-      )
-      this.mediaService = new MediaService(this.client)
-    }
-
-    await this.client.start({
-      phoneNumber: async () => this.config.phoneNumber,
-      password: async () => {
-        this.logger.log('需要输入两步验证密码')
-        const password = await input.password({ message: '请输入两步验证密码：' })
-        if (!password)
-          throw new Error('需要两步验证密码')
-        return password
-      },
-      phoneCode: async () => {
-        this.logger.log('需要输入验证码')
-        const code = await input.input({ message: '请输入你收到的验证码：' })
-        if (!code)
-          throw new Error('需要验证码')
-        return code
-      },
-      onError: err => this.logger.log('连接错误:', String(err)),
-    })
-
-    // Save session
-    const sessionString = this.session.save()
-    await this.saveSession(sessionString)
-
-    // Setup message handler
-    this.client.addEventHandler(async (event: NewMessageEvent) => {
-      if (this.messageCallback && event.message) {
-        const message = await this.convertMessage(event.message)
-        await this.messageCallback(message)
+    try {
+      // Load session
+      const savedSession = await this.loadSession()
+      if (savedSession) {
+        this.logger.log('使用已保存的会话...')
+        this.session = new StringSession(savedSession)
+        this.client = new TelegramClient(
+          this.session,
+          this.config.apiId,
+          this.config.apiHash,
+          {
+            connectionRetries: 5,
+            retryDelay: 1000,
+            autoReconnect: true,
+            useWSS: true,
+            maxConcurrentDownloads: 10,
+          },
+        )
+        this.mediaService = new MediaService(this.client)
       }
-    }, new NewMessage({}))
 
-    this.logger.log('已连接到 Telegram')
+      await this.client.start({
+        phoneNumber: async () => this.config.phoneNumber,
+        password: async () => {
+          this.logger.log('需要输入两步验证密码')
+          const password = await input.password({ message: '请输入两步验证密码：' })
+          if (!password)
+            throw new Error('需要两步验证密码')
+          return password
+        },
+        phoneCode: async () => {
+          this.logger.log('需要输入验证码')
+          const code = await input.input({ message: '请输入你收到的验证码：' })
+          if (!code)
+            throw new Error('需要验证码')
+          return code
+        },
+        onError: err => {
+          this.logger.withError(err).error('连接错误')
+          throw err
+        },
+      })
+
+      // Save session
+      const sessionString = this.session.save()
+      await this.saveSession(sessionString)
+
+      // Setup message handler
+      this.client.addEventHandler(async (event: NewMessageEvent) => {
+        if (this.messageCallback && event.message) {
+          const message = await this.convertMessage(event.message)
+          await this.messageCallback(message)
+        }
+      }, new NewMessage({}))
+
+      this.logger.log('已连接到 Telegram')
+    }
+    catch (error) {
+      this.logger.withError(error).error('连接失败')
+      throw error
+    }
   }
 
   async disconnect() {
