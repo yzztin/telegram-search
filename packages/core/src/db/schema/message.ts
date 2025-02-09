@@ -40,8 +40,10 @@ export interface MediaInfo {
 
 // Chats table
 export const chats = pgTable('chats', {
+  // UUID for external reference
+  uuid: uuid('uuid').defaultRandom().primaryKey(),
   // Chat ID from Telegram
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).unique(),
   // Chat name
   name: text('name').notNull(),
   // Chat type
@@ -60,8 +62,10 @@ export const chats = pgTable('chats', {
 
 // Folders table
 export const folders = pgTable('folders', {
+  // UUID for external reference
+  uuid: uuid('uuid').defaultRandom().primaryKey(),
   // Folder ID from Telegram
-  id: integer('id').primaryKey(),
+  id: integer('id').unique(),
   // Folder title
   title: text('title').notNull(),
   // Folder emoji
@@ -72,10 +76,10 @@ export const folders = pgTable('folders', {
 
 // Base messages table
 export const messages = pgTable('messages', {
+  // UUID for external reference
+  uuid: uuid('uuid').defaultRandom().primaryKey(),
   // Message ID from Telegram
   id: bigint('id', { mode: 'number' }).notNull(),
-  // UUID for external reference
-  uuid: uuid('uuid').defaultRandom(),
   // Chat ID from Telegram
   chatId: bigint('chat_id', { mode: 'number' }).notNull(),
   // Message type
@@ -101,8 +105,8 @@ export const messages = pgTable('messages', {
   // Forwards count
   forwards: integer('forwards'),
 }, table => ({
-  // Composite primary key
-  pk: sql`PRIMARY KEY (chat_id, id)`,
+  // Unique constraint for chat_id and id
+  chatMessageUnique: sql`UNIQUE (chat_id, id)`,
   // Index for vector similarity search
   embeddingIdx: sql`CREATE INDEX IF NOT EXISTS messages_embedding_idx ON ${table} USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)`,
   // Index for created_at
@@ -195,8 +199,10 @@ export function createMessageRoutingTrigger() {
 
 // Sync state table
 export const syncState = pgTable('sync_state', {
+  // UUID for external reference
+  uuid: uuid('uuid').defaultRandom().primaryKey(),
   // Chat ID from Telegram
-  chatId: bigint('chat_id', { mode: 'number' }).primaryKey(),
+  chatId: bigint('chat_id', { mode: 'number' }).unique(),
   // Last synced message ID
   lastMessageId: bigint('last_message_id', { mode: 'number' }),
   // Last sync time

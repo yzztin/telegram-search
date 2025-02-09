@@ -4,12 +4,46 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as input from '@inquirer/prompts'
 import { useLogger } from '@tg-search/common'
+import { eq } from 'drizzle-orm'
 
 import { getConfig } from '../composable/config'
 import { createAdapter } from '../adapter/factory'
-import { createMessage, updateChat } from '../db'
+import { createMessage, updateChat, db, messages } from '../db'
 
 const logger = useLogger()
+
+/**
+ * Get last message ID from database
+ */
+async function getLastMessageId(chatId: number): Promise<number> {
+  const result = await db.select({ id: messages.id })
+    .from(messages)
+    .where(eq(messages.chatId, chatId))
+    .orderBy(messages.id, 'desc')
+    .limit(1)
+
+  return result[0]?.id || 0
+}
+
+/**
+ * Sync all chats to database
+ */
+async function syncChats(adapter: ClientAdapter) {
+  logger.log('正在同步所有会话信息...')
+  const chats = await adapter.getChats()
+  logger.debug(`获取到 ${chats.length} 个会话`)
+
+  for (const chat of chats) {
+    try {
+      await updateChat(chat)
+      logger.debug(`已同步会话: [${chat.type}] ${chat.name} (ID: ${chat.id})`)
+    }
+    catch (error) {
+      logger.withError(error).error(`同步会话失败: ${chat.name}`)
+    }
+  }
+  logger.log(`会话同步完成，共同步 ${chats.length} 个会话`)
+}
 
 /**
  * Export messages from Telegram
@@ -48,26 +82,6 @@ async function exportMessages(adapter: ClientAdapter) {
   }
   logger.debug(`已选择会话: ${selectedChat.name} (ID: ${chatId})`)
 
-  // Sync chat info to database
-  logger.debug('正在同步会话信息到数据库...')
-  try {
-    await updateChat({
-      id: selectedChat.id,
-      name: selectedChat.name,
-      type: selectedChat.type,
-      lastMessage: selectedChat.lastMessage,
-      lastMessageDate: selectedChat.lastMessageDate,
-      lastSyncTime: new Date(),
-      messageCount: 0,
-      folderId: folderId === 0 ? null : folderId,
-    })
-    logger.debug('会话信息已同步')
-  }
-  catch (error) {
-    logger.withError(error).error('同步会话信息失败')
-    throw error
-  }
-
   // Get export type
   const exportType = await input.select({
     message: '请选择导出类型：',
@@ -81,6 +95,7 @@ async function exportMessages(adapter: ClientAdapter) {
   logger.log('正在导出消息...')
   let count = 0
   let failedCount = 0
+  let skippedCount = 0
 
   if (exportType === 'db') {
     // Get time range
@@ -114,6 +129,10 @@ async function exportMessages(adapter: ClientAdapter) {
       },
     })
 
+    // Get last message ID for incremental update
+    const lastMessageId = await getLastMessageId(chatId)
+    logger.debug(`上次同步的最后消息 ID: ${lastMessageId}`)
+
     logger.debug(`开始导出消息，时间范围: ${startDate} - ${endDate}，数量限制: ${limit}`)
 
     // Export to database
@@ -122,6 +141,13 @@ async function exportMessages(adapter: ClientAdapter) {
       // 只处理文本消息
       if (message.type !== 'text') {
         logger.debug(`跳过非文本消息 ${message.id}，类型: ${message.type}`)
+        continue
+      }
+
+      // 增量更新：跳过已存在的消息
+      if (message.id <= lastMessageId) {
+        logger.debug(`跳过已存在的消息 ${message.id}`)
+        skippedCount++
         continue
       }
 
@@ -156,6 +182,19 @@ async function exportMessages(adapter: ClientAdapter) {
         failedCount += batch.length
         logger.withError(error).error('导入消息批次失败')
       }
+    }
+
+    // Update chat message count
+    try {
+      await updateChat({
+        ...selectedChat,
+        messageCount: count,
+        lastSyncTime: new Date(),
+      })
+      logger.debug('已更新会话消息计数')
+    }
+    catch (error) {
+      logger.withError(error).error('更新会话消息计数失败')
     }
   }
   else {
@@ -214,8 +253,8 @@ async function exportMessages(adapter: ClientAdapter) {
   }
 
   const summary = failedCount > 0
-    ? `导出完成，共导出 ${count} 条消息，${failedCount} 条消息失败`
-    : `导出完成，共导出 ${count} 条消息`
+    ? `导出完成，共导出 ${count} 条消息，${failedCount} 条消息失败，${skippedCount} 条消息已存在`
+    : `导出完成，共导出 ${count} 条消息，${skippedCount} 条消息已存在`
   logger.log(summary)
 
   // Ask if continue
@@ -252,6 +291,22 @@ export default async function exportCmd() {
     logger.log('连接到 Telegram...')
     await adapter.connect()
     logger.log('已连接！')
+
+    // Sync all chats
+    logger.log('正在同步所有会话信息...')
+    const chats = await adapter.getChats()
+    logger.debug(`获取到 ${chats.length} 个会话`)
+
+    for (const chat of chats) {
+      try {
+        await updateChat(chat)
+        logger.debug(`已同步会话: [${chat.type}] ${chat.name} (ID: ${chat.id})`)
+      }
+      catch (error) {
+        logger.withError(error).error(`同步会话失败: ${chat.name}`)
+      }
+    }
+    logger.log(`会话同步完成，共同步 ${chats.length} 个会话`)
 
     await exportMessages(adapter)
 
