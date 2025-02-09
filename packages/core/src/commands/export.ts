@@ -1,4 +1,5 @@
 import type { ClientAdapter } from '../adapter/client'
+import type { TelegramMessageType } from '../adapter/types'
 
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
@@ -92,6 +93,50 @@ async function exportMessages(adapter: ClientAdapter) {
     ],
   })
 
+  // Get export options
+  const useTimeRange = await input.confirm({
+    message: '是否设置时间范围？',
+    default: false,
+  })
+
+  let startTime: Date | undefined
+  let endTime: Date | undefined
+  if (useTimeRange) {
+    const startDateStr = await input.input({
+      message: '请输入开始时间 (YYYY-MM-DD)：',
+      default: '2000-01-01',
+    })
+    startTime = new Date(startDateStr)
+
+    const endDateStr = await input.input({
+      message: '请输入结束时间 (YYYY-MM-DD)：',
+      default: new Date().toISOString().split('T')[0],
+    })
+    endTime = new Date(endDateStr)
+  }
+
+  const messageLimit = await input.input({
+    message: '请输入要导出的消息数量（0 表示全部）：',
+    default: '0',
+  })
+
+  const batchSize = await input.input({
+    message: '每多少条消息提醒一次继续？',
+    default: '3000',
+  })
+
+  const messageTypes = await input.checkbox({
+    message: '请选择要导出的消息类型：',
+    choices: [
+      { name: '文本消息', value: 'text', checked: true },
+      { name: '图片', value: 'photo' },
+      { name: '文档', value: 'document' },
+      { name: '视频', value: 'video' },
+      { name: '贴纸', value: 'sticker' },
+      { name: '其他', value: 'other' },
+    ],
+  })
+
   // Export messages
   logger.log('正在导出消息...')
   let count = 0
@@ -104,14 +149,20 @@ async function exportMessages(adapter: ClientAdapter) {
     logger.debug(`上次同步的最后消息 ID: ${lastMessageId}`)
 
     // Export to database
-    const batchSize = 200
+    const currentBatchSize = Number(batchSize)
     let currentBatch = []
     let totalProcessed = 0
     let messagesByType: Record<string, number> = {}
 
     logger.log('开始获取所有消息，这可能需要一些时间...')
-    // 修改这里：使用 skipMedia 选项，但不跳过非文本消息
-    for await (const message of adapter.getMessages(Number(chatId), undefined, { skipMedia: true })) {
+    // 使用新的选项
+    for await (const message of adapter.getMessages(Number(chatId), undefined, {
+      skipMedia: !messageTypes.includes('photo') && !messageTypes.includes('document') && !messageTypes.includes('video') && !messageTypes.includes('sticker'),
+      startTime,
+      endTime,
+      limit: Number(messageLimit) || undefined,
+      messageTypes: messageTypes as TelegramMessageType[],
+    })) {
       // 增量更新：跳过已存在的消息
       if (message.id <= lastMessageId) {
         skippedCount++
@@ -121,14 +172,20 @@ async function exportMessages(adapter: ClientAdapter) {
         continue
       }
 
+      // 检查消息类型是否需要导出
+      if (!messageTypes.includes(message.type)) {
+        skippedCount++
+        continue
+      }
+
       // 统计消息类型
       messagesByType[message.type] = (messagesByType[message.type] || 0) + 1
 
       currentBatch.push(message)
       count++
 
-      // 当批次达到 200 条时，进行一次导入
-      if (currentBatch.length >= batchSize) {
+      // 当批次达到设定值时，进行一次导入
+      if (currentBatch.length >= currentBatchSize) {
         try {
           await createMessage(currentBatch)
           totalProcessed += currentBatch.length
@@ -137,6 +194,17 @@ async function exportMessages(adapter: ClientAdapter) {
           logger.debug('当前消息类型统计：')
           for (const [type, typeCount] of Object.entries(messagesByType)) {
             logger.debug(`- ${type}: ${typeCount} 条`)
+          }
+
+          // 询问是否继续
+          const shouldContinue = await input.confirm({
+            message: `已处理 ${totalProcessed} 条消息，是否继续？`,
+            default: true,
+          })
+
+          if (!shouldContinue) {
+            logger.log('用户取消导出')
+            return
           }
         }
         catch (error) {

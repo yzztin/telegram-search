@@ -30,6 +30,11 @@ export interface TelegramMessage {
 
 export interface MessageOptions {
   skipMedia?: boolean
+  startTime?: Date
+  endTime?: Date
+  limit?: number
+  batchSize?: number
+  messageTypes?: TelegramMessageType[]
 }
 
 /**

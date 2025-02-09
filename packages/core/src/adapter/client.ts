@@ -318,6 +318,7 @@ export class ClientAdapter implements TelegramAdapter {
   async *getMessages(chatId: number, limit = 100, options?: MessageOptions): AsyncGenerator<TelegramMessage> {
     let offsetId = 0
     let hasMore = true
+    let processedCount = 0
 
     while (hasMore) {
       // 获取一批消息
@@ -331,12 +332,33 @@ export class ClientAdapter implements TelegramAdapter {
       hasMore = messages.length === 100
 
       for (const message of messages) {
+        // 检查时间范围
+        const messageTime = new Date(message.date * 1000)
+        if (options?.startTime && messageTime < options.startTime) {
+          continue
+        }
+        if (options?.endTime && messageTime > options.endTime) {
+          continue
+        }
+
         // 如果是媒体消息，只获取基本信息而不下载文件
         const converted = await this.convertMessage(message, options?.skipMedia)
+
+        // 检查消息类型
+        if (options?.messageTypes && !options.messageTypes.includes(converted.type)) {
+          continue
+        }
+
         yield converted
+        processedCount++
 
         // 更新 offsetId 为当前消息的 ID
         offsetId = message.id
+
+        // 检查是否达到限制
+        if (options?.limit && processedCount >= options.limit) {
+          return
+        }
       }
     }
   }
