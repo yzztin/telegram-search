@@ -4,7 +4,7 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as input from '@inquirer/prompts'
 import { useLogger } from '@tg-search/common'
-import { eq } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 
 import { getConfig } from '../composable/config'
 import { createAdapter } from '../adapter/factory'
@@ -19,7 +19,7 @@ async function getLastMessageId(chatId: number): Promise<number> {
   const result = await db.select({ id: messages.id })
     .from(messages)
     .where(eq(messages.chatId, chatId))
-    .orderBy(messages.id, 'desc')
+    .orderBy(asc(messages.id))
     .limit(1)
 
   return result[0]?.id || 0

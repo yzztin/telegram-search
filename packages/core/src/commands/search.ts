@@ -97,7 +97,7 @@ async function searchMessages(adapter: ClientAdapter) {
   })
 
   // 获取文件夹中的会话
-  const chats = folderId === 0 ? await getAllChats() : await getChatsInFolder(folderId)
+  const chats = folderId === 0 ? await getAllChats() : await getChatsInFolder(Number(folderId))
   if (chats.length === 0) {
     logger.log('所选文件夹中没有任何会话')
     return
@@ -125,7 +125,7 @@ async function searchMessages(adapter: ClientAdapter) {
   // Get search options
   const options = await getSearchOptions()
   if (chatId !== 0) {
-    options.chatId = chatId
+    options.chatId = Number(chatId)
   }
 
   // Generate embedding for query

@@ -86,7 +86,7 @@ export default async function watch() {
     logger.log('已连接！')
 
     // First, get all folders
-    const folders = await adapter.getAllFolders()
+    const folders = await adapter.getFolders()
     const folderChoices = folders.map(folder => ({
       name: folder.title,
       value: folder.id,
@@ -105,8 +105,13 @@ export default async function watch() {
       throw new Error('Folder not found')
     }
 
-    const result = await adapter.getDialogsInFolder(folderId)
-    const dialogs = result.dialogs
+    // Get dialogs for the selected folder
+    const result = await adapter.getDialogs()
+    const dialogs = result.dialogs.filter(dialog => {
+      // Get folders for this dialog
+      const dialogFolders = adapter.getFoldersForChat(dialog.id)
+      return dialogFolders.then(folders => folders.some(f => f.id === folderId))
+    })
 
     // Let user select a dialog
     const choices = dialogs.map(dialog => ({

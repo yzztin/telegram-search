@@ -1,17 +1,16 @@
 import type { NewMessageEvent } from 'telegram/events'
 import type { TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
 
-import * as fs from 'node:fs/promises'
-import * as path from 'node:path'
 import * as input from '@inquirer/prompts'
 import { useLogger } from '@tg-search/common'
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 import { Api, TelegramClient } from 'telegram'
 import { NewMessage } from 'telegram/events'
 import { StringSession } from 'telegram/sessions'
 
-import { MediaService } from '../services/media'
 import type { NewChat, NewFolder } from '../db'
-import type { DialogFilter, Chat } from 'telegram/types'
+import { MediaService } from '../services/media'
 
 export interface ClientAdapterConfig {
   apiId: number
@@ -485,7 +484,7 @@ export class ClientAdapter implements TelegramAdapter {
   /**
    * Get chat type from Telegram chat object
    */
-  private getChatType(chat: Chat): 'user' | 'group' | 'channel' | 'saved' {
+  private getChatType(chat: any): 'user' | 'group' | 'channel' | 'saved' {
     if (chat.className === 'Channel') {
       return chat.megagroup ? 'group' : 'channel'
     }

@@ -3,6 +3,7 @@ import { useLogger } from '@tg-search/common'
 import { createAdapter } from '../adapter/factory'
 import { getConfig } from '../composable/config'
 import { sync } from './sync'
+import { ClientAdapter } from '../adapter/client'
 
 const logger = useLogger()
 
@@ -11,7 +12,12 @@ const logger = useLogger()
  */
 export async function connect() {
   const config = await getConfig()
-  const adapter = await createAdapter(config)
+  const adapter = await createAdapter({
+    type: 'client',
+    apiId: Number(config.apiId),
+    apiHash: config.apiHash,
+    phoneNumber: config.phoneNumber,
+  }) as ClientAdapter
 
   try {
     // Connect to Telegram
