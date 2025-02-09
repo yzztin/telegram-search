@@ -111,4 +111,24 @@ program
     }
   })
 
+// Embed command - Generate embeddings for messages
+program
+  .command('embed')
+  .description('Generate embeddings for messages that do not have them')
+  .option('-b, --batch-size <size>', 'Batch size for processing', '100')
+  .option('-c, --chat-id <id>', 'Only process messages from this chat')
+  .action(async (options) => {
+    try {
+      const mod = await import('./commands/embed')
+      await mod.default({
+        batchSize: Number(options.batchSize),
+        chatId: options.chatId ? Number(options.chatId) : undefined,
+      })
+    }
+    catch (error) {
+      logger.withError(error).error('Embed 命令执行失败:')
+      process.exit(1)
+    }
+  })
+
 program.parse()

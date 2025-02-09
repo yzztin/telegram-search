@@ -11,6 +11,7 @@
 - 🌐 完整的消息元数据（回复、转发、查看次数等）
 - 🚀 批量处理和向量生成
 - 💾 PostgreSQL 数据存储
+- ⚠️ 注意：使用 userbot 可能存在封号风险，请谨慎使用
 
 ## 安装
 
@@ -48,6 +49,12 @@ nr dev:core import -c <chat_id> -p <path_to_html_files>
 
 # 跳过向量嵌入
 nr dev:core import -c <chat_id> -p <path_to_html_files> --no-embedding
+```
+
+### 生成向量嵌入
+
+```bash
+nr dev:core embed -b <batch_size> -c <chat_id>
 ```
 
 ### 启动 Bot
