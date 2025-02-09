@@ -93,4 +93,22 @@ program
     }
   })
 
+// Import command - Import messages from HTML export files
+program
+  .command('import')
+  .description('Import messages from HTML export files')
+  .requiredOption('-c, --chat-id <id>', 'Chat ID')
+  .requiredOption('-p, --path <path>', 'Path to HTML export files')
+  .option('--no-embedding', 'Skip embedding generation')
+  .action(async (options) => {
+    try {
+      const mod = await import('./commands/import')
+      await mod.default(options.chatId, options.path, { noEmbedding: !options.embedding })
+    }
+    catch (error) {
+      logger.withError(error).error('Import 命令执行失败:')
+      process.exit(1)
+    }
+  })
+
 program.parse()

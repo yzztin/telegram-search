@@ -28,6 +28,12 @@ async function watchChat(adapter: ClientAdapter, chatId: number, folderTitle: st
     if (message.chatId !== chatId)
       return
 
+    // Only handle text messages
+    if (message.type !== 'text') {
+      logger.log(`[${new Date().toLocaleString()}] 跳过非文本消息: ${message.type}`)
+      return
+    }
+
     try {
       await createMessage({
         id: message.id,
@@ -44,8 +50,6 @@ async function watchChat(adapter: ClientAdapter, chatId: number, folderTitle: st
       })
       count++
       logger.log(`[${new Date().toLocaleString()}] 已保存 ${count} 条新消息`)
-      if (message.mediaInfo?.localPath)
-        logger.log(`已下载媒体文件: ${message.mediaInfo.localPath}`)
     }
     catch (error) {
       logger.withError(error).error('保存消息失败:')
