@@ -1,19 +1,12 @@
 {
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1739048896821,
-      "tag": "0000_living_kulan_gath",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1739050002688,
-      "tag": "0001_steep_nico_minoru",
+      "version": "7",
+      "when": 1739091576018,
+      "tag": "0000_conscious_medusa",
       "breakpoints": true
     }
   ]

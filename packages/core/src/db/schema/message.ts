@@ -1,4 +1,4 @@
-import { bigint, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core'
+import { bigint, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid, vector } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
 // Message type enum
@@ -22,14 +22,10 @@ export interface MediaInfo {
   localPath?: string
 }
 
-// Custom vector type
-export const pgVector = (name: string, dimensions: number) =>
-  text(name).$type<`[${string}]`>()
-
 // Base messages table
 export const messages = pgTable('messages', {
   // Message ID from Telegram
-  id: bigint('id', { mode: 'number' }),
+  id: bigint('id', { mode: 'number' }).notNull(),
   // UUID for external reference
   uuid: uuid('uuid').defaultRandom(),
   // Chat ID from Telegram
@@ -39,7 +35,7 @@ export const messages = pgTable('messages', {
   // Message content
   content: text('content'),
   // Message vector embedding (1536 dimensions)
-  embedding: text('embedding').$type<`[${string}]`>(),
+  embedding: vector('embedding', { dimensions: 1536 }),
   // Media file info
   mediaInfo: jsonb('media_info').$type<MediaInfo>(),
   // Creation time
@@ -65,6 +61,8 @@ export const messages = pgTable('messages', {
   createdAtIdx: sql`CREATE INDEX IF NOT EXISTS messages_created_at_idx ON ${table} (created_at DESC)`,
   // Index for type
   typeIdx: sql`CREATE INDEX IF NOT EXISTS messages_type_idx ON ${table} (type)`,
+  // Index for chat_id and created_at
+  chatCreatedAtIdx: sql`CREATE INDEX IF NOT EXISTS messages_chat_id_created_at_idx ON ${table} (chat_id, created_at DESC)`,
 }))
 
 // Function to create partition table for a chat

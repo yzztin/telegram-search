@@ -1,28 +1,18 @@
 import type { TelegramMessage } from '../adapter/types'
 
-import { initLogger, useLogger } from '@tg-search/common'
-import { config } from 'dotenv'
+import { useLogger } from '@tg-search/common'
 
 import { createAdapter } from '../adapter/factory'
+import { getConfig } from '../composable/config'
 import { createMessage } from '../db'
-
-// Load environment variables
-config()
-
-// Initialize logger
-initLogger()
 
 const logger = useLogger()
 
-process.on('unhandledRejection', (error) => {
-  logger.log('Unhandled promise rejection:', String(error))
-})
-
-async function main() {
+export default async function bot() {
   const token = process.env.BOT_TOKEN
   if (!token) {
     logger.log('BOT_TOKEN is required')
-    process.exit(1)
+    throw new Error('Missing required configuration')
   }
 
   // Create adapter
@@ -67,19 +57,10 @@ async function main() {
     adapter.onMessage(handleMessage)
 
     // Keep the process running
-    process.on('SIGINT', async () => {
-      logger.log('正在关闭...')
-      await adapter.disconnect()
-      process.exit(0)
-    })
-
     await new Promise(() => {})
   }
   catch (error) {
-    logger.log('错误:', String(error))
     await adapter.disconnect()
-    process.exit(1)
+    throw error
   }
 }
-
-main()

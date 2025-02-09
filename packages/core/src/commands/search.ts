@@ -1,25 +1,16 @@
 import type { ClientAdapter } from '../adapter/client'
 import type { SearchOptions } from '../db'
+import type { MessageType } from '../db/schema/message'
 
 import * as input from '@inquirer/prompts'
-import { initLogger, useLogger } from '@tg-search/common'
-import { config } from 'dotenv'
+import { useLogger } from '@tg-search/common'
 
 import { createAdapter } from '../adapter/factory'
-import { EmbeddingService } from '../services/embedding'
+import { getConfig } from '../composable/config'
 import { findSimilarMessages } from '../db'
-
-// Load environment variables
-config()
-
-// Initialize logger
-initLogger()
+import { EmbeddingService } from '../services/embedding'
 
 const logger = useLogger()
-
-process.on('unhandledRejection', (error) => {
-  logger.log('Unhandled promise rejection:', String(error))
-})
 
 /**
  * Format message for display
@@ -44,7 +35,7 @@ async function getSearchOptions(): Promise<SearchOptions> {
   })
 
   if (includeType) {
-    const type = await input.select({
+    const type = await input.select<MessageType>({
       message: '请选择消息类型：',
       choices: [
         { name: '文本', value: 'text' },
@@ -106,7 +97,7 @@ async function searchMessages(adapter: ClientAdapter) {
   const selectedFolder = folders.find(f => f.id === folderId)
   if (!selectedFolder) {
     logger.log('找不到该文件夹')
-    process.exit(1)
+    throw new Error('Folder not found')
   }
 
   const result = await adapter.getDialogsInFolder(folderId)
@@ -166,21 +157,21 @@ async function searchMessages(adapter: ClientAdapter) {
     return searchMessages(adapter)
 }
 
-async function main() {
-  // Check required environment variables
-  const apiId = Number(process.env.API_ID)
-  const apiHash = process.env.API_HASH
-  const phoneNumber = process.env.PHONE_NUMBER
+export default async function search() {
+  const config = getConfig()
+  const apiId = Number(config.apiId)
+  const apiHash = config.apiHash
+  const phoneNumber = config.phoneNumber
   const apiKey = process.env.OPENAI_API_KEY
 
   if (!apiId || !apiHash || !phoneNumber) {
     logger.log('API_ID, API_HASH and PHONE_NUMBER are required')
-    process.exit(1)
+    throw new Error('Missing required configuration')
   }
 
   if (!apiKey) {
     logger.log('OPENAI_API_KEY is required')
-    process.exit(1)
+    throw new Error('Missing required configuration')
   }
 
   // Create client adapter
@@ -199,13 +190,9 @@ async function main() {
     await searchMessages(adapter)
 
     await adapter.disconnect()
-    process.exit(0)
   }
   catch (error) {
-    logger.log('错误:', String(error))
     await adapter.disconnect()
-    process.exit(1)
+    throw error
   }
 }
-
-main() 

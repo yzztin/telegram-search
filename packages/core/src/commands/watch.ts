@@ -2,23 +2,13 @@ import type { ClientAdapter } from '../adapter/client'
 import type { TelegramMessage } from '../adapter/types'
 
 import * as input from '@inquirer/prompts'
-import { initLogger, useLogger } from '@tg-search/common'
-import { config } from 'dotenv'
+import { useLogger } from '@tg-search/common'
 
 import { createAdapter } from '../adapter/factory'
+import { getConfig } from '../composable/config'
 import { createMessage } from '../db'
 
-// Load environment variables
-config()
-
-// Initialize logger
-initLogger()
-
 const logger = useLogger()
-
-process.on('unhandledRejection', (error) => {
-  logger.log('Unhandled promise rejection:', String(error))
-})
 
 async function watchChat(adapter: ClientAdapter, chatId: number, folderTitle: string) {
   // Get dialog info
@@ -64,21 +54,18 @@ async function watchChat(adapter: ClientAdapter, chatId: number, folderTitle: st
 
   // Keep the process running
   logger.log('按 Ctrl+C 停止监听')
-  process.on('SIGINT', () => {
-    logger.log(`\n停止监听，共保存了 ${count} 条新消息。`)
-    process.exit(0)
-  })
+  return count
 }
 
-async function main() {
-  // Check required environment variables
-  const apiId = Number(process.env.API_ID)
-  const apiHash = process.env.API_HASH
-  const phoneNumber = process.env.PHONE_NUMBER
+export default async function watch() {
+  const config = getConfig()
+  const apiId = Number(config.apiId)
+  const apiHash = config.apiHash
+  const phoneNumber = config.phoneNumber
 
   if (!apiId || !apiHash || !phoneNumber) {
     logger.log('API_ID, API_HASH and PHONE_NUMBER are required')
-    process.exit(1)
+    throw new Error('Missing required configuration')
   }
 
   // Create client adapter
@@ -111,7 +98,7 @@ async function main() {
     const selectedFolder = folders.find(f => f.id === folderId)
     if (!selectedFolder) {
       logger.log('找不到该文件夹')
-      process.exit(1)
+      throw new Error('Folder not found')
     }
 
     const result = await adapter.getDialogsInFolder(folderId)
@@ -129,16 +116,14 @@ async function main() {
     })
 
     // Start watching
-    await watchChat(adapter, chatId, selectedFolder.title)
+    const count = await watchChat(adapter, chatId, selectedFolder.title)
 
     // Keep the process running
     await new Promise(() => {})
+    return count
   }
   catch (error) {
-    logger.log('错误:', String(error))
     await adapter.disconnect()
-    process.exit(1)
+    throw error
   }
 }
-
-main() 

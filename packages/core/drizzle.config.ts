@@ -1,17 +1,19 @@
-import type { Config } from 'drizzle-kit'
-import { config } from 'dotenv'
+import process from 'node:process'
+import dotenv from 'dotenv'
+import { defineConfig } from 'drizzle-kit'
 
-// Load environment variables
-config()
+dotenv.config()
 
-export default {
+// Ensure DATABASE_URL exists before using it
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is required')
+}
+
+export default defineConfig({
+  dialect: 'postgresql',
   schema: './src/db/schema/*',
   out: './drizzle',
-  driver: 'pg',
   dbCredentials: {
-    connectionString: process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/tg_search',
+    url: process.env.DATABASE_URL as string, // Type assertion to handle undefined case
   },
-  // Enable vector extension
-  strict: true,
-  verbose: true,
-} satisfies Config 
+})

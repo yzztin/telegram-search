@@ -1,18 +1,25 @@
 {
-  "id": "cda01e77-2700-4259-ac15-7f8cb1528b26",
+  "id": "3c44f871-a909-430c-8551-f0400c404a49",
   "prevId": "00000000-0000-0000-0000-000000000000",
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "tables": {
-    "messages": {
+    "public.messages": {
       "name": "messages",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
           "type": "bigint",
-          "primaryKey": true,
+          "primaryKey": false,
           "notNull": true
+        },
+        "uuid": {
+          "name": "uuid",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "gen_random_uuid()"
         },
         "chat_id": {
           "name": "chat_id",
@@ -23,6 +30,7 @@
         "type": {
           "name": "type",
           "type": "message_type",
+          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'text'"
@@ -35,7 +43,7 @@
         },
         "embedding": {
           "name": "embedding",
-          "type": "text",
+          "type": "vector(1536)",
           "primaryKey": false,
           "notNull": false
         },
@@ -92,23 +100,63 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sync_state": {
+      "name": "sync_state",
+      "schema": "",
+      "columns": {
+        "chat_id": {
+          "name": "chat_id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "last_message_id": {
+          "name": "last_message_id",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_sync_time": {
+          "name": "last_sync_time",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
     }
   },
   "enums": {
-    "message_type": {
+    "public.message_type": {
       "name": "message_type",
-      "values": {
-        "text": "text",
-        "photo": "photo",
-        "video": "video",
-        "document": "document",
-        "sticker": "sticker",
-        "other": "other"
-      }
+      "schema": "public",
+      "values": [
+        "text",
+        "photo",
+        "video",
+        "document",
+        "sticker",
+        "other"
+      ]
     }
   },
   "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},
