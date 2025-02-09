@@ -68,7 +68,7 @@ async function main() {
     logger.log('所有测试完成！')
   }
   catch (error) {
-    logger.log('测试失败:', String(error))
+    logger.withError(error).error('测试失败:')
   }
   finally {
     await client.end()

@@ -17,7 +17,7 @@ process.on('unhandledRejection', (error) => {
 
 // Graceful shutdown handler
 process.on('SIGINT', () => {
-  logger.log('\n正在关闭应用...')
+  logger.log('正在关闭应用...')
   process.exit(0)
 })
 
@@ -43,7 +43,7 @@ program
       await mod.default()
     }
     catch (error) {
-      logger.log('Bot 命令执行失败:', String(error))
+      logger.withError(error).error('Bot 命令执行失败:')
       process.exit(1)
     }
   })
@@ -58,7 +58,7 @@ program
       await mod.default()
     }
     catch (error) {
-      logger.log('Search 命令执行失败:', String(error))
+      logger.withError(error).error('Search 命令执行失败:')
       process.exit(1)
     }
   })
@@ -73,7 +73,7 @@ program
       await mod.default()
     }
     catch (error) {
-      logger.log('Watch 命令执行失败:', String(error))
+      logger.withError(error).error('Watch 命令执行失败:')
       process.exit(1)
     }
   })
@@ -88,7 +88,7 @@ program
       await mod.default()
     }
     catch (error) {
-      logger.log('Export 命令执行失败:', String(error))
+      logger.withError(error).error('Export 命令执行失败:')
       process.exit(1)
     }
   })

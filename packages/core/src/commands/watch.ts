@@ -19,7 +19,7 @@ async function watchChat(adapter: ClientAdapter, chatId: number, folderTitle: st
     return
   }
 
-  logger.log(`\n开始监听 "${selectedDialog.name}" 的 "${folderTitle}" 文件夹...`)
+  logger.log(`开始监听 "${selectedDialog.name}" 的 "${folderTitle}" 文件夹...`)
   let count = 0
 
   // Setup message handler
@@ -48,7 +48,7 @@ async function watchChat(adapter: ClientAdapter, chatId: number, folderTitle: st
         logger.log(`已下载媒体文件: ${message.mediaInfo.localPath}`)
     }
     catch (error) {
-      logger.log('保存消息失败:', String(error))
+      logger.withError(error).error('保存消息失败:')
     }
   })
 

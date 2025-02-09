@@ -70,7 +70,7 @@ export async function createMessage(data: NewMessage): Promise<Message[]> {
         embedding = await embeddingService.generateEmbedding(data.content)
       }
       catch (error) {
-        logger.withFields({ error: String(error) }).log('生成向量嵌入失败')
+        logger.withError(error).error('生成向量嵌入失败')
         // Continue without embedding
       }
     }
@@ -102,7 +102,7 @@ export async function createMessage(data: NewMessage): Promise<Message[]> {
     return result
   }
   catch (error) {
-    logger.withFields({ error: String(error) }).log('保存消息失败')
+    logger.withError(error).error('保存消息失败')
     throw error
   }
 }

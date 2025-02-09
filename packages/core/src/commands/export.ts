@@ -95,11 +95,11 @@ async function exportMessages(adapter: ClientAdapter) {
         break
     }
     catch (error) {
-      logger.log('保存消息失败:', String(error))
+      logger.withError(error).error('保存消息失败:')
     }
   }
 
-  logger.log(`\n导出完成，共导出 ${count} 条消息。`)
+  logger.log(`导出完成，共导出 ${count} 条消息。`)
 
   // Ask if continue
   const shouldContinue = await input.confirm({

@@ -132,7 +132,7 @@ async function searchMessages(adapter: ClientAdapter) {
   const messages = await findSimilarMessages(embedding, options)
 
   // Display results
-  logger.log('\n搜索结果：')
+  logger.log('搜索结果：')
   logger.log('----------------------------------------')
   for (const message of messages) {
     logger.withFields({

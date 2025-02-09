@@ -42,7 +42,7 @@ export default async function bot() {
       logger.log('消息已保存到数据库:', result)
     }
     catch (error) {
-      logger.log('保存消息失败:', String(error))
+      logger.withError(error).error('保存消息失败:')
     }
   }
 

@@ -3,10 +3,12 @@ import type { TelegramAdapter, TelegramMessage, TelegramMessageType } from './ty
 import { Bot, GrammyError, HttpError } from 'grammy'
 
 import { getChatStats } from '../db'
+import { useLogger } from '@tg-search/common'
 
 export class BotAdapter implements TelegramAdapter {
   private bot: Bot
   private messageCallback?: (message: TelegramMessage) => Promise<void>
+  private logger = useLogger()
 
   constructor(token: string) {
     this.bot = new Bot(token)
@@ -54,7 +56,7 @@ export class BotAdapter implements TelegramAdapter {
         )
       }
       catch (error) {
-        console.error('Error getting stats:', error)
+        this.logger.withFields({ error }).error('Error getting stats:')
         await ctx.reply('获取统计信息失败')
       }
     })

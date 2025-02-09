@@ -33,7 +33,7 @@ export class EmbeddingService {
       return response.data[0].embedding
     }
     catch (error) {
-      this.logger.withFields({ error: String(error) }).log('生成向量嵌入失败')
+      this.logger.withError(error).error('生成向量嵌入失败')
       throw error
     }
   }
@@ -52,7 +52,7 @@ export class EmbeddingService {
       return response.data.map(d => d.embedding)
     }
     catch (error) {
-      this.logger.withFields({ error: String(error) }).log('批量生成向量嵌入失败')
+      this.logger.withError(error).error('批量生成向量嵌入失败')
       throw error
     }
   }

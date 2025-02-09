@@ -350,7 +350,7 @@ export class ClientAdapter implements TelegramAdapter {
       }
     }
     catch (error) {
-      this.logger.log('获取文件夹失败:', String(error))
+      this.logger.withError(error).error('获取文件夹失败:')
     }
 
     return folders
