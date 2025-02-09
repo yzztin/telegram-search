@@ -10,6 +10,8 @@ import { NewMessage } from 'telegram/events'
 import { StringSession } from 'telegram/sessions'
 
 import { MediaService } from '../services/media'
+import type { NewChat, NewFolder } from '../db'
+import type { DialogFilter, Chat } from 'telegram/types'
 
 export interface ClientAdapterConfig {
   apiId: number
@@ -309,7 +311,7 @@ export class ClientAdapter implements TelegramAdapter {
   /**
    * Get folders from a dialog
    */
-  async getFolders(chatId: number): Promise<Folder[]> {
+  async getFoldersForChat(chatId: number): Promise<Folder[]> {
     const folders: Folder[] = []
 
     try {
@@ -357,85 +359,127 @@ export class ClientAdapter implements TelegramAdapter {
   }
 
   /**
-   * Get all folders
+   * Get all folders from Telegram
    */
-  async getAllFolders(): Promise<Folder[]> {
-    // Add "All Messages" as the first option
-    const folders: Folder[] = [{
-      id: 0,
-      title: '全部消息',
-    }]
+  async getFolders(): Promise<NewFolder[]> {
+    const folders: NewFolder[] = []
 
-    // Get custom folders from Telegram
-    const customFolders = await this.client.invoke(new Api.messages.GetDialogFilters())
-    if (customFolders && Array.isArray(customFolders)) {
-      folders.push(...customFolders.map((folder: any) => ({
-        id: folder.id + 1, // Add 1 to avoid conflict with "All Messages"
-        title: folder.title,
-        customId: folder.id,
-      })))
+    try {
+      // Add default folder
+      folders.push({
+        id: 0,
+        title: '全部消息',
+        emoji: '📁',
+        lastSyncTime: new Date(),
+      })
+
+      // Get custom folders from Telegram
+      const result = await this.client.invoke(new Api.messages.GetDialogFilters())
+      const customFolders = Array.isArray(result) ? result : []
+
+      // Convert to our format
+      for (const folder of customFolders) {
+        if (folder.className === 'DialogFilter') {
+          folders.push({
+            id: folder.id + 1, // Add 1 to avoid conflict with default folder
+            title: folder.title,
+            emoji: folder.emoticon || null,
+            lastSyncTime: new Date(),
+          })
+        }
+      }
+
+      // Add saved messages folder
+      const me = await this.client.getMe()
+      folders.push({
+        id: -1,
+        title: '常用消息',
+        emoji: '📌',
+        lastSyncTime: new Date(),
+      })
+
+      this.logger.debug(`获取到 ${folders.length} 个文件夹`)
+    }
+    catch (error) {
+      this.logger.withError(error).error('获取文件夹失败')
     }
 
     return folders
   }
 
   /**
-   * Get dialogs in folder
+   * Get all chats from Telegram
    */
-  async getDialogsInFolder(folderId: number): Promise<DialogsResult> {
-    // If folderId is 0, return all dialogs
-    if (folderId === 0) {
-      return this.getDialogs(0, 100)
-    }
+  async getChats(): Promise<NewChat[]> {
+    const chats: NewChat[] = []
 
-    // Get custom folder
-    const customFolders = await this.client.invoke(new Api.messages.GetDialogFilters())
-    if (!customFolders || !Array.isArray(customFolders)) {
-      return { dialogs: [], total: 0 }
-    }
-
-    const customFolder = customFolders.find((f: any) => f.id === folderId - 1)
-    if (!customFolder || !customFolder.includePeers) {
-      return { dialogs: [], total: 0 }
-    }
-
-    // Get all dialogs first
-    const allDialogs = await this.client.getDialogs({
-      limit: 100,
-      offsetDate: undefined,
-      offsetId: 0,
-      offsetPeer: undefined,
-      ignorePinned: false,
-    })
-
-    // Filter dialogs by folder
-    const filteredDialogs = allDialogs.filter((dialog) => {
-      // Check if dialog matches folder's include rules
-      // This is a simplified implementation
-      return customFolder.includePeers.some((peer: any) => {
-        const peerId = peer.userId?.value || peer.chatId?.value || peer.channelId?.value
-        return dialog.entity?.id?.toJSNumber() === peerId
+    try {
+      // Get all dialogs first
+      const dialogs = await this.client.getDialogs({
+        limit: 100,
+        offsetDate: undefined,
+        offsetId: 0,
+        offsetPeer: undefined,
+        ignorePinned: false,
       })
-    })
 
-    // Convert dialogs to our format
-    const convertedDialogs = filteredDialogs.map((dialog) => {
-      const entity = dialog.entity
-      const { type, name } = this.getEntityInfo(entity)
+      this.logger.debug(`获取到 ${dialogs.length} 个会话`)
 
-      return {
-        id: entity?.id.toJSNumber() || 0,
-        name,
-        type,
-        unreadCount: dialog.unreadCount,
-        lastMessage: dialog.message?.message,
-        lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : undefined,
+      // Convert to our format
+      for (const dialog of dialogs) {
+        const entity = dialog.entity
+        if (!entity) continue
+
+        const { type, name } = this.getEntityInfo(entity)
+        chats.push({
+          id: entity.id.toJSNumber(),
+          name,
+          type,
+          lastMessage: dialog.message?.message || null,
+          lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : null,
+          lastSyncTime: new Date(),
+          messageCount: 'participantsCount' in entity ? entity.participantsCount || 0 : 0,
+          folderId: null,  // Will be updated later
+        })
       }
-    })
 
-    return {
-      dialogs: convertedDialogs,
-      total: convertedDialogs.length,
+      // Add Saved Messages
+      const me = await this.client.getMe()
+      if (!chats.some(chat => chat.id === me.id.toJSNumber())) {
+        chats.unshift({
+          id: me.id.toJSNumber(),
+          name: '常用',
+          type: 'saved',
+          lastMessage: null,
+          lastMessageDate: null,
+          lastSyncTime: new Date(),
+          messageCount: 0,
+          folderId: null,
+        })
+      }
+
+      this.logger.debug(`处理完成，共 ${chats.length} 个会话`)
     }
+    catch (error) {
+      this.logger.withError(error).error('获取会话失败')
+    }
+
+    return chats
+  }
+
+  /**
+   * Get chat type from Telegram chat object
+   */
+  private getChatType(chat: Chat): 'user' | 'group' | 'channel' | 'saved' {
+    if (chat.className === 'Channel') {
+      return chat.megagroup ? 'group' : 'channel'
+    }
+    if (chat.className === 'Chat') {
+      return 'group'
+    }
+    if (chat.className === 'User') {
+      return 'self' in chat && chat.self ? 'saved' : 'user'
+    }
+    return 'group'
   }
 }

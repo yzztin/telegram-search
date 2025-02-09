@@ -6,10 +6,14 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
 import { EmbeddingService } from '../services/embedding'
-import { messages, syncState } from './schema/message'
+import { chats, folders, messages, syncState } from './schema/message'
 
 type Message = InferModel<typeof messages>
 type NewMessage = InferModel<typeof messages, 'insert'>
+type Chat = InferModel<typeof chats>
+type NewChat = InferModel<typeof chats, 'insert'>
+type Folder = InferModel<typeof folders>
+type NewFolder = InferModel<typeof folders, 'insert'>
 
 // Database connection
 const connectionString = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/tg_search'
@@ -201,9 +205,77 @@ export async function getChatStats(chatId: number) {
   }
 }
 
+/**
+ * Get all chats in database with message counts
+ */
+export async function getAllChats() {
+  return db.select().from(chats).orderBy(chats.lastMessageDate)
+}
+
+/**
+ * Get all folders in database
+ */
+export async function getAllFolders() {
+  return db.select().from(folders)
+}
+
+/**
+ * Get chats in folder
+ */
+export async function getChatsInFolder(folderId: number) {
+  return db.select()
+    .from(chats)
+    .where(eq(chats.folderId, folderId))
+    .orderBy(chats.lastMessageDate)
+}
+
+/**
+ * Update chat info
+ */
+export async function updateChat(data: NewChat) {
+  return db.insert(chats)
+    .values(data)
+    .onConflictDoUpdate({
+      target: chats.id,
+      set: {
+        name: data.name,
+        type: data.type,
+        lastMessage: data.lastMessage,
+        lastMessageDate: data.lastMessageDate,
+        lastSyncTime: data.lastSyncTime,
+        messageCount: data.messageCount,
+        folderId: data.folderId,
+      },
+    })
+    .returning()
+}
+
+/**
+ * Update folder info
+ */
+export async function updateFolder(data: NewFolder) {
+  return db.insert(folders)
+    .values(data)
+    .onConflictDoUpdate({
+      target: folders.id,
+      set: {
+        title: data.title,
+        emoji: data.emoji,
+        lastSyncTime: data.lastSyncTime,
+      },
+    })
+    .returning()
+}
+
 export {
   type Message,
   messages,
   type NewMessage,
+  type Chat,
+  chats,
+  type NewChat,
+  type Folder,
+  folders,
+  type NewFolder,
   syncState,
 }

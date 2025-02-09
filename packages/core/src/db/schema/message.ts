@@ -2,10 +2,25 @@ import { sql } from 'drizzle-orm'
 import { bigint, integer, jsonb, pgEnum, pgTable, text, timestamp, uuid, vector } from 'drizzle-orm/pg-core'
 
 // Message type enum
-export const messageTypeEnum = pgEnum('message_type', ['text', 'photo', 'video', 'document', 'sticker', 'other'])
+export const messageTypeEnum = pgEnum('message_type', [
+  'text',
+  'photo',
+  'video',
+  'document',
+  'sticker',
+  'other',
+])
 export type MessageType = (typeof messageTypeEnum.enumValues)[number]
 
-// Media file info
+// Chat type enum
+export const chatTypeEnum = pgEnum('chat_type', [
+  'user',
+  'group',
+  'channel',
+  'saved',
+])
+
+// Media file info type
 export interface MediaInfo {
   fileId: string
   type: string
@@ -22,6 +37,38 @@ export interface MediaInfo {
   }
   localPath?: string
 }
+
+// Chats table
+export const chats = pgTable('chats', {
+  // Chat ID from Telegram
+  id: bigint('id', { mode: 'number' }).primaryKey(),
+  // Chat name
+  name: text('name').notNull(),
+  // Chat type
+  type: chatTypeEnum('type').notNull(),
+  // Last message
+  lastMessage: text('last_message'),
+  // Last message date
+  lastMessageDate: timestamp('last_message_date'),
+  // Last sync time
+  lastSyncTime: timestamp('last_sync_time').notNull().defaultNow(),
+  // Message count
+  messageCount: integer('message_count').notNull().default(0),
+  // Folder ID
+  folderId: integer('folder_id'),
+})
+
+// Folders table
+export const folders = pgTable('folders', {
+  // Folder ID from Telegram
+  id: integer('id').primaryKey(),
+  // Folder title
+  title: text('title').notNull(),
+  // Folder emoji
+  emoji: text('emoji'),
+  // Last sync time
+  lastSyncTime: timestamp('last_sync_time').notNull().defaultNow(),
+})
 
 // Base messages table
 export const messages = pgTable('messages', {

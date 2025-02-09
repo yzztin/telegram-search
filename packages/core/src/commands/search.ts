@@ -7,7 +7,7 @@ import { useLogger } from '@tg-search/common'
 
 import { createAdapter } from '../adapter/factory'
 import { getConfig } from '../composable/config'
-import { findSimilarMessages } from '../db'
+import { findSimilarMessages, getAllChats, getAllFolders, getChatsInFolder } from '../db'
 import { EmbeddingService } from '../services/embedding'
 
 const logger = useLogger()
@@ -80,38 +80,41 @@ async function getSearchOptions(): Promise<SearchOptions> {
 }
 
 async function searchMessages(adapter: ClientAdapter) {
-  // First, get all folders
-  const folders = await adapter.getAllFolders()
-  const folderChoices = folders.map(folder => ({
-    name: folder.title,
-    value: folder.id,
-  }))
+  // 获取所有文件夹
+  const folders = await getAllFolders()
+  const folderChoices = [
+    { name: '全部会话', value: 0 },
+    ...folders.map(folder => ({
+      name: `${folder.emoji || ''} ${folder.title}`,
+      value: folder.id,
+    })),
+  ]
 
-  // Let user select a folder
+  // 让用户选择文件夹
   const folderId = await input.select({
     message: '请选择要搜索的文件夹：',
     choices: folderChoices,
   })
 
-  // Then, get dialogs in the selected folder
-  const selectedFolder = folders.find(f => f.id === folderId)
-  if (!selectedFolder) {
-    logger.log('找不到该文件夹')
-    throw new Error('Folder not found')
+  // 获取文件夹中的会话
+  const chats = folderId === 0 ? await getAllChats() : await getChatsInFolder(folderId)
+  if (chats.length === 0) {
+    logger.log('所选文件夹中没有任何会话')
+    return
   }
 
-  const result = await adapter.getDialogsInFolder(folderId)
-  const dialogs = result.dialogs
-
-  // Let user select a dialog
-  const choices = dialogs.map(dialog => ({
-    name: `[${dialog.type}] ${dialog.name}${dialog.unreadCount > 0 ? ` (${dialog.unreadCount})` : ''}`,
-    value: dialog.id,
-  }))
+  // 让用户选择会话
+  const chatChoices = [
+    { name: '所有会话', value: 0 },
+    ...chats.map(chat => ({
+      name: `[${chat.type}] ${chat.name} (${chat.messageCount} 条消息，最后更新: ${chat.lastMessageDate?.toLocaleString() || '从未'})`,
+      value: chat.id,
+    })),
+  ]
 
   const chatId = await input.select({
-    message: '请选择要搜索的对话：',
-    choices,
+    message: '请选择要搜索的会话：',
+    choices: chatChoices,
   })
 
   // Get search query
@@ -121,37 +124,51 @@ async function searchMessages(adapter: ClientAdapter) {
 
   // Get search options
   const options = await getSearchOptions()
-  options.chatId = chatId
+  if (chatId !== 0) {
+    options.chatId = chatId
+  }
 
   // Generate embedding for query
   const embeddingService = new EmbeddingService()
-  const embedding = await embeddingService.generateEmbedding(query)
+  try {
+    const embedding = await embeddingService.generateEmbedding(query)
 
-  // Search messages
-  logger.log('正在搜索...')
-  const messages = await findSimilarMessages(embedding, options)
+    // Search messages
+    logger.log('正在搜索...')
+    const messages = await findSimilarMessages(embedding, options)
 
-  // Display results
-  logger.log('搜索结果：')
-  logger.log('----------------------------------------')
-  for (const message of messages) {
-    logger.withFields({
-      id: message.id,
-      chatId: message.chatId,
-      type: message.type,
-      similarity: message.similarity,
-    }).log(formatMessage(message))
-    logger.log('----------------------------------------')
+    // Display results
+    if (messages.length === 0) {
+      logger.log('未找到相关消息')
+    }
+    else {
+      logger.log('搜索结果：')
+      logger.log('----------------------------------------')
+      for (const message of messages) {
+        const chat = chats.find(c => c.id === message.chatId)
+        logger.withFields({
+          id: message.id,
+          chatId: message.chatId,
+          chatName: chat?.name,
+          type: message.type,
+          similarity: message.similarity,
+        }).log(formatMessage(message))
+        logger.log('----------------------------------------')
+      }
+    }
+
+    // Ask if continue
+    const shouldContinue = await input.confirm({
+      message: '是否继续搜索？',
+      default: true,
+    })
+
+    if (shouldContinue)
+      return searchMessages(adapter)
   }
-
-  // Ask if continue
-  const shouldContinue = await input.confirm({
-    message: '是否继续搜索？',
-    default: true,
-  })
-
-  if (shouldContinue)
-    return searchMessages(adapter)
+  finally {
+    embeddingService.destroy()
+  }
 }
 
 export default async function search() {
