@@ -2,6 +2,8 @@
 
 一个功能强大的 Telegram 聊天记录搜索工具，支持向量搜索和语义匹配。
 
+⚠️ 注意：使用 userbot 可能存在封号风险，请谨慎使用
+
 ## 功能特点
 
 - 🤖 支持 Telegram Bot 实时收集消息
@@ -11,7 +13,10 @@
 - 🌐 完整的消息元数据（回复、转发、查看次数等）
 - 🚀 批量处理和向量生成
 - 💾 PostgreSQL 数据存储
-- ⚠️ 注意：使用 userbot 可能存在封号风险，请谨慎使用
+
+## 功能预览
+
+![image](https://github.com/user-attachments/assets/2ff088c1-41f2-455f-9cb1-ec31ce691c80)
 
 ## 安装
 
@@ -45,34 +50,34 @@ pnpm -F @tg-search/core db:migrate
 
 ```bash
 # 正常导入（包含向量嵌入）
-nr dev:core import -c <chat_id> -p <path_to_html_files>
+pnpm run dev:core import -c <chat_id> -p <path_to_html_files>
 
 # 跳过向量嵌入
-nr dev:core import -c <chat_id> -p <path_to_html_files> --no-embedding
+pnpm run dev:core import -c <chat_id> -p <path_to_html_files> --no-embedding
 ```
 
 ### 生成向量嵌入
 
 ```bash
-nr dev:core embed -b <batch_size> -c <chat_id>
+pnpm run dev:core embed -b <batch_size> -c <chat_id>
 ```
 
 ### 启动 Bot
 
 ```bash
-nr dev:core bot
+pnpm run dev:core bot
 ```
 
 ### 搜索消息
 
 ```bash
-nr dev:core search
+pnpm run dev:core search
 ```
 
 ### 监听新消息
 
 ```bash
-nr dev:core watch
+pnpm run dev:core watch
 ```
 
 ## 环境要求
@@ -121,6 +126,7 @@ pnpm -F @tg-search/core db:migrate
 pnpm -F @tg-search/core dev
 ```
 
-## 许可证
+## Star History
 
-MIT 
+![Star History Chart](https://api.star-history.com/svg?repos=luoling8192/telegram-search&type=Date)
+
