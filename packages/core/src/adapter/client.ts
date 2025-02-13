@@ -1,15 +1,16 @@
 import type { NewMessageEvent } from 'telegram/events'
-import type { TelegramAdapter, TelegramMessage, TelegramMessageType, MessageOptions } from './types'
+import type { NewChat, NewFolder } from '../db'
+import type { MessageOptions, TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
 
-import * as input from '@inquirer/prompts'
-import { useLogger } from '@tg-search/common'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
+import * as input from '@inquirer/prompts'
+import { useLogger } from '@tg-search/common'
 import { Api, TelegramClient } from 'telegram'
 import { NewMessage } from 'telegram/events'
 import { StringSession } from 'telegram/sessions'
 
-import type { NewChat, NewFolder } from '../db'
+import { getConfig } from '../composable/config'
 import { MediaService } from '../services/media'
 
 export interface ClientAdapterConfig {
@@ -51,7 +52,8 @@ export class ClientAdapter implements TelegramAdapter {
 
   constructor(config: ClientAdapterConfig) {
     this.config = config
-    this.sessionFile = path.join(process.cwd(), '.session')
+    const appConfig = getConfig()
+    this.sessionFile = appConfig.sessionPath
 
     // Create client with session
     this.session = new StringSession('')
@@ -73,6 +75,7 @@ export class ClientAdapter implements TelegramAdapter {
    */
   private async loadSession(): Promise<string> {
     try {
+      await fs.mkdir(path.dirname(this.sessionFile), { recursive: true })
       return await fs.readFile(this.sessionFile, 'utf-8')
     }
     catch {
@@ -84,6 +87,7 @@ export class ClientAdapter implements TelegramAdapter {
    * Save session string to file
    */
   private async saveSession(session: string) {
+    await fs.mkdir(path.dirname(this.sessionFile), { recursive: true })
     await fs.writeFile(this.sessionFile, session, 'utf-8')
   }
 
@@ -285,7 +289,7 @@ export class ClientAdapter implements TelegramAdapter {
             throw new Error('需要验证码')
           return code
         },
-        onError: err => {
+        onError: (err) => {
           this.logger.withError(err).error('连接错误')
           throw err
         },
@@ -487,7 +491,8 @@ export class ClientAdapter implements TelegramAdapter {
       // Convert to our format
       for (const dialog of dialogs) {
         const entity = dialog.entity
-        if (!entity) continue
+        if (!entity)
+          continue
 
         const { type, name } = this.getEntityInfo(entity)
         chats.push({
@@ -498,7 +503,7 @@ export class ClientAdapter implements TelegramAdapter {
           lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : null,
           lastSyncTime: new Date(),
           messageCount: 'participantsCount' in entity ? entity.participantsCount || 0 : 0,
-          folderId: null,  // Will be updated later
+          folderId: null, // Will be updated later
         })
       }
 

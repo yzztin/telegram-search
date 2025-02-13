@@ -1,11 +1,11 @@
 import type { TelegramClient } from 'telegram'
 import type { MediaInfo } from '../db/schema/message'
 
+import { useLogger } from '@tg-search/common'
 import * as fs from 'node:fs/promises'
-import * as os from 'node:os'
 import * as path from 'node:path'
 import process from 'node:process'
-import { useLogger } from '@tg-search/common'
+import { getConfig } from '../composable/config'
 
 export class MediaService {
   private client: TelegramClient
@@ -14,7 +14,8 @@ export class MediaService {
 
   constructor(client: TelegramClient) {
     this.client = client
-    this.mediaDir = path.join(os.homedir(), '.telegram-search', 'media')
+    const appConfig = getConfig()
+    this.mediaDir = appConfig.mediaPath
   }
 
   /**
@@ -22,7 +23,6 @@ export class MediaService {
    */
   async init() {
     try {
-      await fs.mkdir(path.join(os.homedir(), '.telegram-search'), { recursive: true })
       await fs.mkdir(this.mediaDir, { recursive: true })
     }
     catch (error) {
