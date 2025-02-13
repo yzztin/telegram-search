@@ -1,6 +1,6 @@
 import { useLogger } from '@tg-search/common'
 import { Command } from 'commander'
-import { and, eq, isNull, sql, type SQL } from 'drizzle-orm'
+import { eq, isNull, sql } from 'drizzle-orm'
 
 import { db } from '../db'
 import { createMessageContentTable, messages } from '../db/schema/message'
@@ -16,7 +16,7 @@ interface EmbedOptions {
  * Process messages in parallel batches
  */
 async function processBatch(
-  batch: { id: number; content: string | null; chatId: number }[],
+  batch: { id: number, content: string | null, chatId: number }[],
   embedding: EmbeddingService,
   logger: ReturnType<typeof useLogger>,
 ) {
@@ -40,7 +40,7 @@ async function processBatch(
           .update(contentTable)
           .set({ embedding: embeddings[idx] })
           .where(eq(contentTable.id, msg.id))
-      })
+      }),
     )
 
     const skipped = batch.length - validBatch.length
@@ -118,17 +118,17 @@ export default async function embed(options: Partial<EmbedOptions> = {}) {
               })
               .from(contentTable)
               .where(isNull(contentTable.embedding))
-              .limit(batchSize)
-          )
+              .limit(batchSize)),
         )
 
         // 过滤掉空批次
         const validBatches = batches.filter(batch => batch.length > 0)
-        if (validBatches.length === 0) break
+        if (validBatches.length === 0)
+          break
 
         // 并行处理多个批次
         const results = await Promise.all(
-          validBatches.map(batch => processBatch(batch, embedding, logger))
+          validBatches.map(batch => processBatch(batch, embedding, logger)),
         )
 
         // 统计处理结果
@@ -156,4 +156,4 @@ export default async function embed(options: Partial<EmbedOptions> = {}) {
     // 清理资源
     embedding.destroy()
   }
-} 
+}

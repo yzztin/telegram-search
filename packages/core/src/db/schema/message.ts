@@ -100,7 +100,7 @@ export const messages = pgTable('messages', {
 }))
 
 // Message content table template
-export const createMessageContentTable = (chatId: number | bigint) => {
+export function createMessageContentTable(chatId: number | bigint) {
   // 使用 n 前缀表示负数，处理 BigInt
   const absId = chatId < 0 ? -chatId : chatId
   const tableName = `messages_${chatId < 0 ? 'n' : ''}${absId}`

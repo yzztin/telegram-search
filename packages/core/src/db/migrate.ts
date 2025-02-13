@@ -1,14 +1,12 @@
-import { dirname, join } from 'node:path'
+import { dirname } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { initLogger, useLogger } from '@tg-search/common'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
-import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 
 import { getConfig, initConfig } from '../composable/config'
-import { chats, folders, messages, syncState } from './schema/message'
 
 initLogger()
 const logger = useLogger()

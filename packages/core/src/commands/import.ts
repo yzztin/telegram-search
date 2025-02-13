@@ -1,13 +1,15 @@
+import type { MessageType } from '../db/schema/message'
+
+import { readFile } from 'node:fs/promises'
+import { join, resolve } from 'node:path'
 import { useLogger } from '@tg-search/common'
 import { Command } from 'commander'
-import { readFile } from 'fs/promises'
+import { parse as parseDate } from 'date-fns'
 import { glob } from 'glob'
 import { JSDOM } from 'jsdom'
-import { join, resolve } from 'path'
-import { parse as parseDate } from 'date-fns'
 
 import { db } from '../db'
-import { messages, type MessageType, createMessageContentTable } from '../db/schema/message'
+import { createMessageContentTable, messages } from '../db/schema/message'
 import { EmbeddingService } from '../services/embedding'
 
 interface ImportOptions {
@@ -86,9 +88,12 @@ function extractMediaInfo(element: Element) {
     if (size) {
       const [, value, unit] = size
       fileSize = Number(value)
-      if (unit === 'KB') fileSize *= 1024
-      else if (unit === 'MB') fileSize *= 1024 * 1024
-      else if (unit === 'GB') fileSize *= 1024 * 1024 * 1024
+      if (unit === 'KB')
+        fileSize *= 1024
+      else if (unit === 'MB')
+        fileSize *= 1024 * 1024
+      else if (unit === 'GB')
+        fileSize *= 1024 * 1024 * 1024
     }
     return {
       fileId: document.querySelector('a')?.getAttribute('href') || '',
@@ -104,7 +109,7 @@ function extractMediaInfo(element: Element) {
     const status = sticker.querySelector('.status.details')
     const size = status?.textContent?.match(/([\d.]+) KB/)
     return {
-      fileId: '',  // Sticker 文件未包含在导出中
+      fileId: '', // Sticker 文件未包含在导出中
       type: 'sticker',
       fileSize: size?.[1] ? Number(size[1]) * 1024 : undefined,
     }
@@ -117,10 +122,14 @@ function extractMediaInfo(element: Element) {
  * Determine message type from element
  */
 function getMessageType(element: Element): MessageType {
-  if (element.querySelector('.photo_wrap')) return 'photo'
-  if (element.querySelector('.video_file_wrap')) return 'video'
-  if (element.querySelector('.document_wrap')) return 'document'
-  if (element.querySelector('.sticker')) return 'sticker'
+  if (element.querySelector('.photo_wrap'))
+    return 'photo'
+  if (element.querySelector('.video_file_wrap'))
+    return 'video'
+  if (element.querySelector('.document_wrap'))
+    return 'document'
+  if (element.querySelector('.sticker'))
+    return 'sticker'
   return 'text'
 }
 
@@ -131,14 +140,15 @@ function getMessageType(element: Element): MessageType {
 function parseTelegramDate(dateStr: string): Date {
   // 先解析基本日期时间
   const basicDate = parseDate(dateStr.split(' UTC')[0], 'dd.MM.yyyy HH:mm:ss', new Date())
-  
+
   // 解析时区
   const tzMatch = dateStr.match(/UTC([+-]\d{2}):(\d{2})/)
-  if (!tzMatch) return basicDate
+  if (!tzMatch)
+    return basicDate
 
   const [, tzHour, tzMinute] = tzMatch
   const tzOffset = (Number(tzHour) * 60 + Number(tzMinute)) * (tzHour.startsWith('-') ? -1 : 1)
-  
+
   // 调整时区
   basicDate.setMinutes(basicDate.getMinutes() - tzOffset)
   return basicDate
@@ -159,7 +169,8 @@ async function parseHtmlFile(filePath: string, logger: ReturnType<typeof useLogg
     .reduce((acc: MessageData[], element: Element) => {
       const id = Number(element.getAttribute('id')?.replace('message', ''))
       const body = element.querySelector('.body')
-      if (!body) return acc
+      if (!body)
+        return acc
 
       // Get sender info
       const fromNameElement = body.querySelector('.from_name')
@@ -170,7 +181,7 @@ async function parseHtmlFile(filePath: string, logger: ReturnType<typeof useLogg
       const textElement = body.querySelector('.text')
       const mediaElement = body.querySelector('.media_wrap')
       let text = textElement?.textContent?.trim() || ''
-      
+
       // 如果是媒体消息，尝试获取媒体描述
       if (mediaElement) {
         const mediaTitle = mediaElement.querySelector('.title.bold')?.textContent?.trim()
@@ -328,7 +339,7 @@ export default async function importMessages(chatId?: string, path?: string, opt
             forwardFromMessageId: msg.forwardFromMessageId,
             views: msg.views,
             forwards: msg.forwards,
-          }))
+          })),
         ).onConflictDoNothing()
 
         // Insert metadata into messages table
@@ -339,7 +350,7 @@ export default async function importMessages(chatId?: string, path?: string, opt
             type: msg.type,
             createdAt: msg.createdAt,
             partitionTable,
-          }))
+          })),
         ).onConflictDoNothing()
 
         logger.debug(`已处理 ${i + batch.length}/${parsedMessages.length} 条消息`)
@@ -349,7 +360,7 @@ export default async function importMessages(chatId?: string, path?: string, opt
       logger.debug(`文件 ${file} 已导入 ${parsedMessages.length} 条消息`)
     }
 
-    const summary = options.noEmbedding 
+    const summary = options.noEmbedding
       ? `导入完成，共导入 ${totalMessages} 条消息（未生成向量嵌入）`
       : `导入完成，共导入 ${totalMessages} 条消息，${failedEmbeddings} 条消息未生成向量嵌入`
     logger.debug(summary)

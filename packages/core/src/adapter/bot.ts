@@ -1,9 +1,9 @@
 import type { TelegramAdapter, TelegramMessage, TelegramMessageType } from './types'
 
+import { useLogger } from '@tg-search/common'
 import { Bot, GrammyError, HttpError } from 'grammy'
 
 import { getChatStats } from '../db'
-import { useLogger } from '@tg-search/common'
 
 export class BotAdapter implements TelegramAdapter {
   private bot: Bot

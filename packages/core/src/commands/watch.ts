@@ -107,7 +107,7 @@ export default async function watch() {
 
     // Get dialogs for the selected folder
     const result = await adapter.getDialogs()
-    const dialogs = result.dialogs.filter(dialog => {
+    const dialogs = result.dialogs.filter((dialog) => {
       // Get folders for this dialog
       const dialogFolders = adapter.getFoldersForChat(dialog.id)
       return dialogFolders.then(folders => folders.some(f => f.id === folderId))

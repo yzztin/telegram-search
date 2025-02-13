@@ -5,12 +5,12 @@ import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import * as input from '@inquirer/prompts'
 import { useLogger } from '@tg-search/common'
-import { eq, asc } from 'drizzle-orm'
+import { asc, eq } from 'drizzle-orm'
 
-import { getConfig } from '../composable/config'
 import { createAdapter } from '../adapter/factory'
-import { createMessage, updateChat, db } from '../db'
-import { messages, createMessageContentTable } from '../db/schema/message'
+import { getConfig } from '../composable/config'
+import { createMessage, db, updateChat } from '../db'
+import { messages } from '../db/schema/message'
 
 const logger = useLogger()
 
@@ -152,7 +152,7 @@ async function exportMessages(adapter: ClientAdapter) {
     const currentBatchSize = Number(batchSize)
     let currentBatch = []
     let totalProcessed = 0
-    let messagesByType: Record<string, number> = {}
+    const messagesByType: Record<string, number> = {}
 
     logger.log('开始获取所有消息，这可能需要一些时间...')
     // 使用新的选项

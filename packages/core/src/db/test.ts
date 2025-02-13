@@ -3,8 +3,8 @@ import { and, count, eq, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-import { messages, messageTypeEnum } from './schema/message'
 import { getConfig, initConfig } from '../composable/config'
+import { messages, messageTypeEnum } from './schema/message'
 
 initLogger()
 initConfig()

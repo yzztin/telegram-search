@@ -1,9 +1,10 @@
 import type { ClientAdapter } from '../adapter/client'
 
 import { useLogger } from '@tg-search/common'
+import { sql } from 'drizzle-orm'
+
 import { db, updateChat, updateFolder } from '../db'
 import { chats, folders } from '../db/schema/message'
-import { sql } from 'drizzle-orm'
 
 const logger = useLogger()
 
@@ -80,4 +81,4 @@ export async function sync(adapter: ClientAdapter) {
     logger.withError(error).error('同步失败')
     throw error
   }
-} 
+}

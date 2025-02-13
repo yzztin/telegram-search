@@ -82,7 +82,7 @@ export async function createMessage(data: MessageCreateInput | MessageCreateInpu
 
     // Insert messages into partition tables and metadata table
     const results = await Promise.all(
-      chatIds.map(async chatId => {
+      chatIds.map(async (chatId) => {
         const chatMessages = messageArray.filter(msg => msg.chatId === chatId)
         const tableName = `messages_${chatId}`
         const contentTable = createMessageContentTable(chatId)
@@ -103,7 +103,7 @@ export async function createMessage(data: MessageCreateInput | MessageCreateInpu
             forwardFromMessageId: msg.forwardFromMessageId || null,
             views: msg.views || null,
             forwards: msg.forwards || null,
-          }))
+          })),
         ).onConflictDoNothing()
 
         // Insert metadata into messages table
@@ -117,7 +117,7 @@ export async function createMessage(data: MessageCreateInput | MessageCreateInpu
           })))
           .onConflictDoNothing()
           .returning()
-      })
+      }),
     )
 
     const flatResults = results.flat()
@@ -185,7 +185,7 @@ export async function findSimilarMessages(embedding: number[], options: SearchOp
         .orderBy(sql`${contentTable.embedding} <=> ${sql.raw(embeddingStr)}::vector`)
         .limit(limit)
         .offset(offset)
-    })
+    }),
   )
 
   // Merge and sort results
@@ -303,14 +303,14 @@ export async function updateFolder(data: NewFolder) {
 }
 
 export {
-  type Message,
-  messages,
-  type NewMessage,
   type Chat,
   chats,
-  type NewChat,
   type Folder,
   folders,
+  type Message,
+  messages,
+  type NewChat,
   type NewFolder,
+  type NewMessage,
   syncState,
 }

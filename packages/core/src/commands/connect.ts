@@ -1,9 +1,10 @@
+import type { ClientAdapter } from '../adapter/client'
+
 import { useLogger } from '@tg-search/common'
 
 import { createAdapter } from '../adapter/factory'
 import { getConfig } from '../composable/config'
 import { sync } from './sync'
-import { ClientAdapter } from '../adapter/client'
 
 const logger = useLogger()
 
@@ -34,4 +35,4 @@ export async function connect() {
     logger.withError(error).error('连接失败')
     throw error
   }
-} 
+}
