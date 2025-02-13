@@ -16,16 +16,16 @@ export class BotAdapter implements TelegramAdapter {
     // Error handling
     this.bot.catch((err) => {
       const ctx = err.ctx
-      console.error(`Error while handling update ${ctx.update.update_id}:`)
+      this.logger.withError(err.error).error(`Error while handling update ${ctx.update.update_id}:`)
       const e = err.error
       if (e instanceof GrammyError) {
-        console.error('Error in request:', e.description)
+        this.logger.withError(e).error('Error in request:')
       }
       else if (e instanceof HttpError) {
-        console.error('Could not contact Telegram:', e)
+        this.logger.withError(e).error('Could not contact Telegram:')
       }
       else {
-        console.error('Unknown error:', e)
+        this.logger.withError(e).error('Unknown error:')
       }
     })
 
@@ -56,7 +56,7 @@ export class BotAdapter implements TelegramAdapter {
         )
       }
       catch (error) {
-        this.logger.withFields({ error }).error('Error getting stats:')
+        this.logger.withError(error).error('Error getting stats:')
         await ctx.reply('获取统计信息失败')
       }
     })
@@ -101,7 +101,7 @@ export class BotAdapter implements TelegramAdapter {
   }
 
   async connect() {
-    console.log('Setting up bot handlers...')
+    this.logger.log('Setting up bot handlers...')
 
     // Setup message handler for all types of messages
     this.bot.on(['message', 'edited_message'], async (ctx) => {
@@ -109,7 +109,7 @@ export class BotAdapter implements TelegramAdapter {
       if (!message)
         return
 
-      console.log(`Received message from chat ${ctx.chat.id} (${ctx.chat.type}):`, message)
+      this.logger.log(`Received message from chat ${ctx.chat.id} (${ctx.chat.type}):`, message)
 
       if (this.messageCallback) {
         try {
@@ -117,22 +117,22 @@ export class BotAdapter implements TelegramAdapter {
           await this.messageCallback(convertedMessage)
         }
         catch (error) {
-          console.error('Error handling message:', error)
+          this.logger.withError(error).error('Error handling message:')
         }
       }
     })
 
     // Start the bot
-    console.log('Starting bot...')
+    this.logger.log('Starting bot...')
     try {
       await this.bot.start({
         onStart: (botInfo) => {
-          console.log('Bot started as:', botInfo.username)
+          this.logger.log('Bot started as:', botInfo.username)
         },
       })
     }
     catch (error) {
-      console.error('Failed to start bot:', error)
+      this.logger.withError(error).error('Failed to start bot:')
       throw error
     }
   }

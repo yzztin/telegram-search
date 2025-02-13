@@ -2,6 +2,7 @@ import type { MessageType } from '../db/schema/message'
 
 import { readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import process from 'node:process'
 import { useLogger } from '@tg-search/common'
 import { Command } from 'commander'
 import { parse as parseDate } from 'date-fns'

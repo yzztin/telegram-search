@@ -1,3 +1,4 @@
+import process from 'node:process'
 import { useLogger } from '@tg-search/common'
 import { Command } from 'commander'
 import { eq, isNull, sql } from 'drizzle-orm'

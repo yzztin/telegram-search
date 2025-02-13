@@ -1,5 +1,6 @@
 import type { TelegramMessage } from '../adapter/types'
 
+import process from 'node:process'
 import { useLogger } from '@tg-search/common'
 
 import { createAdapter } from '../adapter/factory'

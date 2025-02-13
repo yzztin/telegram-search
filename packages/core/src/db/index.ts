@@ -1,5 +1,6 @@
-import type { InferModel } from 'drizzle-orm'
+import type { InferInsertModel, InferSelectModel } from 'drizzle-orm'
 
+import process from 'node:process'
 import { useLogger } from '@tg-search/common'
 import { and, count, eq, gt, lt, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -8,16 +9,16 @@ import postgres from 'postgres'
 import { EmbeddingService } from '../services/embedding'
 import { chats, createChatPartition, createMessageContentTable, folders, messages, syncState } from './schema/message'
 
-type Message = InferModel<typeof messages>
-type NewMessage = InferModel<typeof messages, 'insert'>
-type Chat = InferModel<typeof chats>
-type NewChat = InferModel<typeof chats, 'insert'>
-type Folder = InferModel<typeof folders>
-type NewFolder = InferModel<typeof folders, 'insert'>
+type Message = InferSelectModel<typeof messages>
+type NewMessage = InferInsertModel<typeof messages>
+type Chat = InferSelectModel<typeof chats>
+type NewChat = InferInsertModel<typeof chats>
+type Folder = InferSelectModel<typeof folders>
+type NewFolder = InferInsertModel<typeof folders>
 
 // Define message content type
-type MessageContent = InferModel<ReturnType<typeof createMessageContentTable>>
-type NewMessageContent = InferModel<ReturnType<typeof createMessageContentTable>, 'insert'>
+type MessageContent = InferSelectModel<ReturnType<typeof createMessageContentTable>>
+type NewMessageContent = InferInsertModel<ReturnType<typeof createMessageContentTable>>
 
 // Database connection
 const connectionString = process.env.DATABASE_URL ?? 'postgres://postgres:postgres@localhost:5432/tg_search'
@@ -301,7 +302,6 @@ export async function updateFolder(data: NewFolder) {
     })
     .returning()
 }
-
 export {
   type Chat,
   chats,
