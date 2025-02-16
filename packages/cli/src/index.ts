@@ -43,4 +43,3 @@ export default function main() { // Register commands
 }
 
 main()
-  

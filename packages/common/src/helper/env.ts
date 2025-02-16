@@ -6,7 +6,6 @@ import dotenv from 'dotenv'
 
 import { useLogger } from './logger'
 
-
 /**
  * Find .env file path from command line arguments or project root
  */
