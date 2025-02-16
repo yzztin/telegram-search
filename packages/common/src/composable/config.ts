@@ -49,7 +49,7 @@ function constructDatabaseUrl({
 }
 
 export function initConfig() {
-  const logger = useLogger()
+  const logger = useLogger('config')
 
   // Load environment variables
   loadEnv({
@@ -86,7 +86,7 @@ export function initConfig() {
     mediaPath,
   }
 
-  logger.withFields({ config }).log('Config initialized')
+  logger.withFields({ config }).debug('Config initialized')
 }
 
 export function getConfig(): Config {
