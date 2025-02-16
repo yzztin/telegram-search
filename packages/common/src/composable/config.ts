@@ -15,6 +15,8 @@ interface Config {
   openaiApiBase?: string
   sessionPath: string
   mediaPath: string
+  // Batch size for message export notification
+  messageBatchSize: number
 }
 
 let config: Config | null = null
@@ -84,6 +86,8 @@ export function initConfig() {
     openaiApiBase: process.env.OPENAI_API_BASE,
     sessionPath,
     mediaPath,
+    // Default to 100 messages per batch
+    messageBatchSize: Number(process.env.MESSAGE_BATCH_SIZE) || 100,
   }
 
   logger.withFields({ config }).debug('Config initialized')
