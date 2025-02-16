@@ -37,7 +37,7 @@ async function processDatabaseBatch(
 
     logger.debug(
       `已保存 ${startIndex + 1} - ${startIndex + messages.length} 条消息 `
-      + `(${new Date(firstMessage.createdAt).toLocaleString()} - ${new Date(lastMessage.createdAt).toLocaleString()})`,
+      + `(ID: ${firstMessage.id} - ${lastMessage.id})`,
     )
 
     // If any message already exists, stop the export
