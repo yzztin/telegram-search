@@ -1,5 +1,5 @@
 {
-  "name": "@tg-search/db",
+  "name": "@tg-search/server",
   "type": "module",
   "version": "1.0.0",
   "exports": {
@@ -7,6 +7,9 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts"
     }
   },
   "main": "./dist/index.cjs",
@@ -16,30 +19,34 @@
     "dist"
   ],
   "scripts": {
+    "serve": "tsx src/index.ts",
     "build": "unbuild",
     "stub": "unbuild --stub",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "typecheck": "tsc --noEmit",
-    "db:generate": "drizzle-kit generate",
-    "db:push": "drizzle-kit push",
-    "db:migrate": "tsx src/migrate.ts"
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
+    "@elysiajs/cors": "^1.0.0",
+    "@elysiajs/node": "^1.2.5",
     "@tg-search/common": "workspace:*",
-    "@tg-search/pg-vector": "workspace:*",
-    "drizzle-kit": "^0.30.4",
-    "drizzle-orm": "^0.39.3",
-    "pg": "^8.13.3",
-    "postgres": "^3.4.5",
+    "@tg-search/db": "workspace:*",
+    "elysia": "^1.0.0",
+    "tsx": "^4.19.2",
+    "web-streams-polyfill": "^3.3.2",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
-    "@types/pg": "^8.11.11",
-    "dotenv": "^16.4.7",
-    "tsx": "^4.19.2",
     "unbuild": "^3.3.1",
     "vitest": "^3.0.5"
+  },
+  "typesVersions": {
+    "*": {
+      "types": ["./dist/types/index.d.ts"]
+    }
   }
 }

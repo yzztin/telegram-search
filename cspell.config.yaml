@@ -3,12 +3,22 @@ ignorePaths: []
 dictionaryDefinitions: []
 dictionaries: []
 words:
+  - Elysia
+  - elysiajs
   - guiiai
+  - iconify
   - Logg
+  - ofetch
   - onnotice
   - pgvector
+  - taze
   - tiktoken
+  - trpc
+  - tsquery
+  - tsvector
   - unocss
+  - unplugin
+  - vueuse
   - xsai
 ignoreWords: []
 import: []
