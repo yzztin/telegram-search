@@ -1,4 +1,5 @@
 import type { NewChat, NewFolder } from '@tg-search/db'
+import type { Entity } from 'telegram/define'
 import type { ConnectOptions, DialogsResult, Folder, ITelegramClientAdapter, MessageOptions, TelegramMessage, TelegramMessageType } from './types'
 
 import * as fs from 'node:fs/promises'
@@ -14,6 +15,7 @@ interface ClientAdapterConfig {
   apiHash: string
   phoneNumber: string
   password?: string
+  systemVersion?: string
 }
 
 export class ClientAdapter implements ITelegramClientAdapter {
@@ -26,7 +28,10 @@ export class ClientAdapter implements ITelegramClientAdapter {
   private logger = useLogger('client')
 
   constructor(config: ClientAdapterConfig) {
-    this.config = config
+    this.config = {
+      systemVersion: 'Unknown',
+      ...config,
+    }
     const appConfig = getConfig()
     this.sessionFile = appConfig.sessionPath
 
@@ -34,8 +39,8 @@ export class ClientAdapter implements ITelegramClientAdapter {
     this.session = new StringSession('')
     this.client = new TelegramClient(
       this.session,
-      config.apiId,
-      config.apiHash,
+      this.config.apiId,
+      this.config.apiHash,
       { connectionRetries: 5 },
     )
     this.mediaService = new MediaService(this.client)
@@ -69,34 +74,30 @@ export class ClientAdapter implements ITelegramClientAdapter {
   /**
    * Get entity type and name
    */
-  private getEntityInfo(entity: any): { type: 'user' | 'group' | 'channel', name: string } {
-    // 检查是否是用户
-    if ('firstName' in entity || 'lastName' in entity || ('username' in entity && !('title' in entity))) {
+  private getEntityInfo(entity: Entity | undefined): { type: 'user' | 'group' | 'channel', name: string } {
+    if (!entity) {
+      return { type: 'user', name: 'Unknown' }
+    }
+
+    if (entity instanceof Api.User) {
       return {
         type: 'user',
-        name: [entity.firstName, entity.lastName].filter(Boolean).join(' ') || entity.username || 'Unknown User',
+        name: [entity.firstName, entity.lastName].filter(Boolean).join(' ')
+          || entity.username
+          || 'Unknown User',
       }
     }
 
-    // 检查是否是群组或频道
-    if ('title' in entity) {
-      // 检查是否是超级群组
-      if ('megagroup' in entity && entity.megagroup) {
-        return { type: 'group', name: entity.title }
+    if (entity instanceof Api.Chat || entity instanceof Api.Channel) {
+      return {
+        type: entity instanceof Api.Channel
+          ? (entity.megagroup ? 'group' : 'channel')
+          : 'group',
+        name: entity.title,
       }
-      // 检查是否是普通群组
-      if ('participantsCount' in entity || entity.className === 'Chat') {
-        return { type: 'group', name: entity.title }
-      }
-      // 其他情况认为是频道
-      return { type: 'channel', name: entity.title }
     }
 
-    // 默认情况
-    return {
-      type: 'user',
-      name: 'Unknown',
-    }
+    return { type: 'user', name: 'Unknown' }
   }
 
   /**
@@ -167,7 +168,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
   /**
    * Convert message type from Telegram to our type
    */
-  private getMessageType(message: any): TelegramMessageType {
+  private getMessageType(message: Api.Message): TelegramMessageType {
     if (message.media) {
       if ('photo' in message.media)
         return 'photo'
@@ -187,35 +188,35 @@ export class ClientAdapter implements ITelegramClientAdapter {
   /**
    * Convert message from Telegram to our format
    */
-  private async convertMessage(message: any, skipMedia = false): Promise<TelegramMessage> {
+  private async convertMessage(message: Api.Message, skipMedia = false): Promise<TelegramMessage> {
     const type = this.getMessageType(message)
     let mediaInfo
 
-    // Handle media files
     if (message.media && !skipMedia) {
-      mediaInfo = this.mediaService.getMediaInfo(message)
-      if (mediaInfo) {
-        // Download media file
-        const localPath = await this.mediaService.downloadMedia(message, mediaInfo)
+      const downloadedMediaInfo = this.mediaService.getMediaInfo(message)
+      if (downloadedMediaInfo) {
+        const localPath = await this.mediaService.downloadMedia(
+          message,
+          downloadedMediaInfo,
+        )
         if (localPath) {
-          mediaInfo.localPath = localPath
+          downloadedMediaInfo.localPath = localPath
         }
+        mediaInfo = downloadedMediaInfo
       }
-    }
-    else if (message.media) {
-      // 如果跳过媒体下载，只获取基本信息
-      mediaInfo = this.mediaService.getMediaInfo(message)
     }
 
     return {
       id: message.id,
-      chatId: message.chatId?.value || message.peerId?.channelId?.value || message.peerId?.chatId?.value || message.peerId?.userId?.value,
+      chatId: this.getPeerId(message.peerId),
       type,
       content: message.message,
       mediaInfo,
-      fromId: message.fromId?.userId?.value,
+      fromId: (message.fromId instanceof Api.PeerUser) ? message.fromId.userId.toJSNumber() : undefined,
       replyToId: message.replyTo?.replyToMsgId,
-      forwardFromChatId: message.fwdFrom?.fromId?.channelId?.value,
+      forwardFromChatId: (message.fwdFrom?.fromId instanceof Api.PeerChannel)
+        ? message.fwdFrom.fromId.channelId.toJSNumber()
+        : undefined,
       forwardFromMessageId: message.fwdFrom?.channelPost,
       views: message.views,
       forwards: message.forwards,
@@ -224,66 +225,38 @@ export class ClientAdapter implements ITelegramClientAdapter {
   }
 
   async connect(options?: ConnectOptions) {
-    // Initialize media service
-    await this.mediaService.init()
-
     try {
-      // Load session from file
+      await this.mediaService.init()
       const session = await this.loadSession()
+
       if (session) {
         this.session = new StringSession(session)
         this.client.session = this.session
       }
 
-      // Connect to Telegram
       await this.client.connect()
 
-      // Check if we need to sign in
       if (!await this.client.isUserAuthorized()) {
-        // Send code request
-        await this.client.invoke(new Api.auth.SendCode({
-          phoneNumber: this.config.phoneNumber,
-          apiId: this.config.apiId,
-          apiHash: this.config.apiHash,
-          settings: new Api.CodeSettings({
-            allowFlashcall: false,
-            currentNumber: true,
-            allowAppHash: true,
-          }),
-        }))
-
-        // Wait for code
-        if (!options?.code) {
-          throw new Error('Code is required')
-        }
-
-        try {
-          // Sign in with code
-          await this.client.start({
-            phoneNumber: async () => this.config.phoneNumber,
-            password: async () => {
-              if (!options?.password && !this.config.password) {
-                throw new Error('2FA password is required')
-              }
-              return options?.password || this.config.password || ''
-            },
-            phoneCode: async () => options.code || '',
-            onError: (err) => {
+        const code = options?.code || ''
+        await this.client.signInUser(
+          {
+            apiId: this.config.apiId,
+            apiHash: this.config.apiHash,
+          },
+          {
+            phoneNumber: this.config.phoneNumber,
+            phoneCode: async () => code,
+            password: async () => options?.password || this.config.password || '',
+            onError: (err: Error) => {
               this.logger.withError(err).error('登录失败')
               throw err
             },
-          })
-        }
-        catch (error) {
-          this.logger.withError(error).error('登录失败')
-          throw error
-        }
+          },
+        )
       }
 
-      // Save session
-      const sessionString = this.client.session.save() as unknown as string
+      const sessionString = await this.client.session.save() as unknown as string
       await this.saveSession(sessionString)
-
       this.logger.log('登录成功')
     }
     catch (error) {
@@ -456,7 +429,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
     try {
       // Get all dialogs first
       const dialogs = await this.client.getDialogs({
-        limit: 100,
+        // limit: 100,
         offsetDate: undefined,
         offsetId: 0,
         offsetPeer: undefined,
@@ -471,15 +444,25 @@ export class ClientAdapter implements ITelegramClientAdapter {
         if (!entity)
           continue
 
+        // Get entity info for type and name
         const { type, name } = this.getEntityInfo(entity)
+
+        // Extract message count from participantsCount if available
+        const messageCount = 'participantsCount' in entity
+          ? entity.participantsCount || 0
+          : 0
+
+        // Create chat object with entity data
         chats.push({
           id: entity.id.toJSNumber(),
           title: name,
           type,
           lastMessage: dialog.message?.message || null,
-          lastMessageDate: dialog.message?.date ? new Date(dialog.message.date * 1000) : null,
+          lastMessageDate: dialog.message?.date
+            ? new Date(dialog.message.date * 1000)
+            : null,
           lastSyncTime: new Date(),
-          messageCount: 'participantsCount' in entity ? entity.participantsCount || 0 : 0,
+          messageCount,
           folderId: null, // Will be updated later
         })
       }
@@ -522,5 +505,16 @@ export class ClientAdapter implements ITelegramClientAdapter {
       return 'self' in chat && chat.self ? 'saved' : 'user'
     }
     return 'group'
+  }
+
+  // 辅助方法：获取 Peer ID
+  private getPeerId(peer: Api.TypePeer): number {
+    if (peer instanceof Api.PeerUser)
+      return peer.userId.toJSNumber()
+    if (peer instanceof Api.PeerChat)
+      return peer.chatId.toJSNumber()
+    if (peer instanceof Api.PeerChannel)
+      return peer.channelId.toJSNumber()
+    return 0
   }
 }
