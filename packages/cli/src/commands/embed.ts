@@ -52,7 +52,7 @@ export class EmbedCommand extends TelegramCommand {
     try {
       // Get all messages for the chat
       const messages = await findMessagesByChatId(Number(chatId))
-      const messagesToEmbed = messages.filter(m => !m.embedding && m.content)
+      const messagesToEmbed = messages.items.filter(m => !m.embedding && m.content)
       const totalMessages = messagesToEmbed.length
 
       logger.log(`共有 ${totalMessages} 条消息需要处理`)

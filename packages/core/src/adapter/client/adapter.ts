@@ -115,13 +115,13 @@ export class ClientAdapter implements ITelegramClientAdapter {
     while (hasMore) {
       // Get a batch of messages
       const messages = await this.client.getMessages(chatId, {
-        limit: 100, // Get 100 messages at a time
+        limit, // Get 100 messages at a time
         offsetId, // Start from the last message of previous batch
         minId: 0, // Start from earliest message
       })
 
       // If we got fewer messages than requested, there are no more
-      hasMore = messages.length === 100
+      hasMore = messages.length === limit
 
       for (const message of messages) {
         // Check time range

@@ -83,7 +83,7 @@ function formatFileSize(bytes: number): string {
       :class="{
         'bg-blue-500 text-white': isSelf,
         'bg-gray-100 dark:bg-gray-800': !isSelf,
-        'highlight': message.highlight,
+        // 'highlight': message.isUnread,
       }"
     >
       <!-- Text content -->

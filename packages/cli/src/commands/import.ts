@@ -378,7 +378,7 @@ export class ImportCommand extends TelegramCommand {
                   mediaInfo: mediaInfo || null,
                   createdAt: messageData.createdAt,
                   fromId: messageData.fromId,
-                  fromName: messageData.fromName,
+                  // fromName: messageData.form,
                   replyToId: messageData.replyToId,
                   forwardFromChatId: messageData.forwardFromChatId,
                   forwardFromMessageId: messageData.forwardFromMessageId,

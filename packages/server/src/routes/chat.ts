@@ -39,8 +39,8 @@ export const chatRoutes = new Elysia({ prefix: '/chats' })
     try {
       // Get messages with pagination
       const messages = await findMessagesByChatId(Number(id))
-      const total = messages.length
-      const slicedMessages = messages
+      const total = messages.items.length
+      const slicedMessages = messages.items
         .slice(Number(offset), Number(offset) + Number(limit))
         .map(message => ({
           id: message.id,
