@@ -237,7 +237,7 @@ export class ExportCommand extends TelegramCommand {
           id: selectedChat.id,
           name: selectedChat.title,
           type: selectedChat.type,
-          unreadCount: 0
+          unreadCount: 0,
         })
 
         // Save remaining messages

@@ -1,9 +1,9 @@
 <!-- Chat list page -->
 <script setup lang="ts">
+import type { PublicChat } from '@tg-search/server/types'
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useApi } from '../composables/api'
-import type { PublicChat } from '@tg-search/server/types'
 
 // Initialize API client and router
 const { loading, getChats } = useApi()

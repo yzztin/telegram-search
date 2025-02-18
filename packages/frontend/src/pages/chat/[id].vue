@@ -221,8 +221,8 @@ onMounted(async () => {
         <!-- Message bubbles -->
         <MessageBubble
           v-for="message in messages"
-          :key="message.id"
           :id="`message-${message.id}`"
+          :key="message.id"
           :message="message"
           :current-user-id="currentUserId"
           @jump-to-message="jumpToMessage"

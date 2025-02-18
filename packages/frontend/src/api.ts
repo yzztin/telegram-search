@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 
-import type { ErrorResponse, PaginatedResponse, PaginationParams, PublicChat, PublicFolder, PublicMessage, SearchRequest, SearchResponse } from '@tg-search/server/types'
+import type { ErrorResponse, PaginationParams, PublicChat, PublicFolder, PublicMessage, SearchRequest, SearchResponse } from '@tg-search/server/types'
 
 /**
  * Base API configuration

@@ -45,7 +45,7 @@ function formatDate(date: Date | string): string {
   else {
     return dateObj.toLocaleDateString('default', {
       year: 'numeric',
-      month: 'short', 
+      month: 'short',
       day: 'numeric',
     })
   }
@@ -66,14 +66,14 @@ function formatFileSize(bytes: number): string {
 
 <template>
   <div
-    class="message-bubble group"
+    class="group message-bubble"
     :class="{
       'self-end': isSelf,
       'self-start': !isSelf,
     }"
   >
     <!-- Sender info -->
-    <div class="mb-1 text-sm text-gray-500 text-left">
+    <div class="mb-1 text-left text-sm text-gray-500">
       <span class="font-medium">{{ message.fromName }}</span> • {{ formatDate(message.createdAt) }} {{ formatTime(message.createdAt) }}
     </div>
 
@@ -155,7 +155,7 @@ function formatFileSize(bytes: number): string {
       </div>
 
       <!-- Message info -->
-      <div 
+      <div
         class="mt-1 text-left text-xs"
         :class="{
           'text-white/60 group-hover:text-white': isSelf,
@@ -170,8 +170,8 @@ function formatFileSize(bytes: number): string {
           <Icon icon="carbon:share" class="mr-1 inline h-4 w-4" />
           {{ message.forwards }} forwards
         </span>
-        <span 
-          v-if="message.replyToId" 
+        <span
+          v-if="message.replyToId"
           class="mr-2 cursor-pointer hover:underline"
           @click="emit('jumpToMessage', message.replyToId)"
         >
