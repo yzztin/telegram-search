@@ -2,9 +2,10 @@ import type { MessageType } from '@tg-search/db'
 
 import { readFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
+import * as input from '@inquirer/prompts'
 import { useLogger } from '@tg-search/common'
 import { EmbeddingService } from '@tg-search/core'
-import { createMessage, insertMessageContent } from '@tg-search/db'
+import { createMessage, getAllChats, refreshMessageStats, updateChat } from '@tg-search/db'
 import { glob } from 'glob'
 import { JSDOM } from 'jsdom'
 
@@ -13,7 +14,6 @@ import { TelegramCommand } from '../command'
 const logger = useLogger()
 
 interface ImportOptions {
-  chatId?: string
   path?: string
   noEmbedding?: boolean
 }
@@ -52,6 +52,17 @@ interface MessageData {
       height: number
     }
   }
+}
+
+interface TelegramChat {
+  id: number
+  type: string
+  title: string
+}
+
+interface SelectedChat {
+  id: number
+  title: string
 }
 
 /**
@@ -288,48 +299,270 @@ async function parseHtmlFile(filePath: string): Promise<MessageData[]> {
 }
 
 /**
+ * Get chat info from HTML files
+ */
+async function getChatInfo(basePath: string): Promise<{ name: string, files: string[] }> {
+  const files = await glob('**/*.html', {
+    cwd: basePath,
+    absolute: false,
+  })
+
+  if (files.length === 0) {
+    throw new Error('未找到任何 HTML 文件')
+  }
+
+  logger.debug(`找到 HTML 文件: ${files.join(', ')}`)
+
+  // Get info from first file to get chat name
+  const filePath = join(basePath, files[0])
+  const content = await readFile(filePath, 'utf-8')
+  const dom = new JSDOM(content)
+  const document = dom.window.document
+
+  // Get chat name from title
+  const title = document.querySelector('.page_header .text.bold')?.textContent?.trim()
+    || document.querySelector('.page_header')?.textContent?.trim()
+    || document.querySelector('title')?.textContent?.trim()
+    || 'Unknown Chat'
+
+  return {
+    name: title,
+    files,
+  }
+}
+
+/**
+ * Ask user whether to generate embeddings
+ */
+async function shouldGenerateEmbeddings(): Promise<boolean> {
+  return input.confirm({
+    message: '是否要生成向量嵌入（用于语义搜索）？',
+    default: false,
+  })
+}
+
+/**
+ * Let user select target chat
+ */
+async function selectTargetChat(client: any, sourceChatName: string): Promise<SelectedChat> {
+  // First ask if user wants to input chat ID directly
+  const useDirectInput = await input.confirm({
+    message: '是否直接输入目标会话 ID？',
+    default: false,
+  })
+
+  if (useDirectInput) {
+    const chatId = await input.input({
+      message: '请输入目标会话 ID：',
+      validate: (value) => {
+        const id = Number(value)
+        return !Number.isNaN(id) ? true : '请输入有效的会话 ID'
+      },
+    })
+
+    // Get chat info to verify ID
+    logger.debug('正在验证会话...')
+    const chats = await client.getChats()
+    const selectedChat = chats.find((c: TelegramChat) => c.id === Number(chatId))
+    if (!selectedChat) {
+      throw new Error(`找不到会话: ${chatId}`)
+    }
+    logger.debug(`已选择会话: ${selectedChat.title} (ID: ${chatId})`)
+    return { id: Number(chatId), title: selectedChat.title }
+  }
+
+  // First try to get chats from database
+  logger.debug('正在从数据库获取会话列表...')
+  let chats = await getAllChats()
+  logger.debug(`从数据库获取到 ${chats.length} 个会话`)
+
+  // Ask if user wants to update chat list from Telegram
+  if (chats.length === 0 || await input.confirm({
+    message: '是否要从 Telegram 更新会话列表？',
+    default: false,
+  })) {
+    logger.debug('正在从 Telegram 获取会话列表...')
+    const telegramChats = await client.getChats()
+    logger.debug(`从 Telegram 获取到 ${telegramChats.length} 个会话`)
+
+    // Update chats in database
+    for (const chat of telegramChats) {
+      await updateChat({
+        id: chat.id,
+        type: chat.type,
+        title: chat.title,
+        lastSyncTime: new Date(),
+      })
+    }
+
+    // Get updated chat list
+    chats = await getAllChats()
+  }
+
+  // Ask how to select from list
+  const method = await input.select({
+    message: '请选择会话选择方式：',
+    choices: [
+      { name: '从列表中选择', value: 'list' },
+      { name: '搜索会话', value: 'search' },
+    ],
+  })
+
+  if (method === 'search') {
+    const keyword = await input.input({
+      message: '请输入搜索关键词：',
+    })
+
+    // Filter chats by keyword
+    const filteredChats = chats.filter(chat =>
+      chat.title.toLowerCase().includes(keyword.toLowerCase()),
+    )
+
+    if (filteredChats.length === 0) {
+      throw new Error(`未找到包含 "${keyword}" 的会话`)
+    }
+
+    const chatChoices = filteredChats.map(chat => ({
+      name: `[${chat.type}] ${chat.title} (${chat.id})`,
+      value: chat,
+    }))
+
+    const selectedChat = await input.select({
+      message: `请选择要导入 "${sourceChatName}" 到哪个会话：`,
+      choices: chatChoices,
+    })
+    return { id: selectedChat.id, title: selectedChat.title }
+  }
+
+  // Default to list selection
+  const chatChoices = chats.map(chat => ({
+    name: `[${chat.type}] ${chat.title} (${chat.id})`,
+    value: chat,
+  }))
+
+  const selectedChat = await input.select({
+    message: `请选择要导入 "${sourceChatName}" 到哪个会话：`,
+    choices: chatChoices,
+  })
+  return { id: selectedChat.id, title: selectedChat.title }
+}
+
+/**
+ * Save messages to database in batch
+ */
+async function saveMessagesBatch(messages: MessageData[], embedding: EmbeddingService | null = null): Promise<{ total: number, failed: number }> {
+  try {
+    // Generate embeddings if needed
+    let embeddings: number[][] | null = null
+    if (embedding) {
+      logger.debug('正在生成向量嵌入...')
+      const contents = messages.map(m => m.content)
+      embeddings = await embedding.generateEmbeddings(contents)
+      logger.debug('向量嵌入生成完成')
+    }
+
+    // Convert messages to database format
+    const dbMessages = messages.map((message, index) => ({
+      id: message.id,
+      chatId: message.chatId,
+      type: message.type,
+      content: message.content,
+      fromId: message.fromId,
+      fromName: message.fromName,
+      fromAvatar: message.fromAvatar,
+      embedding: embeddings?.[index],
+      replyToId: message.replyToId,
+      forwardFromChatId: message.forwardFromChatId,
+      forwardFromMessageId: message.forwardFromMessageId,
+      views: message.views,
+      forwards: message.forwards,
+      links: message.links,
+      metadata: {
+        hasLinks: message.links && message.links.length > 0,
+        hasMedia: !!message.mediaInfo,
+        isForwarded: !!message.forwardFromChatId,
+        isReply: !!message.replyToId,
+      },
+      createdAt: message.createdAt,
+    }))
+
+    // Save messages in batch
+    await createMessage(dbMessages)
+
+    // Refresh message stats
+    if (messages.length > 0) {
+      await refreshMessageStats(messages[0].chatId)
+    }
+
+    return { total: messages.length, failed: 0 }
+  }
+  catch (error) {
+    logger.withError(error).error('批量保存消息失败')
+    return { total: 0, failed: messages.length }
+  }
+}
+
+/**
  * Import command to import messages from HTML files
  */
 export class ImportCommand extends TelegramCommand {
   meta = {
     name: 'import',
     description: 'Import messages from HTML files',
-    usage: '<chatId> <path> [options]',
+    usage: '[options]',
+    options: [
+      {
+        flags: '-p, --path <path>',
+        description: '导出文件所在的文件夹路径',
+      },
+      {
+        flags: '--no-embedding',
+        description: '不生成向量嵌入',
+      },
+    ],
+    requiresConnection: true,
   }
 
   async execute(args: string[], options: ImportOptions): Promise<void> {
-    // Get chat ID and path
-    const chatId = options.chatId || args[0]
-    const path = options.path || args[1]
+    const path = options.path
 
-    if (!chatId || !path) {
-      throw new Error('Chat ID and path are required')
+    if (!path) {
+      throw new Error('Path is required. Use -p or --path to specify the path.')
     }
-
-    // Initialize embedding service
-    const embedding = new EmbeddingService()
 
     try {
       const basePath = resolve(path)
       logger.debug(`正在搜索文件: ${basePath}`)
 
-      // Find all HTML files
-      const files = await glob('**/*.html', {
-        cwd: basePath,
-        absolute: false,
+      // Get chat info and files from HTML
+      const chatInfo = await getChatInfo(basePath)
+      logger.debug(`找到聊天: ${chatInfo.name}，共 ${chatInfo.files.length} 个文件`)
+
+      // Let user select target chat
+      const selectedChat = await selectTargetChat(this.getClient(), chatInfo.name)
+      logger.debug(`已选择会话: ${selectedChat.title} (ID: ${selectedChat.id})`)
+
+      // Create or update chat in database
+      await updateChat({
+        id: selectedChat.id,
+        type: 'user', // TODO: 从 Telegram API 获取正确的类型
+        title: selectedChat.title,
+        lastSyncTime: new Date(),
       })
 
-      if (files.length === 0) {
-        logger.warn('未找到任何 HTML 文件')
-        return
-      }
+      // Ask about embeddings
+      const generateEmbeddings = options.noEmbedding !== undefined
+        ? !options.noEmbedding
+        : await shouldGenerateEmbeddings()
 
-      logger.debug(`找到 ${files.length} 个文件`)
+      // Initialize embedding service if needed
+      const embedding = generateEmbeddings ? new EmbeddingService() : null
+
       let totalMessages = 0
       let failedEmbeddings = 0
 
       // Process each file
-      for (const file of files) {
+      for (const file of chatInfo.files) {
         const filePath = join(basePath, file)
         logger.debug(`正在处理文件: ${filePath}`)
 
@@ -340,112 +573,13 @@ export class ImportCommand extends TelegramCommand {
 
           // Set chat ID for all messages
           for (const message of messages) {
-            message.chatId = Number(chatId)
+            message.chatId = selectedChat.id
           }
 
-          // Generate embeddings if needed
-          if (!options.noEmbedding) {
-            logger.debug('正在生成向量嵌入...')
-            const contents = messages.map(m => m.content)
-            const embeddings = await embedding.generateEmbeddings(contents)
-            logger.debug('向量嵌入生成完成')
-
-            // Save messages with embeddings
-            for (let i = 0; i < messages.length; i++) {
-              try {
-                const { mediaInfo, links, fromName, ...messageData } = messages[i]
-                // Create message metadata
-                await createMessage({
-                  id: messageData.id,
-                  chatId: messageData.chatId,
-                  type: messageData.type,
-                  createdAt: messageData.createdAt,
-                  fromId: messageData.fromId,
-                  replyToId: messageData.replyToId,
-                  forwardFromChatId: messageData.forwardFromChatId,
-                  forwardFromMessageId: messageData.forwardFromMessageId,
-                  views: messageData.views,
-                  forwards: messageData.forwards,
-                })
-
-                // Insert message content with embedding
-                await insertMessageContent(messageData.chatId, {
-                  id: messageData.id,
-                  chatId: messageData.chatId,
-                  type: messageData.type,
-                  content: messageData.content,
-                  embedding: embeddings[i],
-                  mediaInfo: mediaInfo || null,
-                  createdAt: messageData.createdAt,
-                  fromId: messageData.fromId,
-                  // fromName: messageData.form,
-                  replyToId: messageData.replyToId,
-                  forwardFromChatId: messageData.forwardFromChatId,
-                  forwardFromMessageId: messageData.forwardFromMessageId,
-                  views: messageData.views,
-                  forwards: messageData.forwards,
-                  links: links || null,
-                  metadata: {
-                    // 存储任何其他可能有用的信息
-                    hasLinks: links && links.length > 0,
-                    hasMedia: !!mediaInfo,
-                    isForwarded: !!messageData.forwardFromChatId,
-                    isReply: !!messageData.replyToId,
-                  },
-                })
-
-                totalMessages++
-              }
-              catch (error) {
-                logger.withError(error).warn(`保存消息 ${messages[i].id} 失败`)
-                failedEmbeddings++
-              }
-            }
-          }
-          else {
-            // Save messages without embeddings
-            for (const message of messages) {
-              try {
-                const { mediaInfo, links, fromName, ...messageData } = message
-                // Create message metadata
-                await createMessage({
-                  id: messageData.id,
-                  chatId: messageData.chatId,
-                  type: messageData.type,
-                  createdAt: messageData.createdAt,
-                  fromId: messageData.fromId,
-                  replyToId: messageData.replyToId,
-                  forwardFromChatId: messageData.forwardFromChatId,
-                  forwardFromMessageId: messageData.forwardFromMessageId,
-                  views: messageData.views,
-                  forwards: messageData.forwards,
-                })
-
-                // Insert message content without embedding
-                await insertMessageContent(messageData.chatId, {
-                  id: messageData.id,
-                  chatId: messageData.chatId,
-                  type: messageData.type,
-                  content: messageData.content,
-                  embedding: null,
-                  mediaInfo: mediaInfo || null,
-                  createdAt: messageData.createdAt,
-                  fromId: messageData.fromId,
-                  replyToId: messageData.replyToId,
-                  forwardFromChatId: messageData.forwardFromChatId,
-                  forwardFromMessageId: messageData.forwardFromMessageId,
-                  views: messageData.views,
-                  forwards: messageData.forwards,
-                })
-
-                totalMessages++
-              }
-              catch (error) {
-                logger.withError(error).warn(`保存消息 ${message.id} 失败`)
-                failedEmbeddings++
-              }
-            }
-          }
+          // Save messages in batch
+          const result = await saveMessagesBatch(messages, embedding)
+          totalMessages += result.total
+          failedEmbeddings += result.failed
 
           logger.debug(`文件处理完成: ${file}`)
         }
@@ -455,6 +589,18 @@ export class ImportCommand extends TelegramCommand {
       }
 
       logger.log(`导入完成，共导入 ${totalMessages} 条消息，${failedEmbeddings} 条消息生成向量嵌入失败`)
+
+      // Final refresh of message stats and chat metadata
+      if (totalMessages > 0) {
+        logger.debug('正在更新会话统计信息...')
+        await refreshMessageStats(selectedChat.id)
+        await updateChat({
+          id: selectedChat.id,
+          type: 'user',
+          title: selectedChat.title,
+          lastSyncTime: new Date(),
+        })
+      }
     }
     catch (error) {
       logger.withError(error).error('导入失败')

@@ -1,6 +1,16 @@
 import type { ClientAdapter, TelegramAdapter } from '@tg-search/core'
 
 /**
+ * Command option interface
+ */
+interface CommandOption {
+  // Option flags (e.g. '-p, --path <path>')
+  flags: string
+  // Option description
+  description: string
+}
+
+/**
  * Command metadata interface
  */
 interface CommandMeta {
@@ -10,6 +20,8 @@ interface CommandMeta {
   description: string
   // Command usage example
   usage?: string
+  // Command options
+  options?: CommandOption[]
   // Whether the command requires Telegram connection
   requiresConnection?: boolean
   // Whether the command can be run in background

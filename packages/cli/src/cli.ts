@@ -54,6 +54,13 @@ export function setupCli() {
       cmd.usage(command.meta.usage)
     }
 
+    // Add command options
+    if (command.meta.options) {
+      for (const option of command.meta.options) {
+        cmd.option(option.flags, option.description)
+      }
+    }
+
     // Execute command
     cmd.action(async (options) => {
       let client: TelegramAdapter | undefined
