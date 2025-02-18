@@ -31,6 +31,10 @@
   - 完整的消息元数据（回复、转发、查看次数等）
   - 支持媒体文件本地存储
   - 支持消息统计和分析
+ 
+## 👀 预览
+
+<img src="https://github.com/user-attachments/assets/407a3980-e8fe-4aa6-a23c-81082d9f7b52" width="60%" />
 
 ## 🚀 快速开始
 
@@ -232,6 +236,10 @@ packages/
 
   - 文件夹信息
   - 同步状态跟踪
+ 
+## 🚀 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=luoling8192/telegram-search&type=Date)](https://star-history.com/#luoling8192/telegram-search&Date)
 
 ## 📝 License
 
