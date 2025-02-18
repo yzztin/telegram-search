@@ -20,11 +20,11 @@ export class DialogManager {
    * Get all dialogs (chats) with pagination
    */
   async getDialogs(offset = 0, limit = 10): Promise<DialogsResult> {
-    // Get all dialogs first
+    // Get dialogs with pagination
     const dialogs = await this.client.getDialogs({
       limit: limit + 1, // Get one extra to check if there are more
       offsetDate: undefined,
-      offsetId: 0,
+      offsetId: offset,
       offsetPeer: undefined,
       ignorePinned: false,
     })

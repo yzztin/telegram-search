@@ -103,8 +103,8 @@ export class ClientAdapter implements ITelegramClientAdapter {
     await this.client.disconnect()
   }
 
-  async getDialogs(_offset = 0, _limit = 10): Promise<DialogsResult> {
-    return this.dialogManager.getDialogs(_offset, _limit)
+  async getDialogs(offset = 0, limit = 10): Promise<DialogsResult> {
+    return this.dialogManager.getDialogs(offset, limit)
   }
 
   async *getMessages(chatId: number, limit = 100, options?: MessageOptions): AsyncGenerator<TelegramMessage> {

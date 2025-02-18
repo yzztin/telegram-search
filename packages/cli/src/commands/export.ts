@@ -91,12 +91,12 @@ export class ExportCommand extends TelegramCommand {
   }
 
   async execute(_args: string[], options: ExportOptions): Promise<void> {
-    // Get all chats in folder
-    const dialogs = await this.getClient().getDialogs()
-    logger.debug(`获取到 ${dialogs.dialogs.length} 个会话`)
-    const chatChoices = dialogs.dialogs.map((dialog: Dialog) => ({
-      name: `[${dialog.type}] ${dialog.name} (${dialog.unreadCount} 条未读)`,
-      value: dialog.id,
+    // Get all chats
+    const chats = await this.getClient().getChats()
+    logger.debug(`获取到 ${chats.length} 个会话`)
+    const chatChoices = chats.map((chat: NewChat) => ({
+      name: `[${chat.type}] ${chat.title} (${chat.messageCount} 条消息)`,
+      value: chat.id,
     }))
 
     // Let user select chat
@@ -104,11 +104,11 @@ export class ExportCommand extends TelegramCommand {
       message: '请选择要导出的会话：',
       choices: chatChoices,
     })
-    const selectedChat = dialogs.dialogs.find((d: Dialog) => d.id === chatId)
+    const selectedChat = chats.find((c: NewChat) => c.id === chatId)
     if (!selectedChat) {
       throw new Error(`找不到会话: ${chatId}`)
     }
-    logger.debug(`已选择会话: ${selectedChat.name} (ID: ${chatId})`)
+    logger.debug(`已选择会话: ${selectedChat.title} (ID: ${chatId})`)
 
     // Get export format
     const format = options.format || await input.select({
@@ -233,7 +233,12 @@ export class ExportCommand extends TelegramCommand {
       }
       else if (format === 'database') {
         // Update chat metadata
-        await updateChatMetadata(selectedChat)
+        await updateChatMetadata({
+          id: selectedChat.id,
+          name: selectedChat.title,
+          type: selectedChat.type,
+          unreadCount: 0
+        })
 
         // Save remaining messages
         const remainingCount = count % Number(batchSize)

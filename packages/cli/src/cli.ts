@@ -56,11 +56,13 @@ export function setupCli() {
 
     // Execute command
     cmd.action(async (options) => {
+      let client: TelegramAdapter | undefined
+
       try {
         // Initialize Telegram client if needed
         if (command.meta.requiresConnection) {
           const config = getConfig()
-          const client = await createAdapter({
+          client = await createAdapter({
             type: 'client',
             apiId: Number(config.apiId),
             apiHash: config.apiHash,
@@ -95,6 +97,15 @@ export function setupCli() {
       catch (error) {
         logger.withError(error).error('命令执行失败')
         process.exit(1)
+      }
+      finally {
+        // Disconnect client if exists
+        if (client) {
+          logger.debug('正在断开连接...')
+          await client.disconnect()
+          logger.debug('连接已断开')
+        }
+        process.exit(0)
       }
     })
   }
