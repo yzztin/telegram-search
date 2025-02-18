@@ -45,7 +45,7 @@ onMounted(() => {
         class="cursor-pointer rounded-lg bg-gray-100 p-4 transition-colors dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
         @click="goToChat(chat.id)"
       >
-        <h2 class="text-lg font-semibold">
+        <h2 class="text-left text-lg font-semibold">
           {{ chat.title }}
         </h2>
         <div class="mt-2 flex items-center gap-4 text-sm text-gray-500">

@@ -209,7 +209,7 @@ onMounted(async () => {
       </div>
 
       <!-- Messages -->
-      <div v-else class="flex flex-col space-y-4">
+      <div v-else class="flex flex-col">
         <!-- Load more indicator -->
         <div
           v-if="loadingMore"
@@ -220,11 +220,13 @@ onMounted(async () => {
 
         <!-- Message bubbles -->
         <MessageBubble
-          v-for="message in messages"
+          v-for="(message, index) in messages"
           :id="`message-${message.id}`"
           :key="message.id"
           :message="message"
           :current-user-id="currentUserId"
+          :previous-message="index > 0 ? messages[index - 1] : undefined"
+          :next-message="index < messages.length - 1 ? messages[index + 1] : undefined"
           @jump-to-message="jumpToMessage"
         />
 
