@@ -1,8 +1,9 @@
 import type { MessageType } from '../schema/types'
 
 import { useDB } from '@tg-search/common'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 
+import { setupTest } from '../test/setup'
 import {
   createMessage,
   findMessagesByChatId,
@@ -37,6 +38,10 @@ vi.mock('../../db', () => ({
 }))
 
 describe('message Model', () => {
+  beforeAll(async () => {
+    setupTest()
+  })
+
   describe('createMessage', () => {
     it('should create a single message', async () => {
       const message = {

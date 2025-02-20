@@ -1,6 +1,7 @@
 import { useDB } from '@tg-search/common'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 
+import { setupTest } from '../test/setup'
 import {
   deleteAllChats,
   getAllChats,
@@ -40,6 +41,10 @@ vi.mock('../../db', () => ({
 }))
 
 describe('chat Model', () => {
+  beforeAll(async () => {
+    setupTest()
+  })
+
   describe('updateChat', () => {
     it('should update or create a chat', async () => {
       const chat = {

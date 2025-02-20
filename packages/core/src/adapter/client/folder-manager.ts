@@ -9,7 +9,7 @@ import { Api } from 'telegram'
  * Manages Telegram folder operations
  */
 export class FolderManager {
-  private logger = useLogger('folder')
+  private logger = useLogger()
 
   constructor(
     private readonly client: TelegramClient,

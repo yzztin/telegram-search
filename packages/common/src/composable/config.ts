@@ -81,7 +81,7 @@ function loadYamlConfig(configPath: string): Partial<Config> {
     return yaml.parse(content)
   }
   catch {
-    const logger = useLogger('config')
+    const logger = useLogger()
     logger.debug(`Failed to load config file: ${configPath}`)
     return {}
   }
@@ -108,7 +108,7 @@ function validateConfig(config: Config) {
 }
 
 export function initConfig() {
-  const logger = useLogger('config')
+  const logger = useLogger()
 
   try {
     // Find config directory
@@ -140,7 +140,7 @@ export function initConfig() {
     }
 
     // Log merged config
-    logger.withFields({ mergedConfig: JSON.stringify(mergedConfig, null, 2) }).debug('Config initialized successfully')
+    logger.withFields({ mergedConfig: JSON.stringify(mergedConfig) }).debug('Config initialized successfully')
 
     // Validate configuration
     validateConfig(mergedConfig)

@@ -4,7 +4,7 @@ import { useLogger } from '@tg-search/common'
 import { findMessagesByChatId, getAllChats } from '@tg-search/db'
 import { Elysia, t } from 'elysia'
 
-const logger = useLogger('chat')
+const logger = useLogger()
 
 /**
  * Convert database chat to public chat

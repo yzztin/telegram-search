@@ -7,7 +7,7 @@ import { Bot, GrammyError, HttpError } from 'grammy'
 export class BotAdapter implements ITelegramBotAdapter {
   private bot: Bot
   private messageCallback?: (message: TelegramMessage) => Promise<void>
-  private logger = useLogger('bot')
+  private logger = useLogger()
 
   constructor(token: string) {
     this.bot = new Bot(token)
@@ -142,7 +142,7 @@ export class BotAdapter implements ITelegramBotAdapter {
     try {
       await this.bot.start({
         onStart: (botInfo) => {
-          this.logger.log('Bot started as:', botInfo.username)
+          this.logger.withFields({ botInfo }).log('Bot started')
         },
       })
     }

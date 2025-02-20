@@ -10,7 +10,7 @@ import { EntityResolver } from './entity-resolver'
  * Manages Telegram dialogs (chats) operations
  */
 export class DialogManager {
-  private logger = useLogger('dialog')
+  private logger = useLogger()
 
   constructor(
     private readonly client: TelegramClient,

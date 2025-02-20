@@ -1,6 +1,7 @@
 import { useDB } from '@tg-search/common'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeAll, describe, expect, it, vi } from 'vitest'
 
+import { setupTest } from '../test/setup'
 import {
   deleteAllFolders,
   getAllFolders,
@@ -31,6 +32,10 @@ vi.mock('../../db', () => ({
 }))
 
 describe('folder Model', () => {
+  beforeAll(async () => {
+    setupTest()
+  })
+
   describe('updateFolder', () => {
     it('should update or create a folder', async () => {
       const folder = {

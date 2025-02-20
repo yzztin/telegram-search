@@ -19,8 +19,7 @@
     "build": "unbuild",
     "stub": "unbuild --stub",
     "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "typecheck": "tsc --noEmit"
+    "lint:fix": "eslint src --fix"
   },
   "dependencies": {
     "@guiiai/logg": "^1.0.7",

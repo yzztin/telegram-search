@@ -37,7 +37,7 @@ export class BotCommand extends TelegramCommand {
           forwards: message.forwards,
           createdAt: message.createdAt,
         })
-        logger.log('消息已保存到数据库:', result)
+        logger.withFields({ result }).log('消息已保存到数据库')
       }
       catch (error) {
         logger.withError(error).error('保存消息失败:')

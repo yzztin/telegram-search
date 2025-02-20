@@ -11,7 +11,7 @@ import { searchRoutes } from './routes/search'
 // Initialize core services
 async function initServices() {
   initLogger()
-  const logger = useLogger('server')
+  const logger = useLogger()
   initConfig()
 
   try {

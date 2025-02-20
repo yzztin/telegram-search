@@ -29,7 +29,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
   private messageConverter: MessageConverter
   private dialogManager: DialogManager
   private folderManager: FolderManager
-  private logger = useLogger('client')
+  private logger = useLogger()
   private config: ClientAdapterConfig
 
   constructor(config: ClientAdapterConfig) {
@@ -71,7 +71,6 @@ export class ClientAdapter implements ITelegramClientAdapter {
       await this.client.connect()
 
       if (!await this.client.isUserAuthorized()) {
-        const code = options?.code || ''
         await this.client.signInUser(
           {
             apiId: this.client.apiId,
@@ -79,8 +78,18 @@ export class ClientAdapter implements ITelegramClientAdapter {
           },
           {
             phoneNumber: this.config.phoneNumber,
-            phoneCode: async () => code,
-            password: async () => options?.password || '',
+            phoneCode: async () => {
+              if (typeof options?.code === 'function') {
+                return options.code()
+              }
+              return options?.code || ''
+            },
+            password: async () => {
+              if (typeof options?.password === 'function') {
+                return options.password()
+              }
+              return options?.password || ''
+            },
             onError: (err: Error) => {
               this.logger.withError(err).error('登录失败')
               throw err

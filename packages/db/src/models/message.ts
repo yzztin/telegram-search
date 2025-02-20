@@ -5,7 +5,7 @@ import { sql } from 'drizzle-orm'
 
 import { createChatPartition, createMessageContentTable } from '../schema/message'
 
-const logger = useLogger('models/messages')
+const logger = useLogger()
 
 /**
  * Message input interface

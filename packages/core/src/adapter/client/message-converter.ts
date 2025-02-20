@@ -12,7 +12,7 @@ import { UserResolver } from './user-resolver'
  * Handles conversion of Telegram messages to internal format
  */
 export class MessageConverter {
-  private logger = useLogger('message-converter')
+  private logger = useLogger()
   private userResolver: UserResolver
 
   constructor(

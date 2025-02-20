@@ -7,13 +7,13 @@ import { Command as Commander } from 'commander'
 
 import { registry } from './command'
 import botCommand from './commands/bot'
-import connectCommand from './commands/connect'
 import embedCommand from './commands/embed'
 import exportCommand from './commands/export'
 import importCommand from './commands/import'
 import searchCommand from './commands/search'
 import syncCommand from './commands/sync'
 import watchCommand from './commands/watch'
+import { ensureAuthenticated } from './middlewares/connect'
 
 const logger = useLogger()
 
@@ -22,7 +22,6 @@ const logger = useLogger()
  */
 export function registerCommands() {
   registry.register(botCommand)
-  registry.register(connectCommand)
   registry.register(embedCommand)
   registry.register(exportCommand)
   registry.register(importCommand)
@@ -86,26 +85,8 @@ export function setupCli() {
             (command as { setClient: (client: TelegramAdapter) => void }).setClient(client)
           }
 
-          // Connect to Telegram
-          logger.log('正在连接到 Telegram...')
-          try {
-            await client.connect()
-          }
-          catch (error) {
-            // If connection failed due to authentication, use connect command
-            if (error instanceof Error && (
-              error.message === 'Code is required'
-              || error.message === '2FA password is required'
-              || error.message === 'Code is empty'
-            )) {
-              logger.debug('需要验证，使用 connect 命令...')
-              connectCommand.setClient(client)
-              await connectCommand.execute([], {})
-            }
-            else {
-              throw error
-            }
-          }
+          // Ensure authentication before executing command
+          await ensureAuthenticated(client)
         }
 
         // Execute command

@@ -3,7 +3,7 @@ import { eq, inArray } from 'drizzle-orm'
 
 import { userTable } from '../schema/user'
 
-const logger = useLogger('models/user')
+const logger = useLogger()
 
 /**
  * Get user by ID

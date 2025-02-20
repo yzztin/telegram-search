@@ -20,7 +20,7 @@
     "db:generate": "pnpm -F @tg-search/db db:generate",
     "db:migrate": "pnpm -F @tg-search/db db:migrate",
     "db:push": "pnpm -F @tg-search/db db:push",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test run",
     "test:coverage": "pnpm -r test:coverage"
   },
   "devDependencies": {

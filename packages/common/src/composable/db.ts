@@ -7,7 +7,7 @@ import { getConfig } from './config'
 let dbInstance: ReturnType<typeof drizzle>
 
 export function initDB() {
-  const logger = useLogger('db')
+  const logger = useLogger()
   logger.debug('Initializing database...')
 
   // Database connection

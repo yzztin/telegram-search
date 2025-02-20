@@ -25,7 +25,7 @@ export class MediaService {
       await fs.mkdir(this.mediaDir, { recursive: true })
     }
     catch (error) {
-      this.logger.log('Failed to create media directory:', String(error))
+      this.logger.withError(error).error('Failed to create media directory')
     }
   }
 
@@ -113,7 +113,7 @@ export class MediaService {
       return path.relative(process.cwd(), filePath)
     }
     catch (error) {
-      this.logger.log('Failed to download media:', String(error))
+      this.logger.withError(error).error('Failed to download media')
       return undefined
     }
   }

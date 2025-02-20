@@ -23,7 +23,8 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
-    "db:migrate": "tsx src/migrate.ts"
+    "db:migrate": "tsx src/migrate.ts",
+    "test": "vitest"
   },
   "dependencies": {
     "@tg-search/common": "workspace:*",

@@ -8,7 +8,7 @@ import { Api } from 'telegram'
  * Handles resolution and caching of Telegram user information
  */
 export class UserResolver {
-  private logger = useLogger('user-resolver')
+  private logger = useLogger()
 
   constructor(
     private readonly client: TelegramClient,

@@ -4,7 +4,7 @@ import { useLogger } from '@tg-search/common'
 import { getAllChats, getChatsInFolder } from '@tg-search/db'
 import { Elysia, t } from 'elysia'
 
-const logger = useLogger('search')
+const logger = useLogger()
 
 /**
  * Search routes

@@ -50,8 +50,8 @@ export interface MessageOptions {
  * Connect options for Telegram
  */
 export interface ConnectOptions {
-  code?: string
-  password?: string
+  code?: string | (() => Promise<string>)
+  password?: string | (() => Promise<string>)
 }
 
 /**

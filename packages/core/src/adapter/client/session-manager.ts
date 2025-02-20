@@ -8,7 +8,7 @@ import { StringSession } from 'telegram/sessions'
  */
 export class SessionManager {
   private session: StringSession
-  private logger = useLogger('session')
+  private logger = useLogger()
 
   constructor(
     private readonly sessionFile: string,
