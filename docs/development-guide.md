@@ -1,30 +1,5 @@
 # 开发指南
 
-## 项目结构
-
-```
-packages/
-  ├── cli/           # 命令行工具
-  │   ├── src/
-  │   │   ├── commands/   # CLI 命令实现
-  │   │   └── command.ts  # 命令基类
-  │   └── package.json
-  ├── core/          # 核心功能模块
-  │   ├── src/
-  │   │   ├── adapter/    # Telegram 适配器
-  │   │   └── services/   # 核心服务
-  │   └── package.json
-  ├── db/            # 数据库模块
-  │   ├── src/
-  │   │   ├── models/     # 数据模型
-  │   │   └── schema/     # 数据库模式
-  │   └── package.json
-  └── common/        # 共享工具和类型
-      └── src/
-          ├── helper/     # 工具函数
-          └── types/      # 类型定义
-```
-
 ## 开发环境
 
 ### 环境要求
@@ -73,15 +48,6 @@ pnpm test
 ```bash
 pnpm build
 ```
-
-## 代码规范
-
-- 所有新代码使用 TypeScript 编写
-- 遵循函数式编程范式
-- 注释要解释"为什么"而不是"如何做"
-- 使用有意义的变量和函数名
-- 保持函数简短且功能单一
-- 为新功能编写单元测试
 
 ## 模块说明
 
