@@ -64,67 +64,13 @@ pnpm install
 3. 配置环境：
 
 ```bash
-cp .env.example .env
-# 编辑 .env 文件，填入必要的配置
+cp config/config.example.yaml config/config.yaml
 ```
 
 4. 初始化数据库：
 
 ```bash
 pnpm -F @tg-search/cli db:migrate
-```
-
-## ⚙️ 配置说明
-
-### 核心配置
-
-```env
-# Telegram Bot Token（从 @BotFather 获取）
-BOT_TOKEN="your_bot_token"
-
-# Telegram API 凭据（从 https://my.telegram.org 获取）
-API_ID="your_api_id"
-API_HASH="your_api_hash"
-PHONE_NUMBER="+8613800138000"  # 国际格式的手机号
-
-# OpenAI API Key（用于向量嵌入）
-OPENAI_API_KEY="your_openai_api_key"
-```
-
-### 数据库配置
-
-支持两种配置方式：
-
-1. 使用完整的数据库 URL：
-
-```env
-DATABASE_URL="postgres://user:password@host:5432/dbname"
-```
-
-2. 使用分离的配置项：
-
-```env
-DB_HOST="localhost"
-DB_PORT="5432"
-DB_USER="postgres"
-DB_PASSWORD="postgres"
-DB_NAME="tg_search"
-```
-
-### 数据存储路径
-
-自定义数据存储位置（支持 ~ 表示用户主目录）：
-
-```env
-SESSION_PATH="~/.telegram-search/session"  # Telegram 会话文件
-MEDIA_PATH="~/.telegram-search/media"      # 媒体文件目录
-```
-
-### 可选配置
-
-```env
-# OpenAI API 代理（可选，用于改善国内访问）
-OPENAI_API_BASE="https://your-api-proxy/v1"
 ```
 
 ## 📖 使用指南
@@ -190,53 +136,12 @@ pnpm run dev:cli embed -b 100 -c <chat_id>
 pnpm run dev:cli search
 ```
 
-## 🔧 开发指南
+## 📚 开发文档
 
-### 项目结构
+- [开发指南](docs/development-guide.md)
+- [数据库设计](docs/database-design.md)
+- [贡献指南](CONTRIBUTING.md)
 
-```
-packages/
-  ├── cli/           # 命令行工具
-  │   ├── src/
-  │   │   ├── commands/   # CLI 命令实现
-  │   │   └── command.ts  # 命令基类
-  │   └── package.json
-  ├── core/          # 核心功能模块
-  │   ├── src/
-  │   │   ├── adapter/    # Telegram 适配器
-  │   │   └── services/   # 核心服务
-  │   └── package.json
-  ├── db/            # 数据库模块
-  │   ├── src/
-  │   │   ├── models/     # 数据模型
-  │   │   └── schema/     # 数据库模式
-  │   └── package.json
-  └── common/        # 共享工具和类型
-      └── src/
-          ├── helper/     # 工具函数
-          └── types/      # 类型定义
-```
-
-### 数据库设计
-
-- `messages` 表：消息主表
-
-  - 支持向量搜索（pgvector）
-  - 自动分区（按聊天 ID）
-  - 完整的消息元数据
-  - 高效的索引设计
-
-- `chats` 表：聊天记录
-
-  - 聊天基本信息
-  - 最后消息和同步时间
-  - 消息计数统计
-
-- `folders` 表：文件夹管理
-
-  - 文件夹信息
-  - 同步状态跟踪
- 
 ## 🚀 Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=luoling8192/telegram-search&type=Date)](https://star-history.com/#luoling8192/telegram-search&Date)
