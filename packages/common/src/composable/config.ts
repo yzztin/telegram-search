@@ -60,7 +60,6 @@ const DEFAULT_CONFIG = {
       apiId: '',
       apiHash: '',
       phoneNumber: '',
-      botToken: '',
     },
     // OpenAI API settings
     openai: {
@@ -97,7 +96,6 @@ function validateConfig(config: Config) {
     'api.telegram.apiId',
     'api.telegram.apiHash',
     'api.telegram.phoneNumber',
-    'api.telegram.botToken',
     'api.openai.apiKey',
   ] as const
 

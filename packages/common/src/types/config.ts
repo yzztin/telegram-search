@@ -29,7 +29,6 @@ export interface ApiConfig {
     apiId: string
     apiHash: string
     phoneNumber: string
-    botToken: string
   }
   openai: {
     apiKey: string

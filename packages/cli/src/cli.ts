@@ -6,7 +6,6 @@ import { createAdapter } from '@tg-search/core'
 import { Command as Commander } from 'commander'
 
 import { registry } from './command'
-import botCommand from './commands/bot'
 import embedCommand from './commands/embed'
 import exportCommand from './commands/export'
 import importCommand from './commands/import'
@@ -21,7 +20,6 @@ const logger = useLogger()
  * Register all commands
  */
 export function registerCommands() {
-  registry.register(botCommand)
   registry.register(embedCommand)
   registry.register(exportCommand)
   registry.register(importCommand)

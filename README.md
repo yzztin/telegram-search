@@ -6,10 +6,10 @@
 
 ## ✨ 功能特点
 
-- 🤖 **多模式支持**
+- 🤖 **Client 模式**
 
-  - Bot 模式：使用 Telegram Bot API 实时收集消息
-  - Client 模式：使用 Telegram Client API 访问完整历史记录
+  - 使用 Telegram Client API 访问完整历史记录
+  - 支持增量同步和实时更新
   - 自动处理多媒体内容和消息元数据
 
 - 📥 **数据管理**
@@ -43,8 +43,7 @@
 - Node.js >= 20
 - PostgreSQL >= 15（需要 pgvector 扩展）
 - OpenAI API Key
-- Telegram Bot Token（Bot 模式）
-- Telegram API 凭据（Client 模式）
+- Telegram API 凭据（API ID 和 API Hash）
 
 ### 安装步骤
 
@@ -70,31 +69,31 @@ cp config/config.example.yaml config/config.yaml
 4. 初始化数据库：
 
 ```bash
-pnpm -F @tg-search/cli db:migrate
+pnpm run db:migrate
 ```
+
+5. 启动服务：
+
+```bash
+# 启动后端服务
+pnpm run dev:server
+
+# 启动前端界面
+pnpm run dev:frontend
+```
+
+访问 `http://localhost:3333` 即可打开搜索界面。
 
 ## 📖 使用指南
 
 ### 消息采集
 
-1. 使用 Bot 模式：
-
 ```bash
-# 启动 Bot 服务
-pnpm run dev:cli bot
+# 同步文件夹和会话信息
+pnpm run dev:cli sync
 
-# 启动消息监听
+# 监听指定会话的消息
 pnpm run dev:cli watch
-```
-
-2. 使用 Client 模式：
-
-```bash
-# 连接到 Telegram
-pnpm run dev:cli connect
-
-# 同步指定会话
-pnpm run dev:cli sync -c <chat_id>
 ```
 
 ### 数据导入导出
@@ -102,31 +101,25 @@ pnpm run dev:cli sync -c <chat_id>
 1. 导入历史记录：
 
 ```bash
-# 完整导入（包含向量嵌入）
-pnpm run dev:cli import -c <chat_id> -p <path_to_html_files>
+# 导入 HTML 格式的消息记录
+pnpm run dev:cli import -p <path_to_html_files>
 
-# 快速导入（跳过向量嵌入）
-pnpm run dev:cli import -c <chat_id> -p <path_to_html_files> --no-embedding
+# 跳过向量嵌入
+pnpm run dev:cli import -p <path_to_html_files> --no-embedding
 ```
 
 2. 导出消息：
 
 ```bash
-# 导出为 JSON 格式
-pnpm run dev:cli export -c <chat_id> --format json
-
-# 导出为 HTML 格式
-pnpm run dev:cli export -c <chat_id> --format html
+# 导出消息（支持 database 格式）
+pnpm run dev:cli export
 ```
 
 ### 向量处理
 
 ```bash
-# 处理所有聊天的向量嵌入
-pnpm run dev:cli embed -b 100
-
-# 处理指定聊天的向量嵌入
-pnpm run dev:cli embed -b 100 -c <chat_id>
+# 处理所有消息的向量嵌入
+pnpm run dev:cli embed
 ```
 
 ### 搜索服务
@@ -135,6 +128,33 @@ pnpm run dev:cli embed -b 100 -c <chat_id>
 # 启动搜索服务
 pnpm run dev:cli search
 ```
+
+## 🏗️ 项目架构
+
+项目采用 monorepo 结构，主要包含以下模块：
+
+- 📦 **packages/frontend**
+  - 基于 Vue 3 + TypeScript 的现代化前端界面
+  - 使用 UnoCSS 实现原子化 CSS
+  - 支持暗色模式和响应式设计
+  - 实时消息预览和搜索结果展示
+
+- 🛠️ **packages/server**
+  - 基于 Node.js 的后端服务
+  - RESTful API 设计
+  - WebSocket 实时消息推送
+  - 向量搜索和消息检索服务
+
+- 🔧 **packages/cli**
+  - 命令行工具集
+  - 数据导入导出
+  - 消息同步和监听
+  - 向量处理和数据管理
+
+- 📚 **packages/common**
+  - 共享类型定义
+  - 工具函数
+  - 配置管理
 
 ## 📚 开发文档
 

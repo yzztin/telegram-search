@@ -40,7 +40,6 @@ api:
     apiId: "your_api_id"
     apiHash: "your_api_hash"
     phoneNumber: "+1234567890"
-    botToken: "your_bot_token"
   # OpenAI API settings
   openai:
     apiKey: "your_openai_api_key"
