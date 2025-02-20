@@ -34,6 +34,8 @@ const DEFAULT_CONFIG = {
       concurrent: 3,
       // Number of retry attempts
       retryTimes: 3,
+      // Number of retry attempts for takeout session (0 means infinite retries)
+      maxTakeoutRetries: 3,
     },
     // Database batch settings
     batch: {
