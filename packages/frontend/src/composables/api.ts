@@ -1,3 +1,4 @@
+import type { Config } from '@tg-search/common'
 import type { PaginationParams, PublicChat, PublicFolder, PublicMessage, SearchRequest, SearchResponse } from '@tg-search/server/types'
 
 import { ofetch } from 'ofetch'
