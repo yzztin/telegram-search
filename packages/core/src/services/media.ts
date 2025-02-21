@@ -41,7 +41,7 @@ export class MediaService {
 
       const info: MediaInfo = {
         fileId: media.id?.toString() || '',
-        type,
+        type: type as 'text' | 'photo' | 'video' | 'document' | 'sticker' | 'other',
       }
 
       // Add common properties
