@@ -51,6 +51,7 @@ export interface SearchRequest extends PaginationParams {
   query: string
   folderId?: number
   chatId?: number
+  useVectorSearch?: boolean
 }
 
 /**

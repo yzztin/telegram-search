@@ -41,7 +41,7 @@ function toSearchResultItem(msg: any, score: number): SearchResultItem {
  */
 export const searchRoutes = new Elysia({ prefix: '/search' })
   .post('/', async ({ body }) => {
-    const { query, folderId, chatId, limit = 20, offset = 0 } = body as SearchRequest
+    const { query, folderId, chatId, limit = 20, offset = 0, useVectorSearch = false } = body as SearchRequest
     const startTime = Date.now()
 
     // Log search request
@@ -51,6 +51,7 @@ export const searchRoutes = new Elysia({ prefix: '/search' })
       chatId,
       limit,
       offset,
+      useVectorSearch,
     }).debug('Search request received')
 
     return createSSEResponse(async (controller) => {
@@ -116,10 +117,10 @@ export const searchRoutes = new Elysia({ prefix: '/search' })
         sendPartialResults()
       }
 
-      // 如果结果不够多，尝试向量搜索
-      if (allResults.size < limit) {
-        logger.debug('Not enough results, trying vector search...')
-        controller.enqueue(createSSEMessage('info', 'Not enough results, trying vector search...'))
+      // 如果使用向量搜索，则进行向量搜索
+      if (useVectorSearch) {
+        logger.debug('Starting vector search...')
+        controller.enqueue(createSSEMessage('info', 'Starting vector search...'))
 
         const embedding = new EmbeddingService()
         try {
@@ -199,5 +200,6 @@ export const searchRoutes = new Elysia({ prefix: '/search' })
       chatId: t.Optional(t.Number()),
       limit: t.Optional(t.Number()),
       offset: t.Optional(t.Number()),
+      useVectorSearch: t.Optional(t.Boolean()),
     }),
   })

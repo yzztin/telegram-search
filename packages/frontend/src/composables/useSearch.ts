@@ -148,6 +148,7 @@ export function useSearch() {
   const pageSize = ref(20)
   const currentChatId = ref<number | undefined>()
   const currentFolderId = ref<number | undefined>()
+  const useVectorSearch = ref(false)
 
   // Stream state
   const isStreaming = ref(false)
@@ -190,6 +191,7 @@ export function useSearch() {
         limit: params?.limit || pageSize.value,
         folderId: currentFolderId.value,
         chatId: currentChatId.value,
+        useVectorSearch: useVectorSearch.value,
       }, streamController.value.signal, {
         onInfo: (info) => {
           searchProgress.value.push(info)
@@ -258,6 +260,7 @@ export function useSearch() {
     currentPage.value = 1
     currentChatId.value = undefined
     currentFolderId.value = undefined
+    useVectorSearch.value = false
     error.value = null
     searchProgress.value = []
 
@@ -280,6 +283,7 @@ export function useSearch() {
     searchProgress,
     currentChatId,
     currentFolderId,
+    useVectorSearch,
 
     // Methods
     search,

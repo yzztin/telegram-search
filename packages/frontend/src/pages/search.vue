@@ -23,6 +23,7 @@ const {
   searchProgress,
   search: doSearch,
   changePage: handlePageChange,
+  useVectorSearch,
 } = useSearch()
 
 // Handle search with chat ID
@@ -78,21 +79,43 @@ function formatDate(date: string | Date): string {
 
     <!-- Search form -->
     <form class="mb-8" @submit.prevent="handleSearch">
-      <div class="flex gap-4">
-        <input
-          v-model="query"
-          type="search"
-          placeholder="输入搜索关键词..."
-          class="flex-1 border rounded-lg px-4 py-2 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          :disabled="isLoading"
-        >
-        <button
-          type="submit"
-          class="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          :disabled="isLoading || !query.trim()"
-        >
-          {{ isLoading ? '搜索中...' : '搜索' }}
-        </button>
+      <div class="flex flex-col gap-4">
+        <div class="flex gap-4">
+          <input
+            v-model="query"
+            type="search"
+            placeholder="输入搜索关键词..."
+            class="flex-1 border rounded-lg px-4 py-2 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :disabled="isLoading"
+          >
+          <button
+            type="submit"
+            class="rounded-lg bg-blue-500 px-6 py-2 text-white hover:bg-blue-600 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            :disabled="isLoading || !query.trim()"
+          >
+            {{ isLoading ? '搜索中...' : '搜索' }}
+          </button>
+        </div>
+        <div class="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+          <label class="text-sm text-gray-600 dark:text-gray-400">
+            使用向量搜索
+            <span class="text-xs text-gray-500">(可能会更慢，但能找到更多相关内容)</span>
+          </label>
+          <button
+            type="button"
+            role="switch"
+            :aria-checked="useVectorSearch"
+            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            :class="useVectorSearch ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'"
+            @click="useVectorSearch = !useVectorSearch"
+          >
+            <span class="sr-only">使用向量搜索</span>
+            <span
+              class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200"
+              :class="useVectorSearch ? 'translate-x-6' : 'translate-x-1'"
+            />
+          </button>
+        </div>
       </div>
     </form>
 
