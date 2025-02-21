@@ -31,6 +31,7 @@
     "@tg-search/pg-vector": "workspace:*",
     "drizzle-kit": "^0.30.4",
     "drizzle-orm": "^0.39.3",
+    "glob": "^11.0.1",
     "pg": "^8.13.3",
     "postgres": "^3.4.5",
     "zod": "^3.24.2"

@@ -195,6 +195,9 @@ importers:
       drizzle-orm:
         specifier: ^0.39.3
         version: 0.39.3(@types/pg@8.11.11)(pg@8.13.3)(postgres@3.4.5)
+      glob:
+        specifier: ^11.0.1
+        version: 11.0.1
       pg:
         specifier: ^8.13.3
         version: 8.13.3
@@ -2409,8 +2412,8 @@ packages:
   '@xsai/providers@0.1.0-beta.5':
     resolution: {integrity: sha512-jx630mUblMSUcDcXa+BNiFB7deQy1lp0XcJHQokfo/+QvYOpgaPrIRH6oUcjwLio0+8gJXqQmQfEY3+fl9Tjew==}
 
-  '@xsai/shared@0.1.0-beta.5':
-    resolution: {integrity: sha512-6xk7udi8L6oI8VaLS10r8j0ZyjEYd9YPwoZ1Pj+28t/6b7UgzJZ0KO5Plc42SNvb784ivXp9UNvoBbya18vL3Q==}
+  '@xsai/shared@0.1.0-beta.6':
+    resolution: {integrity: sha512-UCTpiD9bCMdOwmoZebi4GNGHkiYMDtI2GUa8d4OCykcrn9sm/+7cjwt4xXm1MYslsMvCrTX1l0sC1QbWHi+kbQ==}
 
   abbrev@3.0.0:
     resolution: {integrity: sha512-+/kfrslGQ7TNV2ecmQwMJj/B65g5KVq1/L3SGVZ3tCYGqlzFuFCGBZJtMP99wH3NpEUyAjn0zPdPUg0D+DwrOA==}
@@ -7529,13 +7532,13 @@ snapshots:
 
   '@xsai/embed@0.1.0-beta.5':
     dependencies:
-      '@xsai/shared': 0.1.0-beta.5
+      '@xsai/shared': 0.1.0-beta.6
 
   '@xsai/providers@0.1.0-beta.5':
     dependencies:
-      '@xsai/shared': 0.1.0-beta.5
+      '@xsai/shared': 0.1.0-beta.6
 
-  '@xsai/shared@0.1.0-beta.5': {}
+  '@xsai/shared@0.1.0-beta.6': {}
 
   abbrev@3.0.0: {}
 
