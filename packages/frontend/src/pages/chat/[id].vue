@@ -142,31 +142,51 @@ async function jumpToMessage(messageId: number) {
   // Message not in current list, load it
   loading.value = true
   try {
-    // Calculate approximate page
-    const page = Math.floor(messageId / pageSize)
-    const response = await getMessages(chatId, {
-      limit: pageSize,
-      offset: page * pageSize,
-    })
+    // Try to load messages until we find the target message
+    let offset = 0
+    let found = false
+    while (!found) {
+      const response = await getMessages(chatId, {
+        limit: pageSize,
+        offset,
+      })
 
-    if (response.items) {
+      if (!response.items || response.items.length === 0) {
+        break
+      }
+
       messages.value = response.items.reverse()
       total.value = response.total
-      currentPage.value = page + 1
+      currentPage.value = Math.floor(offset / pageSize) + 1
 
-      await nextTick()
-      const messageElement = document.getElementById(`message-${messageId}`)
-      if (messageElement) {
-        messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
-        // Highlight message temporarily
-        const targetMessage = messages.value.find(m => m.id === messageId)
-        if (targetMessage) {
+      // Check if target message is in this batch
+      const targetMessage = messages.value.find(m => m.id === messageId)
+      if (targetMessage) {
+        found = true
+        await nextTick()
+        const messageElement = document.getElementById(`message-${messageId}`)
+        if (messageElement) {
+          messageElement.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          // Highlight message temporarily
           targetMessage.highlight = true
           setTimeout(() => {
             targetMessage.highlight = false
           }, 2000)
         }
+        break
       }
+
+      // If not found and there are more messages, try next batch
+      if (offset + pageSize < response.total) {
+        offset += pageSize
+      }
+      else {
+        break
+      }
+    }
+
+    if (!found) {
+      console.warn(`Message ${messageId} not found`)
     }
   }
   finally {
