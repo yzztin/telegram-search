@@ -1,5 +1,3 @@
-import type { Config } from '@tg-search/common'
-
 import { getConfig, updateConfig, useLogger } from '@tg-search/common'
 import { Elysia, t } from 'elysia'
 
@@ -46,30 +44,6 @@ const configSchema = t.Object({
 })
 
 /**
- * Mask sensitive information in config
- */
-function maskConfig(config: Config): Config {
-  return {
-    ...config,
-    database: {
-      ...config.database,
-      password: '******',
-    },
-    api: {
-      ...config.api,
-      telegram: {
-        ...config.api.telegram,
-        apiHash: '******',
-      },
-      openai: {
-        ...config.api.openai,
-        apiKey: '******',
-      },
-    },
-  }
-}
-
-/**
  * Config routes
  */
 export const configRoutes = new Elysia({ prefix: '/config' })
@@ -81,13 +55,13 @@ export const configRoutes = new Elysia({ prefix: '/config' })
   // Get current config
   .get('/', () => {
     const config = getConfig()
-    return createResponse(maskConfig(config))
+    return createResponse(config)
   })
   // Update config
   .put('/', async ({ body }) => {
     try {
       const updatedConfig = updateConfig(body)
-      return createResponse(maskConfig(updatedConfig))
+      return createResponse(updatedConfig)
     }
     catch (err) {
       logger.withError(err).error('Failed to update config')
