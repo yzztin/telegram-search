@@ -5,6 +5,7 @@ import { initConfig, initDB, initLogger, useLogger } from '@tg-search/common'
 import { Elysia } from 'elysia'
 
 import { chatRoutes } from './routes/chat'
+import { configRoutes } from './routes/config'
 import { messageRoutes } from './routes/message'
 import { searchRoutes } from './routes/search'
 
@@ -158,6 +159,7 @@ function setupErrorHandlers(logger: ReturnType<typeof useLogger>) {
     .use(chatRoutes)
     .use(searchRoutes)
     .use(messageRoutes)
+    .use(configRoutes)
     .listen(3000, () => {
       logger.debug('Server listening on http://localhost:3000')
     })

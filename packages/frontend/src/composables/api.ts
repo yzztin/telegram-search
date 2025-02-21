@@ -119,6 +119,50 @@ export function useApi() {
     }
   }
 
+  // Get current config
+  async function getConfig(): Promise<Config> {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await apiFetch<{ success: boolean, data: Config }>('/config')
+      if (!response.success) {
+        throw new Error('Failed to fetch config')
+      }
+      return response.data
+    }
+    catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  // Update config
+  async function updateConfig(config: Config): Promise<void> {
+    loading.value = true
+    error.value = null
+
+    try {
+      const response = await apiFetch<{ success: boolean }>('/config', {
+        method: 'PUT',
+        body: config,
+      })
+      if (!response.success) {
+        throw new Error('Failed to update config')
+      }
+    }
+    catch (err) {
+      error.value = err instanceof Error ? err.message : 'Unknown error'
+      throw err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
   // Composable methods with state management
   return {
     loading,
@@ -127,6 +171,8 @@ export function useApi() {
     searchMessages: (params: SearchRequest) => request(() => api.searchMessages(params)),
     getChats: () => request(() => api.getChats()),
     getMessages: (chatId: number, params?: PaginationParams) => request(() => api.getMessages(chatId, params)),
+    getConfig,
+    updateConfig,
   }
 }
 

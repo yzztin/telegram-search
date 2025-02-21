@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import { isDark, toggleDark } from '../composables/dark'
+
+const router = useRouter()
 </script>
 
 <template>
@@ -17,6 +20,13 @@ import { isDark, toggleDark } from '../composables/dark'
             @click="toggleDark()"
           >
             <div class="i-carbon-moon dark:i-carbon-sun h-5 w-5 dark:text-white" />
+          </button>
+
+          <button
+            class="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800"
+            @click="router.push('/settings')"
+          >
+            <div class="i-carbon-settings h-5 w-5 dark:text-white" />
           </button>
         </div>
       </div>
