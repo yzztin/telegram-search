@@ -5,7 +5,7 @@ import type { DatabaseMessageType } from '@tg-search/db'
 import type { ExportDetails } from '@tg-search/server'
 import { computed, onUnmounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
-import { useCommands } from '../../apis/useCommands'
+import { useExport } from '../../apis/commands/useExport'
 
 // Props
 const props = defineProps<{
@@ -18,7 +18,7 @@ const {
   isLoading,
   isConnected,
   cleanup,
-} = useCommands()
+} = useExport()
 
 // Cleanup when component is unmounted
 onUnmounted(() => {
@@ -74,11 +74,16 @@ async function handleExport() {
     return
   }
 
-  await executeExport({
+  const toastId = toast.loading('正在准备导出...')
+  const result = await executeExport({
     chatId: selectedChatId.value,
     messageTypes: selectedMessageTypes.value,
     method: selectedMethod.value,
   })
+
+  if (!result.success) {
+    toast.error(result.error || '导出失败', { id: toastId })
+  }
 }
 
 // Computed properties for progress display
@@ -90,9 +95,9 @@ const exportStatus = computed(() => {
   switch (currentCommand.value.status) {
     case 'running':
       return '导出中'
-    case 'success':
+    case 'completed':
       return '导出完成'
-    case 'error':
+    case 'failed':
       return '导出失败'
     default:
       return '准备导出'
@@ -265,9 +270,8 @@ function formatTime(time: string): string {
           class="rounded px-2 py-1 text-sm"
           :class="{
             'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100': currentCommand.status === 'running',
-            'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100': currentCommand.status === 'success',
-            'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100': currentCommand.status === 'error',
-            'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100': currentCommand.status === 'idle',
+            'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100': currentCommand.status === 'completed',
+            'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100': currentCommand.status === 'failed',
           }"
         >
           {{ exportStatus }}
@@ -281,8 +285,8 @@ function formatTime(time: string): string {
             class="h-full rounded transition-all duration-300"
             :class="{
               'bg-blue-500 dark:bg-blue-600': currentCommand.status === 'running',
-              'bg-green-500 dark:bg-green-600': currentCommand.status === 'success',
-              'bg-red-500 dark:bg-red-600': currentCommand.status === 'error',
+              'bg-green-500 dark:bg-green-600': currentCommand.status === 'completed',
+              'bg-red-500 dark:bg-red-600': currentCommand.status === 'failed',
             }"
             :style="{ width: `${exportProgress}%` }"
           />

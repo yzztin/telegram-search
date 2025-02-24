@@ -1,13 +1,13 @@
 import type { App, H3Event } from 'h3'
-import type { SearchRequest, SearchResultItem } from '../types'
+import type { SearchCompleteResponse, SearchRequest, SearchResultItem } from '../types'
 
 import { useLogger } from '@tg-search/common'
 import { EmbeddingService } from '@tg-search/core'
 import { findMessagesByText, findSimilarMessages, getChatsInFolder } from '@tg-search/db'
 import { createRouter, defineEventHandler, readBody } from 'h3'
 
-import { createResponse } from '../utils/response'
-import { createSSEMessage, createSSEResponse } from '../utils/sse'
+import { SSEHandler } from '../services/sse-handler'
+import { createSSEResponse } from '../utils/sse'
 
 const logger = useLogger()
 
@@ -24,58 +24,36 @@ export function setupSearchRoutes(app: App) {
     const startTime = Date.now()
 
     // Log search request
-    logger.withFields({
-      query,
-      folderId,
-      chatId,
-      limit,
-      offset,
-      useVectorSearch,
-    }).debug('Search request received')
-
     return createSSEResponse(async (controller) => {
-      // Send initial message
-      controller.enqueue(createSSEMessage('info', 'Starting search...'))
-
-      // Get chats to search in
-      let targetChatId = chatId
-      if (folderId) {
-        // Search in folder
-        const chats = await getChatsInFolder(folderId)
-        if (chats.length === 0) {
-          throw new Error('No chats found in folder')
-        }
-        if (chats.length === 1) {
-          targetChatId = chats[0].id
-        }
-        logger.debug(`Searching in folder: ${folderId}, found ${chats.length} chats`)
-        controller.enqueue(createSSEMessage('info', `Searching in folder ${folderId} (${chats.length} chats)`))
-      }
-
-      // Store all results in a Map
-      const allResults = new Map<number, SearchResultItem>()
-
-      // Function to send partial results
-      const sendPartialResults = () => {
-        const items = Array.from(allResults.values())
-          .sort((a, b) => b.score - a.score)
-          .slice(offset, offset + limit)
-
-        const response = createResponse({
-          total: allResults.size,
-          items,
-        }, undefined, {
-          total: allResults.size,
-          page: Math.floor(offset / limit) + 1,
-          pageSize: limit,
-          totalPages: Math.ceil(allResults.size / limit),
-        })
-
-        controller.enqueue(createSSEMessage('partial', response))
-        logger.debug(`Sent partial results: ${items.length} items, total: ${allResults.size}`)
-      }
+      const handler = new SSEHandler<SearchResultItem[]>(controller)
 
       try {
+        // Get chats to search in
+        let targetChatId = chatId
+        if (folderId) {
+          // Search in folder
+          const chats = await getChatsInFolder(folderId)
+          if (chats.length === 0) {
+            throw new Error('No chats found in folder')
+          }
+          if (chats.length === 1) {
+            targetChatId = chats[0].id
+          }
+
+          logger.debug(`Searching in folder: ${folderId}, found ${chats.length} chats`)
+        }
+
+        const allResults = new Map<number, SearchResultItem>()
+
+        // Function to send partial results
+        const sendPartialResults = () => {
+          const items = Array.from(allResults.values())
+            .sort((a, b) => b.score - a.score)
+            .slice(offset, offset + limit)
+
+          handler.sendProgress(items)
+        }
+
         if (useVectorSearch) {
           // Vector search
           const embedding = new EmbeddingService()
@@ -111,16 +89,14 @@ export function setupSearchRoutes(app: App) {
           sendPartialResults()
         }
 
-        // Send complete message
-        const endTime = Date.now()
-        controller.complete({
-          duration: endTime - startTime,
+        handler.complete({
+          duration: Date.now() - startTime,
           total: allResults.size,
-        })
+        } as SearchCompleteResponse)
       }
       catch (error) {
         logger.withError(error).error('Search failed')
-        controller.error(error)
+        handler.error(error as Error)
       }
     })
   }))

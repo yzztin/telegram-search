@@ -1,28 +1,58 @@
-import type { ApiError, ApiResponse } from '@tg-search/server'
+import type { ApiError, ApiResponse, SSEHandlerOptions } from '@tg-search/server'
 
-import { ofetch } from 'ofetch'
 import { ref } from 'vue'
 
-import { useReconnect } from '../apis/useReconnect'
 import { API_BASE } from '../constants'
+import { useReconnect } from './useReconnect'
 
-interface SSEHandlers<T> {
-  onInfo: (info: string) => void
-  onInit?: (data: ApiResponse<T>) => void
-  onUpdate: (data: ApiResponse<T>) => void
-  onError: (error: ApiError) => void
-  onComplete: (data: ApiResponse<T>) => void
+interface SSEEvent {
+  event: string
+  data: string
+}
+
+export type SSEClientOptions<T, R> = SSEHandlerOptions<T, R> & {
+  signal?: AbortSignal
 }
 
 /**
- * Create SSE connection with event handlers and state management
+ * Parse SSE events from raw response data
  */
-export function useSSE<T>() {
-  // Connection state
+function parseSSEEvents(chunk: Uint8Array): SSEEvent[] {
+  const decoder = new TextDecoder()
+  const text = decoder.decode(chunk, { stream: true })
+  const events: SSEEvent[] = []
+
+  const lines = text.split('\n')
+  let currentEvent: Partial<SSEEvent> = {}
+
+  for (const line of lines) {
+    if (!line.trim()) {
+      if (currentEvent.data) {
+        events.push(currentEvent as SSEEvent)
+        currentEvent = {}
+      }
+      continue
+    }
+
+    if (line.startsWith('event: ')) {
+      currentEvent.event = line.slice(7).trim()
+    }
+    else if (line.startsWith('data: ')) {
+      currentEvent.data = line.slice(6).trim()
+    }
+  }
+
+  return events
+}
+
+/**
+ * SSE composable for handling server-sent events
+ */
+export function useSSE<T = unknown, R = unknown>() {
   const loading = ref<boolean>(false)
   const error = ref<string | null>(null)
-  const abortController = ref<AbortController | null>(null)
   const isConnected = ref(false)
+
   const {
     attempts: reconnectAttempts,
     maxAttempts: maxReconnectAttempts,
@@ -34,54 +64,28 @@ export function useSSE<T>() {
   async function createConnection(
     url: string,
     params: Record<string, unknown>,
-    handlers: SSEHandlers<T>,
+    handlers: SSEHandlerOptions<T, R>,
   ) {
-    if (abortController.value) {
-      abortController.value.abort()
-    }
-    abortController.value = new AbortController()
+    loading.value = true
+    error.value = null
 
     try {
-      loading.value = true
-      error.value = null
-
-      const response = await ofetch.raw(`${API_BASE}${url}`, {
+      const response = await fetch(`${API_BASE}${url}`, {
         method: 'POST',
-        body: params,
-        signal: abortController.value.signal,
-        responseType: 'stream',
-        onResponseError: () => {},
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params),
       })
 
       if (!response.ok) {
         throw new Error('Failed to connect to SSE')
       }
 
-      const reader = response._data!.getReader()
-      const decoder = new TextDecoder()
-      let buffer = ''
+      const reader = response.body?.getReader()
+      if (!reader)
+        throw new Error('No response body')
 
-      // Create event type to handler mapping
-      const eventHandlers: Record<string, (data: ApiResponse<T>) => void> = {
-        info: (data) => {
-          handlers.onInfo?.(data.message || 'Unknown info')
-          isConnected.value = true
-          resetAttempts()
-        },
-        init: data => handlers.onInit?.(data),
-        update: data => handlers.onUpdate?.(data),
-        partial: data => handlers.onUpdate?.(data),
-        complete: (data) => {
-          handlers.onComplete?.(data)
-          isConnected.value = false
-          resetAttempts()
-        },
-        error: (data) => {
-          handlers.onError?.(new Error(data.message || 'Unknown error') as ApiError)
-          isConnected.value = false
-          recordAttempt()
-        },
-      }
+      isConnected.value = true
+      resetAttempts()
 
       try {
         while (true) {
@@ -89,24 +93,38 @@ export function useSSE<T>() {
           if (done)
             break
 
-          buffer += decoder.decode(value, { stream: true })
-          const lines = buffer.split('\n')
-          buffer = lines.pop() || ''
+          const events = parseSSEEvents(value)
+          for (const event of events) {
+            const data = JSON.parse(event.data) as ApiResponse<T | R>
 
-          for (const line of lines) {
-            if (!line.trim())
-              continue
+            switch (event.event) {
+              case 'progress': {
+                // eslint-disable-next-line no-console
+                console.log('[SSE] Received progress event:', data)
 
-            if (line.startsWith('event: ')) {
-              const eventType = line.slice(7).trim()
-              const dataLine = lines[lines.indexOf(line) + 1]
-              if (!dataLine?.startsWith('data: '))
-                continue
+                if (data.success && data.data) {
+                  handlers.onProgress?.(data.data as T)
+                }
+                break
+              }
+              case 'complete': {
+                // eslint-disable-next-line no-console
+                console.log('[SSE] Received complete event:', data)
 
-              const handler = eventHandlers[eventType]
-              if (handler && dataLine?.startsWith('data: ')) {
-                const data = JSON.parse(dataLine.slice(6)) as ApiResponse<T>
-                handler(data)
+                if (data.success && data.data) {
+                  handlers.onComplete?.(data.data as R)
+                }
+                isConnected.value = false
+                resetAttempts()
+                break
+              }
+              case 'error': {
+                console.error('[SSE] Received error event:', data)
+
+                handlers.onError?.(new Error(data.message || 'Unknown error') as ApiError)
+                isConnected.value = false
+                recordAttempt()
+                break
               }
             }
           }
@@ -128,11 +146,10 @@ export function useSSE<T>() {
       const message = e instanceof Error ? e.message : 'Unknown error'
       error.value = message
       isConnected.value = false
-      handlers.onError?.(new Error(message) as ApiError)
+      handlers.onError?.(new Error(message))
     }
     finally {
       loading.value = false
-      abortController.value = null
     }
   }
 

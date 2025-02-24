@@ -19,34 +19,49 @@ export function createSSEResponse(
   return new Response(
     new ReadableStream({
       async start(controller) {
-        // Create SSE controller with helper methods
         const sseController: SSEController = {
           enqueue: data => controller.enqueue(data),
           close: () => {
-            controller.close()
+            if (!isStreamClosed(controller)) {
+              controller.close()
+            }
           },
-          complete: (data: unknown) => {
-            controller.enqueue(createSSEMessage('complete', createResponse(data)))
-            controller.close()
+          complete: (data) => {
+            if (!isStreamClosed(controller)) {
+              controller.enqueue(createSSEMessage('complete', createResponse(data)))
+              controller.close()
+            }
           },
-          error: (err: unknown) => {
-            controller.enqueue(createSSEMessage('error', createResponse(undefined, err)))
-            controller.close()
+          error: (err) => {
+            if (!isStreamClosed(controller)) {
+              controller.enqueue(createSSEMessage('error', createResponse(undefined, err)))
+              controller.close()
+            }
+          },
+          progress: (data) => {
+            if (!isStreamClosed(controller)) {
+              controller.enqueue(createSSEMessage('progress', createResponse(data)))
+            }
           },
         }
 
         try {
-          // Execute handler without auto-closing
           await handler(sseController)
+          // 确保处理完成后关闭
+          sseController.complete(null)
         }
         catch (err) {
-          // Only handle error if controller is still writable
-          if (controller.desiredSize !== null) {
-            sseController.error(err)
-          }
+          sseController.error(err)
         }
       },
     }),
     { headers: SSE_HEADERS },
   )
+}
+
+/**
+ * Check if the stream is closed
+ */
+function isStreamClosed(controller: ReadableStreamDefaultController) {
+  return controller.desiredSize === null
 }
