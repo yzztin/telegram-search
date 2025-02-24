@@ -4,7 +4,7 @@ import * as fs from 'node:fs'
 import * as os from 'node:os'
 import { join } from 'node:path'
 import process from 'node:process'
-import { merge } from 'lodash'
+import { defu } from 'defu'
 import * as yaml from 'yaml'
 
 import { useLogger } from '../helper/logger'
@@ -184,7 +184,7 @@ export function initConfig() {
     }
 
     // Merge configurations with type assertion
-    const mergedConfig = merge({}, DEFAULT_CONFIG, envConfig, mainConfig) as Config
+    const mergedConfig = defu<Config, Partial<Config>[]>(mainConfig, envConfig, DEFAULT_CONFIG)
 
     // Resolve paths
     mergedConfig.path.session = resolveHomeDir(mergedConfig.path.session)
@@ -206,6 +206,8 @@ export function initConfig() {
     config = mergedConfig
 
     logger.debug('Config initialized successfully')
+
+    return mergedConfig
   }
   catch (error) {
     logger.withError(error).error('Failed to initialize config')
@@ -237,7 +239,7 @@ export function updateConfig(newConfig: Config): Config {
     const configPath = findConfigFile()
 
     // Merge new config with current config
-    const mergedConfig = merge({}, currentConfig, newConfig)
+    const mergedConfig = defu({}, currentConfig, newConfig)
 
     // Validate merged config
     validateConfig(mergedConfig)

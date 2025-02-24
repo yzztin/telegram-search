@@ -66,6 +66,7 @@ cd telegram-search
 
 ```bash
 pnpm install
+pnpm run stub
 ```
 
 3. 配置环境：
