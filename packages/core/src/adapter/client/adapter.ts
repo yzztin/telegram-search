@@ -1,5 +1,5 @@
-import type { NewChat, NewFolder } from '@tg-search/db'
-import type { ConnectOptions, DialogsResult, Folder, ITelegramClientAdapter, MessageOptions, TelegramMessage } from '../types'
+import type { DatabaseFolder, DatabaseNewChat } from '@tg-search/db'
+import type { ClientAdapterConfig, ConnectOptions, GetTelegramMessageParams, ITelegramClientAdapter, TelegramChatsResult, TelegramFolder, TelegramMessage } from '../../types'
 
 import { getConfig, useLogger } from '@tg-search/common'
 import bigInt from 'big-integer'
@@ -11,14 +11,6 @@ import { DialogManager } from './dialog-manager'
 import { FolderManager } from './folder-manager'
 import { MessageConverter } from './message-converter'
 import { SessionManager } from './session-manager'
-
-interface ClientAdapterConfig {
-  apiId: number
-  apiHash: string
-  phoneNumber: string
-  password?: string
-  systemVersion?: string
-}
 
 /**
  * Telegram client adapter implementation
@@ -60,6 +52,10 @@ export class ClientAdapter implements ITelegramClientAdapter {
 
   get type() {
     return 'client' as const
+  }
+
+  async isConnected() {
+    return this.client.isUserAuthorized()
   }
 
   async connect(options?: ConnectOptions) {
@@ -115,7 +111,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
     await this.client.disconnect()
   }
 
-  async getDialogs(offset = 0, limit = 10): Promise<DialogsResult> {
+  async getDialogs(offset = 0, limit = 10): Promise<TelegramChatsResult> {
     return this.dialogManager.getDialogs(offset, limit)
   }
 
@@ -269,7 +265,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
   private async *takeoutMessages(
     chatId: number,
     limit: number,
-    options?: MessageOptions,
+    options?: GetTelegramMessageParams,
   ): AsyncGenerator<TelegramMessage> {
     let offsetId = 0
     let hasMore = true
@@ -362,7 +358,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
   private async *getNormalMessages(
     chatId: number,
     limit?: number,
-    options?: MessageOptions,
+    options?: GetTelegramMessageParams,
   ): AsyncGenerator<TelegramMessage> {
     let offsetId = 0
     let hasMore = true
@@ -424,7 +420,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
     }
   }
 
-  async *getMessages(chatId: number, limit = 100, options?: MessageOptions): AsyncGenerator<TelegramMessage> {
+  async *getMessages(chatId: number, limit = 100, options?: GetTelegramMessageParams): AsyncGenerator<TelegramMessage> {
     if (options?.method === 'takeout') {
       try {
       // Try to use takeout first
@@ -450,15 +446,15 @@ export class ClientAdapter implements ITelegramClientAdapter {
     this.messageCallback = callback
   }
 
-  async getFolders(): Promise<NewFolder[]> {
+  async getFolders(): Promise<DatabaseFolder[]> {
     return this.folderManager.getFolders()
   }
 
-  async getFoldersForChat(chatId: number): Promise<Folder[]> {
+  async getFoldersForChat(chatId: number): Promise<TelegramFolder[]> {
     return this.folderManager.getFoldersForChat(chatId)
   }
 
-  async getChats(): Promise<NewChat[]> {
+  async getChats(): Promise<DatabaseNewChat[]> {
     return this.dialogManager.getChats()
   }
 }

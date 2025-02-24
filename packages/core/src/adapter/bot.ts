@@ -1,16 +1,17 @@
-import type { ITelegramBotAdapter, TelegramMessage, TelegramMessageType } from './types'
+import type { DatabaseMessageType } from '@tg-search/db'
+import type { ITelegramBotAdapter, TelegramMessage } from '../types'
 
 import { useLogger } from '@tg-search/common'
 import { getMessageStats } from '@tg-search/db'
-import { Bot, GrammyError, HttpError } from 'grammy'
+import { GrammyError, HttpError, Bot as TelegramBot } from 'grammy'
 
 export class BotAdapter implements ITelegramBotAdapter {
-  private bot: Bot
+  private bot: TelegramBot
   private messageCallback?: (message: TelegramMessage) => Promise<void>
   private logger = useLogger()
 
   constructor(token: string) {
-    this.bot = new Bot(token)
+    this.bot = new TelegramBot(token)
 
     // Error handling
     this.bot.catch((err) => {
@@ -84,7 +85,7 @@ export class BotAdapter implements ITelegramBotAdapter {
   /**
    * Convert message type from Grammy to our type
    */
-  private getMessageType(message: any): TelegramMessageType {
+  private getMessageType(message: any): DatabaseMessageType {
     if (message.text)
       return 'text'
     if (message.photo)

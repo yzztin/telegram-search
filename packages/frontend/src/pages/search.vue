@@ -2,8 +2,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from 'vue-router'
 import { toast, Toaster } from 'vue-sonner'
-import HighlightText from '../components/HighlightText.vue'
-import { useSearch } from '../composables/useSearch'
+import { useSearch } from '../apis/useSearch'
 
 const route = useRoute()
 const router = useRouter()
@@ -96,7 +95,7 @@ function formatDate(date: string | Date): string {
             {{ isLoading ? '搜索中...' : '搜索' }}
           </button>
         </div>
-        <div class="flex items-center justify-between px-2 py-1 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800">
+        <div class="flex items-center justify-between rounded-lg px-2 py-1 hover:bg-gray-50 dark:hover:bg-gray-800">
           <label class="text-sm text-gray-600 dark:text-gray-400">
             使用向量搜索
             <span class="text-xs text-gray-500">(可能会更慢，但能找到更多相关内容)</span>
@@ -105,7 +104,7 @@ function formatDate(date: string | Date): string {
             type="button"
             role="switch"
             :aria-checked="useVectorSearch"
-            class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            class="relative h-6 w-11 inline-flex items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             :class="useVectorSearch ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'"
             @click="useVectorSearch = !useVectorSearch"
           >
@@ -130,7 +129,7 @@ function formatDate(date: string | Date): string {
       </div>
 
       <!-- Progress logs -->
-      <div class="rounded-lg bg-gray-50 p-4 space-y-2 dark:bg-gray-800">
+      <!-- <div class="rounded-lg bg-gray-50 p-4 space-y-2 dark:bg-gray-800">
         <div
           v-for="(log, index) in searchProgress"
           :key="index"
@@ -138,7 +137,7 @@ function formatDate(date: string | Date): string {
         >
           {{ log }}
         </div>
-      </div>
+      </div> -->
     </div>
 
     <!-- Error message -->

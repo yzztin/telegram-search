@@ -1,26 +1,18 @@
 <!-- Chat list page -->
 <script setup lang="ts">
-import type { PublicChat } from '@tg-search/server/types'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useApi } from '../composables/api'
+import { useChats } from '../apis/useChats'
 
 // Initialize API client and router
-const { loading, getChats } = useApi()
+const { loading, error, chats, loadChats } = useChats()
 const router = useRouter()
-const chats = ref<PublicChat[]>([])
 
 // Computed properties for filtered and categorized chats
-const nonEmptyChats = computed(() => chats.value.filter(chat => chat.messageCount > 0))
-
+const nonEmptyChats = computed(() => chats.value.filter(chat => chat.messageCount && chat.messageCount > 0))
 const privateChats = computed(() => nonEmptyChats.value.filter(chat => chat.type === 'user'))
 const groupChats = computed(() => nonEmptyChats.value.filter(chat => chat.type === 'group'))
 const channelChats = computed(() => nonEmptyChats.value.filter(chat => chat.type === 'channel'))
-
-// Load chats from API
-async function loadChats() {
-  chats.value = await getChats()
-}
 
 // Navigate to chat view
 function goToChat(chatId: number) {
@@ -28,8 +20,8 @@ function goToChat(chatId: number) {
 }
 
 // Load chats on component mount
-onMounted(() => {
-  loadChats()
+onMounted(async () => {
+  await loadChats()
 })
 </script>
 
@@ -42,6 +34,11 @@ onMounted(() => {
     <!-- Loading state -->
     <div v-if="loading" class="text-gray-500">
       Loading...
+    </div>
+
+    <!-- Error state -->
+    <div v-else-if="error" class="text-red-500">
+      {{ error }}
     </div>
 
     <!-- Chat list -->

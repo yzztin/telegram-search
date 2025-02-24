@@ -1,10 +1,7 @@
-import type { ApiResponse } from './response'
+import type { SSEController } from '../types/sse'
 
-import { useLogger } from '@tg-search/common'
-
+import { SSE_HEADERS } from '../types/sse'
 import { createResponse } from './response'
-
-const logger = useLogger()
 
 /**
  * SSE message creator
@@ -14,95 +11,42 @@ export function createSSEMessage(event: string, data: unknown) {
 }
 
 /**
- * SSE response headers
- */
-export const SSE_HEADERS = {
-  'Content-Type': 'text/event-stream',
-  'Cache-Control': 'no-cache',
-  'Connection': 'keep-alive',
-}
-
-/**
- * SSE stream controller type
- */
-export interface SSEController {
-  enqueue: (data: Uint8Array) => void
-  close: () => void
-}
-
-/**
- * SSE event emitter type
- */
-export type SSEEventEmitter = Map<string, (data: Uint8Array) => void>
-
-/**
  * Create SSE response with error handling
  */
 export function createSSEResponse(
-  handler: (controller: SSEController, clientId: string, emitter: SSEEventEmitter) => Promise<void> | void,
-  emitter: SSEEventEmitter = new Map(),
+  handler: (controller: SSEController) => Promise<void> | void,
 ) {
   return new Response(
     new ReadableStream({
-      start(controller) {
+      async start(controller) {
+        // Create SSE controller with helper methods
+        const sseController: SSEController = {
+          enqueue: data => controller.enqueue(data),
+          close: () => {
+            controller.close()
+          },
+          complete: (data: unknown) => {
+            controller.enqueue(createSSEMessage('complete', createResponse(data)))
+            controller.close()
+          },
+          error: (err: unknown) => {
+            controller.enqueue(createSSEMessage('error', createResponse(undefined, err)))
+            controller.close()
+          },
+        }
+
         try {
-          // Generate unique client ID
-          const clientId = Math.random().toString(36).substring(7)
-
-          // Create controller wrapper
-          const sseController: SSEController = {
-            enqueue: data => controller.enqueue(data),
-            close: () => controller.close(),
-          }
-
-          // Store event emitter
-          emitter.set(clientId, (data: Uint8Array) => {
-            try {
-              controller.enqueue(data)
-            }
-            catch (err) {
-              logger.withError(err).error('Failed to send SSE event')
-              // Send error event to client
-              const errorData = createResponse(undefined, err)
-              controller.enqueue(createSSEMessage('error', errorData))
-            }
-          })
-
-          // Execute handler
-          Promise.resolve(handler(sseController, clientId, emitter))
-            .catch((err) => {
-              logger.withError(err).error('SSE handler error')
-              // Send error event to client
-              const errorData = createResponse(undefined, err)
-              controller.enqueue(createSSEMessage('error', errorData))
-              controller.close()
-            })
-
-          // Cleanup on close
-          return () => {
-            logger.debug(`SSE client ${clientId} disconnected`)
-            emitter.delete(clientId)
-          }
+          // Execute handler without auto-closing
+          await handler(sseController)
         }
         catch (err) {
-          logger.withError(err).error('Failed to initialize SSE connection')
-          // Send error event to client
-          const errorData = createResponse(undefined, err)
-          controller.enqueue(createSSEMessage('error', errorData))
-          controller.close()
+          // Only handle error if controller is still writable
+          if (controller.desiredSize !== null) {
+            sseController.error(err)
+          }
         }
       },
     }),
     { headers: SSE_HEADERS },
   )
-}
-
-/**
- * Broadcast SSE event to all connected clients
- */
-export function broadcastSSEEvent(emitter: SSEEventEmitter, event: string, data: ApiResponse<any>) {
-  const message = createSSEMessage(event, data)
-  for (const send of emitter.values()) {
-    send(message)
-  }
 }

@@ -12,10 +12,6 @@
 
     /* Bundler mode */
     "moduleResolution": "bundler",
-    "paths": {
-      "@tg-search/server/*": ["../server/src/*"],
-      "@tg-search/db/*": ["../db/src/*"]
-    },
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "noEmit": true,

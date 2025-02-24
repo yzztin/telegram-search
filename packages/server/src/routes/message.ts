@@ -1,52 +1,32 @@
-import type { PublicMessage } from '../types'
+import type { App, H3Event } from 'h3'
 
 import { useLogger } from '@tg-search/common'
 import { findMessagesByChatId } from '@tg-search/db'
-import { Elysia, t } from 'elysia'
+import { createRouter, defineEventHandler, getQuery, getRouterParams } from 'h3'
 
 import { createResponse } from '../utils/response'
 
 const logger = useLogger()
 
 /**
- * Convert database message to public message
+ * Setup message routes
  */
-function toPublicMessage(message: Awaited<ReturnType<typeof findMessagesByChatId>>['items'][number]): PublicMessage {
-  return {
-    id: message.id,
-    chatId: message.chatId,
-    type: message.type,
-    content: message.content,
-    mediaInfo: message.mediaInfo,
-    fromId: message.fromId,
-    fromName: message.fromName,
-    fromAvatar: message.fromAvatar,
-    replyToId: message.replyToId,
-    forwardFromChatId: message.forwardFromChatId,
-    forwardFromChatName: message.forwardFromChatName,
-    forwardFromMessageId: message.forwardFromMessageId,
-    views: message.views,
-    forwards: message.forwards,
-    links: message.links,
-    metadata: message.metadata,
-    createdAt: message.createdAt,
-  }
-}
+export function setupMessageRoutes(app: App) {
+  const router = createRouter()
 
-/**
- * Message routes
- */
-export const messageRoutes = new Elysia({ prefix: '/messages' })
   // Get messages in chat
-  .get('/:id', async ({ params: { id }, query: { limit = '50', offset = '0' } }) => {
+  router.get('/:id', defineEventHandler(async (event: H3Event) => {
     try {
+      const { id } = getRouterParams(event)
+      const { limit = '50', offset = '0' } = getQuery(event)
+
       const { items, total } = await findMessagesByChatId(Number(id), {
         limit: Number(limit),
         offset: Number(offset),
       })
 
       return createResponse({
-        items: items.map(toPublicMessage),
+        items,
         total,
       }, undefined, {
         total,
@@ -59,12 +39,8 @@ export const messageRoutes = new Elysia({ prefix: '/messages' })
       logger.withError(error).error('Failed to get messages')
       return createResponse(undefined, error)
     }
-  }, {
-    params: t.Object({
-      id: t.String(),
-    }),
-    query: t.Object({
-      limit: t.Optional(t.String()),
-      offset: t.Optional(t.String()),
-    }),
-  })
+  }))
+
+  // Mount routes
+  app.use('/messages', router.handler)
+}

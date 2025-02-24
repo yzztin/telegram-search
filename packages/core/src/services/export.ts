@@ -1,5 +1,9 @@
-import type { ITelegramClientAdapter, TelegramMessage, TelegramMessageType } from '../adapter/types'
+import type { DatabaseMessageType, DatabaseNewChat } from '@tg-search/db'
+import type { ITelegramClientAdapter } from '../types/adapter'
+import type { TelegramMessage } from '../types/message'
 
+import * as fs from 'node:fs/promises'
+import * as path from 'node:path'
 import { getConfig, useLogger } from '@tg-search/common'
 import { createMessages, updateChat } from '@tg-search/db'
 
@@ -19,9 +23,11 @@ export type ExportMethod = 'getMessage' | 'takeout'
  * Export service options
  */
 export interface ExportOptions {
+  chatMetadata: DatabaseNewChat
   chatId: number
   format?: ExportFormat
-  messageTypes?: TelegramMessageType[]
+  path?: string
+  messageTypes?: DatabaseMessageType[]
   startTime?: Date
   endTime?: Date
   limit?: number
@@ -43,7 +49,7 @@ export class ExportService {
   private async processDatabaseBatch(
     messages: TelegramMessage[],
     startIndex: number,
-  ): Promise<void> {
+  ): Promise<{ failedCount: number }> {
     try {
       // Convert messages to database format
       const messagesToCreate = messages.map(msg => ({
@@ -74,22 +80,46 @@ export class ExportService {
       // Create messages in batch
       await createMessages(messagesToCreate)
       logger.debug(
-        `Saved messages ${startIndex + 1} - ${startIndex + messages.length} `
+        `已保存 ${startIndex + 1} - ${startIndex + messages.length} 条消息 `
         + `(ID: ${messages[0].id} - ${messages[messages.length - 1].id})`,
       )
+      return { failedCount: 0 }
     }
     catch (error) {
-      logger.withError(error).error(`Failed to save batch (${startIndex + 1} - ${startIndex + messages.length})`)
-      throw error
+      logger.withError(error).error(`保存批次消息失败 (${startIndex + 1} - ${startIndex + messages.length})`)
+      return { failedCount: messages.length }
+    }
+  }
+
+  /**
+   * Save messages to JSON file
+   */
+  private async saveToJsonFile(messages: TelegramMessage[], chatId: number, exportPath: string): Promise<boolean> {
+    try {
+      await fs.mkdir(exportPath, { recursive: true })
+
+      const fileName = `${chatId}_${new Date().toISOString().split('T')[0]}`
+      const filePath = path.join(exportPath, `${fileName}.json`)
+      await fs.writeFile(filePath, JSON.stringify(messages, null, 2))
+      logger.debug(`已保存 JSON 文件: ${filePath}`)
+      logger.log(`已导出到文件: ${filePath}`)
+      return true
+    }
+    catch (error) {
+      logger.withError(error).error('保存 JSON 文件失败')
+      return false
     }
   }
 
   /**
    * Export messages from chat
    */
-  async exportMessages(options: ExportOptions): Promise<void> {
+  async exportMessages(options: ExportOptions): Promise<{ count: number, failedCount: number }> {
     const {
+      chatMetadata,
       chatId,
+      format = 'database',
+      path: exportPath,
       messageTypes = ['text'],
       startTime,
       endTime,
@@ -99,25 +129,23 @@ export class ExportService {
       onProgress,
     } = options
 
-    // Get chat info
-    const chats = await this.client.getChats()
-    const selectedChat = chats.find(c => c.id === chatId)
-    if (!selectedChat) {
-      throw new Error(`Chat not found: ${chatId}`)
-    }
-
     // Report progress
-    onProgress?.(5, `Selected chat: ${selectedChat.title}`)
+    onProgress?.(5, `已选择会话: ${chatMetadata.title}`)
 
     // Export messages
     let count = 0
+    let failedCount = 0
     let messages: TelegramMessage[] = []
-    const total = limit || selectedChat.messageCount || 100
+    const total = limit || chatMetadata.messageCount || 100
+
+    function isSkipMedia(type: DatabaseMessageType) {
+      return !messageTypes.includes(type)
+    }
 
     try {
       // Try to export messages
       for await (const message of this.client.getMessages(chatId, undefined, {
-        skipMedia: messageTypes.length === 1 && messageTypes[0] === 'text',
+        skipMedia: isSkipMedia('photo') || isSkipMedia('video') || isSkipMedia('document'),
         startTime,
         endTime,
         limit,
@@ -128,13 +156,14 @@ export class ExportService {
         count++
 
         // Process batch if needed
-        if (messages.length >= batchSize) {
-          await this.processDatabaseBatch(messages, count - messages.length)
+        if (format === 'database' && messages.length >= batchSize) {
+          const result = await this.processDatabaseBatch(messages, count - messages.length)
+          failedCount += result.failedCount
           messages = []
 
           // Report progress
           const progress = Math.min(95, Math.floor((count / total) * 90) + 5)
-          onProgress?.(progress, `Processed ${count} messages`)
+          onProgress?.(progress, `已处理 ${count} 条消息`)
         }
 
         // Check if we need to stop
@@ -145,19 +174,38 @@ export class ExportService {
 
       // Process remaining messages
       if (messages.length > 0) {
-        await this.processDatabaseBatch(messages, count - messages.length)
+        if (format === 'database') {
+          const result = await this.processDatabaseBatch(messages, count - messages.length)
+          failedCount += result.failedCount
+        }
+        else if (format === 'json' && exportPath) {
+          const success = await this.saveToJsonFile(messages, chatId, exportPath)
+          if (!success) {
+            failedCount = count
+          }
+        }
+        else if (format === 'html') {
+          logger.warn('HTML 导出暂未实现')
+        }
       }
 
       // Update chat metadata
-      await updateChat({
-        id: selectedChat.id,
-        type: selectedChat.type,
-        title: selectedChat.title,
-        lastSyncTime: new Date(),
-      })
+      if (format === 'database') {
+        await updateChat({
+          id: chatMetadata.id,
+          type: chatMetadata.type,
+          title: chatMetadata.title,
+          lastSyncTime: new Date(),
+        })
+      }
 
       // Report completion
-      onProgress?.(100, `Export completed, processed ${count} messages`)
+      const summary = failedCount > 0
+        ? `导出完成，共导出 ${count} 条消息，${failedCount} 条消息失败`
+        : `导出完成，共导出 ${count} 条消息`
+      onProgress?.(100, summary)
+
+      return { count, failedCount }
     }
     catch (error: any) {
       // Handle special errors
@@ -165,7 +213,7 @@ export class ExportService {
         const waitSeconds = Number(error.message.match(/TAKEOUT_INIT_DELAY_(\d+)/)?.[1])
         if (waitSeconds) {
           const waitHours = Math.ceil(waitSeconds / 3600)
-          const message = `Need to wait ${waitHours} hours to use takeout export`
+          const message = `需要等待 ${waitHours} 小时才能使用 takeout 导出`
           logger.warn(message)
           onProgress?.(0, message)
           throw error
@@ -174,12 +222,12 @@ export class ExportService {
       else if (error?.message?.includes('FLOOD_WAIT')) {
         const waitSeconds = Number(error.message.match(/FLOOD_WAIT_(\d+)/)?.[1])
         if (waitSeconds) {
-          const message = `Need to wait ${waitSeconds} seconds to continue`
+          const message = `需要等待 ${waitSeconds} 秒才能继续`
           logger.warn(message)
           onProgress?.(count > 0 ? 50 : 0, message)
           await new Promise(resolve => setTimeout(resolve, waitSeconds * 1000))
-          logger.log('Continuing export...')
-          onProgress?.(count > 0 ? 55 : 5, 'Continuing export...')
+          logger.log('继续导出...')
+          onProgress?.(count > 0 ? 55 : 5, '继续导出...')
         }
       }
 
