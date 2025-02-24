@@ -1,4 +1,5 @@
 import type { DatabaseFolder, DatabaseNewChat } from '@tg-search/db'
+import type { Api } from 'telegram'
 import type { TelegramChatsResult } from './chat'
 import type { TelegramFolder } from './folder'
 import type { GetTelegramMessageParams, TelegramMessage } from './message'
@@ -77,7 +78,7 @@ export interface ITelegramClientAdapter extends BaseTelegramAdapter {
   /**
    * Get all dialogs (chats) with pagination
    */
-  getDialogs: (offset?: number, limit?: number) => Promise<TelegramChatsResult>
+  getPaginationDialogs: (offset?: number, limit?: number) => Promise<TelegramChatsResult>
 
   /**
    * Get all folders from Telegram
@@ -87,10 +88,15 @@ export interface ITelegramClientAdapter extends BaseTelegramAdapter {
   /**
    * Get all chats from Telegram
    */
-  getChats: () => Promise<DatabaseNewChat[]>
+  getDialogs: () => Promise<DatabaseNewChat[]>
 
   /**
    * Get folders for a specific chat
    */
   getFoldersForChat: (chatId: number) => Promise<TelegramFolder[]>
+
+  /**
+   * Get history for a specific chat
+   */
+  getHistory: (chatId: number) => Promise<Api.messages.TypeMessages & { count: number }>
 }

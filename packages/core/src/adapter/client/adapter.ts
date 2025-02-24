@@ -111,8 +111,8 @@ export class ClientAdapter implements ITelegramClientAdapter {
     await this.client.disconnect()
   }
 
-  async getDialogs(offset = 0, limit = 10): Promise<TelegramChatsResult> {
-    return this.dialogManager.getDialogs(offset, limit)
+  async getPaginationDialogs(offset = 0, limit = 10): Promise<TelegramChatsResult> {
+    return this.dialogManager.getPaginationDialogs(offset, limit)
   }
 
   /**
@@ -442,6 +442,19 @@ export class ClientAdapter implements ITelegramClientAdapter {
     }
   }
 
+  async getHistory(chatId: number): Promise<Api.messages.TypeMessages & { count: number }> {
+    return this.client.invoke(new Api.messages.GetHistory({
+      peer: chatId,
+      limit: 1,
+      offsetId: 0,
+      offsetDate: 0,
+      addOffset: 0,
+      maxId: 0,
+      minId: 0,
+      hash: bigInt(0),
+    })) as Promise<Api.messages.TypeMessages & { count: number }>
+  }
+
   onMessage(callback: (message: TelegramMessage) => Promise<void>) {
     this.messageCallback = callback
   }
@@ -454,7 +467,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
     return this.folderManager.getFoldersForChat(chatId)
   }
 
-  async getChats(): Promise<DatabaseNewChat[]> {
-    return this.dialogManager.getChats()
+  async getDialogs(): Promise<DatabaseNewChat[]> {
+    return this.dialogManager.getDialogs()
   }
 }
