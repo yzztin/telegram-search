@@ -38,13 +38,19 @@ pnpm run stub
 cp config/config.example.yaml config/config.yaml
 ```
 
-4. 初始化数据库：
+4. 启动数据库容器:
+
+```bash
+docker compose up -d
+```
+
+5. 初始化数据库：
 
 ```bash
 pnpm run db:migrate
 ```
 
-5. 启动服务：
+6. 启动服务：
 
 ```bash
 # 启动后端服务
