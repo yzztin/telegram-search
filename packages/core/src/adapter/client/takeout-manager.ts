@@ -6,6 +6,8 @@ import { getConfig, useLogger } from '@tg-search/common'
 import bigInt from 'big-integer'
 import { Api } from 'telegram/tl'
 
+import { ErrorHandler } from './utils/error-handler'
+
 /**
  * Manager for Telegram takeout sessions
  * Handles initialization, message retrieval, and cleanup of takeout sessions
@@ -15,6 +17,7 @@ export class TakeoutManager {
   private messageConverter: MessageConverter
   private takeoutSession?: Api.account.Takeout
   private logger = useLogger()
+  private errorHandler = new ErrorHandler()
 
   constructor(client: TelegramClient, messageConverter: MessageConverter) {
     this.client = client
@@ -32,17 +35,29 @@ export class TakeoutManager {
 
     try {
       // Create new takeout session
-      this.takeoutSession = await this.client.invoke(new Api.account.InitTakeoutSession({
-        contacts: true,
-        messageUsers: true,
-        messageChats: true,
-        messageMegagroups: true,
-        messageChannels: true,
-        files: true,
-        fileMaxSize: bigInt(1024 * 1024 * 1024), // 1GB
-      }))
+      const result = await this.errorHandler.withRetry(
+        () => this.client.invoke(new Api.account.InitTakeoutSession({
+          contacts: true,
+          messageUsers: true,
+          messageChats: true,
+          messageMegagroups: true,
+          messageChannels: true,
+          files: true,
+          fileMaxSize: bigInt(1024 * 1024 * 1024), // 1GB
+        })),
+        {
+          context: '初始化导出会话',
+          maxRetries: 3,
+          initialDelay: 2000,
+          throwAfterRetries: false,
+        },
+      )
 
-      return this.takeoutSession
+      if (result.success && result.data) {
+        this.takeoutSession = result.data
+        return this.takeoutSession
+      }
+      return null
     }
     catch (error: any) {
       // Check if we need to wait
@@ -50,6 +65,8 @@ export class TakeoutManager {
         this.logger.warn('Takeout session not available, using normal message fetch')
         return null
       }
+
+      this.errorHandler.handleError(error, '初始化导出会话', '无法初始化导出会话')
       throw error
     }
   }
@@ -65,43 +82,37 @@ export class TakeoutManager {
     const appConfig = getConfig()
     // maxRetries = 0 means infinite retries
     const maxRetries = appConfig.message?.export?.maxTakeoutRetries ?? 3
-    let retryCount = 0
-    let lastError: Error | null = null
-    const waitTime = 30 * 1000 // 30 seconds
 
-    // eslint-disable-next-line no-unmodified-loop-condition
-    while (maxRetries === 0 || retryCount < maxRetries) {
-      try {
-        await this.client.invoke(new Api.account.FinishTakeoutSession({
+    try {
+      // Try to finish takeout session with proper retry logic
+      const result = await this.errorHandler.withRetry(
+        () => this.client.invoke(new Api.account.FinishTakeoutSession({
           success: true,
-        }))
+        })),
+        {
+          context: '结束导出会话',
+          maxRetries: maxRetries === 0 ? 10 : maxRetries, // If infinite retries is configured, use 10 as a reasonable limit
+          initialDelay: 30 * 1000, // 30 seconds between retries
+          throwAfterRetries: true,
+        },
+      )
+
+      if (result.success) {
         this.takeoutSession = undefined
         this.logger.log('成功结束 takeout 会话')
-        return
-      }
-      catch (error: any) {
-        lastError = error
-        // Check if we need to wait for takeout
-        if (error?.message?.includes('TAKEOUT_REQUIRED')) {
-          const retryInfo = maxRetries === 0
-            ? '无限重试'
-            : `第 ${retryCount + 1}/${maxRetries} 次重试`
-          this.logger.warn(`等待 takeout 会话完成...（${retryInfo}，等待 ${waitTime / 1000} 秒）`)
-          // Wait before retrying
-          await new Promise(resolve => setTimeout(resolve, waitTime))
-          retryCount++
-          continue
-        }
-        // For other errors, throw immediately
-        this.logger.error(`结束 takeout 会话时遇到未知错误：${error.message}`)
-        throw error
       }
     }
-
-    // If we've exhausted all retries, throw the last error
-    if (lastError) {
-      this.logger.error(`结束 takeout 会话失败，已重试 ${maxRetries} 次`)
-      throw lastError
+    catch (error: any) {
+      // Special handling for TAKEOUT_REQUIRED error
+      if (error?.message?.includes('TAKEOUT_REQUIRED')) {
+        this.logger.error('无法结束导出会话：服务器仍在处理导出请求')
+      }
+      else {
+        this.errorHandler.handleError(error, '结束导出会话', '结束导出会话失败')
+      }
+      // Reset session anyway to avoid getting stuck
+      this.takeoutSession = undefined
+      throw error
     }
   }
 
@@ -196,15 +207,32 @@ export class TakeoutManager {
           hash: bigInt(0),
         })
 
-        const result = await this.client.invoke(
-          new Api.InvokeWithTakeout({
-            takeoutId: takeoutSession.id,
-            query,
-          }),
-        ) as Api.messages.MessagesSlice | Api.messages.Messages | Api.messages.ChannelMessages
+        // Use error handler for API requests
+        const apiResponse = await this.errorHandler.withRetry(
+          () => this.client.invoke(
+            new Api.InvokeWithTakeout({
+              takeoutId: takeoutSession.id,
+              query,
+            }),
+          ),
+          {
+            context: '获取聊天历史记录',
+            maxRetries: 3,
+            initialDelay: 2000,
+          },
+        )
 
-        // Check if we have messages
-        if (!('messages' in result)) {
+        if (!apiResponse.success || !apiResponse.data) {
+          this.logger.warn('获取消息请求失败或返回空数据')
+          break
+        }
+
+        // 使用类型断言确保 result 是对象类型
+        const result = apiResponse.data as Record<string, any>
+
+        // 检查是否包含 messages 字段
+        if (!result || typeof result !== 'object' || !('messages' in result)) {
+          this.logger.warn('返回数据格式不正确，没有消息数组')
           break
         }
 
@@ -252,9 +280,15 @@ export class TakeoutManager {
         }
       }
     }
+    catch (error: any) {
+      this.errorHandler.handleError(error, '获取聊天消息', '获取聊天消息失败')
+      throw error
+    }
     finally {
       // Always finish takeout session
-      await this.finishTakeout()
+      await this.finishTakeout().catch((error) => {
+        this.logger.withError(error).warn('结束导出会话时出现错误，但仍将继续')
+      })
     }
   }
 
