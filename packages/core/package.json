@@ -28,7 +28,7 @@
     "@xsai/embed": "0.1.0-beta.6",
     "@xsai/providers": "0.1.0-beta.5",
     "big-integer": "^1.6.52",
-    "drizzle-orm": "^0.39.3",
+    "drizzle-orm": "^0.40.0",
     "grammy": "^1.35.0",
     "postgres": "^3.4.5",
     "telegram": "^2.26.22",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
-    "unbuild": "^3.3.1",
-    "vitest": "^3.0.6"
+    "unbuild": "^3.4.2",
+    "vitest": "^3.0.7"
   }
 }
