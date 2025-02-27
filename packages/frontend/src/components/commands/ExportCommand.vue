@@ -6,6 +6,12 @@ import type { ExportDetails } from '@tg-search/server'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { useExport } from '../../apis/commands/useExport'
+import CheckboxGroup from '../ui/CheckboxGroup.vue'
+import ProgressBar from '../ui/ProgressBar.vue'
+import RadioGroup from '../ui/RadioGroup.vue'
+import SearchSelect from '../ui/SearchSelect.vue'
+import SelectDropdown from '../ui/SelectDropdown.vue'
+import StatusBadge from '../ui/StatusBadge.vue'
 
 // Props
 const props = defineProps<{
@@ -56,13 +62,68 @@ const messageTypeOptions = [
 
 // Export method options
 const exportMethodOptions = [
-  { label: 'Takeout (推荐，可能需要等待)', value: 'takeout' },
-  { label: 'GetMessage (立即导出，可能不完整)', value: 'getMessage' },
+  { label: 'GetMessage', value: 'getMessage' },
+  { label: 'Takeout', value: 'takeout' },
 ]
+
+// Status icon based on current state
+const statusIcon = computed((): string => {
+  if (!currentCommand.value)
+    return ''
+
+  const iconMap: Record<string, string> = {
+    running: '⟳',
+    waiting: '⏱',
+    completed: '✓',
+    failed: '✗',
+    default: '↻',
+  }
+
+  return iconMap[currentCommand.value.status] || iconMap.default
+})
+
+// 格式化数字
+function formatNumber(num: number | undefined): string {
+  if (num === undefined)
+    return '0'
+  return num.toLocaleString()
+}
 
 // Filtered chats based on selected type
 const filteredChats = computed(() => {
   return props.chats.filter((chat: TelegramChat) => chat.type === selectedChatType.value)
+})
+
+// Format chat options for SearchSelect
+const chatOptions = computed(() => {
+  return filteredChats.value.map(chat => ({
+    id: chat.id,
+    label: chat.title || `Chat ${chat.id}`,
+  }))
+})
+
+// Command status for UI display
+const commandStatus = computed((): 'waiting' | 'running' | 'completed' | 'failed' => {
+  if (!currentCommand.value)
+    return 'waiting'
+  return currentCommand.value.status as any
+})
+
+// Human-readable export status
+const exportStatus = computed((): string => {
+  if (!currentCommand.value) {
+    return '准备导出'
+  }
+
+  const statusMap: Record<string, string> = {
+    running: '导出中',
+    waiting: '等待中',
+    completed: '导出完成',
+    failed: '导出失败',
+    default: '准备导出',
+  }
+
+  return statusMap[currentCommand.value.status] || statusMap.default
 })
 
 // Start export command
@@ -77,21 +138,26 @@ async function handleExport() {
     return
   }
 
-  const toastId = toast.loading('正在导出...')
-  const result = await executeExport({
-    chatId: selectedChatId.value,
-    messageTypes: selectedMessageTypes.value,
-    method: selectedMethod.value,
-    // 添加增量导出相关参数
-    incremental: enableIncremental.value,
-    minId: customMinId.value,
-  })
+  const toastId = toast.loading('正在准备导出...')
+  try {
+    const result = await executeExport({
+      chatId: selectedChatId.value,
+      messageTypes: selectedMessageTypes.value,
+      method: selectedMethod.value,
+      // 添加增量导出相关参数
+      incremental: enableIncremental.value,
+      minId: customMinId.value,
+    })
 
-  if (!result.success) {
-    toast.error(result.error || '导出失败', { id: toastId })
+    if (!result.success) {
+      toast.error(result.error || '导出失败', { id: toastId })
+    }
+    else {
+      toast.success('导出已开始', { id: toastId })
+    }
   }
-  else {
-    toast.success('导出成功', { id: toastId })
+  catch (error) {
+    toast.error(`导出错误: ${error instanceof Error ? error.message : '未知错误'}`, { id: toastId })
   }
 }
 
@@ -99,347 +165,385 @@ async function handleExport() {
 const isExporting = computed(() => currentCommand.value?.status === 'running')
 const isWaiting = computed(() => currentCommand.value?.status === 'waiting')
 const waitingTimeLeft = ref(0)
-let countdownTimer: number | undefined
 
-// 获取从metadata中的总消息数和已处理消息数
-const totalMessages = computed(() => currentCommand.value?.metadata?.totalMessages as number | undefined)
-const processedMessages = computed(() => currentCommand.value?.metadata?.processedMessages as number | undefined)
-
-// 每秒更新剩余等待时间
-function startCountdown() {
-  if (countdownTimer) {
-    clearInterval(countdownTimer)
-  }
-
-  const waitSeconds = currentCommand.value?.metadata?.waitSeconds
-  if (!waitSeconds || typeof waitSeconds !== 'number') {
-    return
-  }
-
-  waitingTimeLeft.value = waitSeconds
-
-  countdownTimer = window.setInterval(() => {
-    if (waitingTimeLeft.value <= 0) {
-      clearInterval(countdownTimer)
-      return
-    }
-    waitingTimeLeft.value -= 1
-  }, 1000)
-}
-
-// 当命令状态更新时检查是否需要启动倒计时
-watch(() => currentCommand.value?.status, (newStatus) => {
-  if (newStatus === 'waiting') {
-    startCountdown()
-  }
-  else if (countdownTimer) {
-    clearInterval(countdownTimer)
-  }
-})
-
-// 组件卸载时清理倒计时
-onUnmounted(() => {
-  if (countdownTimer) {
-    clearInterval(countdownTimer)
-  }
-  cleanup()
-})
-
-const exportStatus = computed(() => {
-  if (!currentCommand.value)
-    return ''
-  switch (currentCommand.value.status) {
-    case 'running':
-      return '导出中'
-    case 'waiting':
-      return `API限制中，等待恢复 (${waitingTimeLeft.value}秒)`
-    case 'completed':
-      return '导出完成'
-    case 'failed':
-      return '导出失败'
-    default:
-      return '准备导出'
-  }
-})
-
+// Export details computed properties
 const exportDetails = computed(() => {
-  if (!currentCommand.value || !currentCommand.value.metadata)
+  if (!currentCommand.value || !currentCommand.value.metadata) {
     return null
+  }
 
-  // 从 metadata 获取需要的字段组成 ExportDetails
+  const metadata = currentCommand.value.metadata
   return {
-    totalMessages: currentCommand.value.metadata.totalMessages as number | undefined,
-    processedMessages: currentCommand.value.metadata.processedMessages as number | undefined,
-    failedMessages: currentCommand.value.metadata.failedMessages as number | undefined,
-    // 其他字段可能没有，暂时不处理
+    totalMessages: metadata.totalMessages as number | undefined,
+    processedMessages: metadata.processedMessages as number | undefined,
+    failedMessages: metadata.failedMessages as number | undefined,
+    totalDuration: metadata.totalDuration as number | undefined,
+    estimatedTimeRemaining: metadata.estimatedTimeRemaining as number | undefined,
+    currentSpeed: metadata.currentSpeed as number | undefined,
+    currentBatch: metadata.currentBatch as number | undefined,
+    totalBatches: metadata.totalBatches as number | undefined,
+    error: metadata.error,
   } as ExportDetails
 })
 
-// Format speed for display
-function formatSpeed(speed: string): string {
-  const match = speed.match(/(\d+)/)
-  if (!match)
-    return speed
-  const value = Number.parseInt(match[1])
-  if (value < 1)
-    return '< 1 消息/秒'
-  if (value > 1000)
-    return `${(value / 1000).toFixed(1)}k 消息/秒`
-  return `${value} 消息/秒`
+// Total messages and processed messages for progress display
+const totalMessages = computed(() => {
+  return exportDetails.value?.totalMessages
+})
+
+const processedMessages = computed(() => {
+  return exportDetails.value?.processedMessages
+})
+
+// Wait time countdown
+let waitTimerId: number | undefined
+
+watch(() => currentCommand.value?.status, (status) => {
+  if (status === 'waiting') {
+    if (currentCommand.value?.metadata?.waitTime) {
+      waitingTimeLeft.value = Math.ceil(
+        (currentCommand.value.metadata.waitTime as number) / 1000,
+      )
+      if (waitTimerId)
+        window.clearInterval(waitTimerId)
+      waitTimerId = window.setInterval(() => {
+        if (waitingTimeLeft.value <= 0) {
+          if (waitTimerId)
+            window.clearInterval(waitTimerId)
+          return
+        }
+        waitingTimeLeft.value--
+      }, 1000)
+    }
+  }
+  else {
+    if (waitTimerId) {
+      window.clearInterval(waitTimerId)
+      waitTimerId = undefined
+    }
+  }
+})
+
+// Format time (seconds) to human-readable string
+function formatTime(seconds: number | string): string {
+  if (typeof seconds === 'string') {
+    seconds = Number.parseFloat(seconds)
+  }
+
+  if (!seconds || seconds < 0)
+    return '未知'
+
+  if (seconds < 60) {
+    return `${Math.floor(seconds)}秒`
+  }
+
+  if (seconds < 3600) {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = Math.floor(seconds % 60)
+    return `${minutes}分${remainingSeconds > 0 ? `${remainingSeconds}秒` : ''}`
+  }
+
+  const hours = Math.floor(seconds / 3600)
+  const remainingMinutes = Math.floor((seconds % 3600) / 60)
+  return `${hours}小时${remainingMinutes > 0 ? `${remainingMinutes}分` : ''}`
 }
 
-// Format time for display
-function formatTime(time: string): string {
-  const match = time.match(/(\d+)/)
-  if (!match)
-    return time
-  const value = Number.parseInt(match[1])
-  if (value < 60)
-    return `${value} 秒`
-  if (value < 3600)
-    return `${Math.floor(value / 60)} 分 ${value % 60} 秒`
-  return `${Math.floor(value / 3600)} 小时 ${Math.floor((value % 3600) / 60)} 分`
+// Format speed (messages per second) to human-readable string
+function formatSpeed(messagesPerSecond: number | string): string {
+  if (typeof messagesPerSecond === 'string') {
+    messagesPerSecond = Number.parseFloat(messagesPerSecond)
+  }
+
+  if (messagesPerSecond >= 1) {
+    return `${messagesPerSecond.toFixed(1)} 消息/秒`
+  }
+
+  const messagesPerMinute = messagesPerSecond * 60
+  return `${messagesPerMinute.toFixed(1)} 消息/分钟`
 }
 </script>
 
 <template>
-  <div class="space-y-4">
-    <!-- Export settings -->
-    <div class="rounded bg-white p-4 shadow dark:bg-gray-800 dark:text-gray-100">
-      <h2 class="mb-2 text-lg font-semibold">
-        导出设置
-      </h2>
+  <div class="space-y-5">
+    <!-- Export configuration -->
+    <div class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800 dark:text-gray-100">
+      <div class="p-5">
+        <h2 class="mb-3 text-lg font-semibold">
+          导出设置
+        </h2>
 
-      <!-- Chat type selection -->
-      <div class="mb-4">
-        <label class="mb-1 block text-sm text-gray-700 font-medium dark:text-gray-300">
-          会话类型
-        </label>
-        <select
-          v-model="selectedChatType"
-          class="w-full border border-gray-300 rounded bg-white p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-          :disabled="isExporting"
-        >
-          <option
-            v-for="option in chatTypeOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
+        <!-- Chat Type Selection -->
+        <div class="mb-5">
+          <SelectDropdown
+            v-model="selectedChatType"
+            :options="chatTypeOptions"
+            label="会话类型"
+            :disabled="isExporting"
+          />
+        </div>
 
-      <!-- Chat selection -->
-      <div class="mb-4">
-        <label class="mb-1 block text-sm text-gray-700 font-medium dark:text-gray-300">
-          选择会话
-        </label>
-        <select
-          v-model="selectedChatId"
-          class="w-full border border-gray-300 rounded bg-white p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-          :disabled="isExporting"
-        >
-          <option value="">
-            请选择会话
-          </option>
-          <option
-            v-for="chat in filteredChats"
-            :key="chat.id"
-            :value="chat.id"
-          >
-            {{ chat.title }}
-          </option>
-        </select>
-      </div>
+        <!-- Chat Selection -->
+        <div class="mb-5">
+          <SearchSelect
+            v-model="selectedChatId"
+            :options="chatOptions"
+            label="选择会话"
+            placeholder="搜索会话..."
+            :disabled="isExporting"
+          />
+        </div>
 
-      <!-- Message type selection -->
-      <div class="mb-4">
-        <label class="mb-1 block text-sm text-gray-700 font-medium dark:text-gray-300">
-          消息类型
-        </label>
-        <div class="grid grid-cols-2 gap-2">
-          <label
-            v-for="option in messageTypeOptions"
-            :key="option.value"
-            class="flex items-center border border-gray-200 rounded p-2 dark:border-gray-700"
-          >
+        <!-- Message Type Selection -->
+        <div class="mb-5">
+          <CheckboxGroup
+            v-model="selectedMessageTypes"
+            :options="messageTypeOptions"
+            label="消息类型"
+            :disabled="isExporting"
+          />
+        </div>
+
+        <!-- Export Method Selection -->
+        <div class="mb-5">
+          <RadioGroup
+            v-model="selectedMethod"
+            :options="exportMethodOptions"
+            label="导出方式"
+            :disabled="isExporting"
+          />
+        </div>
+
+        <!-- Incremental Export Option -->
+        <div class="mb-5">
+          <label class="flex cursor-pointer items-center gap-2">
             <input
-              v-model="selectedMessageTypes"
+              v-model="enableIncremental"
               type="checkbox"
-              :value="option.value"
-              class="border-gray-300 rounded text-blue-600 dark:border-gray-600 dark:bg-gray-700"
+              class="h-4 w-4 border-gray-300 rounded text-blue-600 focus:ring-blue-500"
               :disabled="isExporting"
             >
-            <span class="ml-2">{{ option.label }}</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Export method selection -->
-      <div class="mb-4">
-        <label class="mb-1 block text-sm text-gray-700 font-medium dark:text-gray-300">
-          导出方式
-        </label>
-        <select
-          v-model="selectedMethod"
-          class="w-full border border-gray-300 rounded bg-white p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-          :disabled="isExporting"
-        >
-          <option
-            v-for="option in exportMethodOptions"
-            :key="option.value"
-            :value="option.value"
-          >
-            {{ option.label }}
-          </option>
-        </select>
-      </div>
-
-      <!-- 增量导出选项 -->
-      <div class="mb-4">
-        <div class="mb-2 flex items-center">
-          <input
-            id="incrementalExport"
-            v-model="enableIncremental"
-            type="checkbox"
-            class="border-gray-300 rounded text-blue-600 dark:border-gray-600 dark:bg-gray-700"
-            :disabled="isExporting"
-          >
-          <label for="incrementalExport" class="ml-2 text-sm text-gray-700 font-medium dark:text-gray-300">
-            增量导出（仅导出上次导出后的新消息）
+            <span class="text-sm">增量导出 (仅导出上次导出之后的新消息)</span>
           </label>
         </div>
 
-        <div v-if="!enableIncremental" class="mt-2">
-          <label class="mb-1 block text-sm text-gray-700 font-medium dark:text-gray-300">
-            自定义起始消息ID（可选）
+        <!-- Custom Min ID -->
+        <div v-if="!enableIncremental" class="mb-5">
+          <label class="mb-2 block text-sm text-gray-700 font-medium dark:text-gray-300">
+            自定义起始消息ID (可选)
           </label>
           <input
-            v-model.number="customMinId"
+            v-model="customMinId"
             type="number"
             placeholder="从此ID开始导出（留空则从最新消息开始）"
-            class="w-full border border-gray-300 rounded bg-white p-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+            class="w-full border border-gray-300 rounded-md p-2.5 text-gray-700 dark:border-gray-600 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-200 dark:focus:border-blue-500 dark:focus:ring-blue-700/30"
             :disabled="isExporting"
           >
         </div>
-      </div>
 
-      <!-- Export button -->
-      <button
-        class="w-full rounded bg-blue-500 px-4 py-2 text-white dark:bg-blue-600 hover:bg-blue-600 disabled:opacity-50 dark:hover:bg-blue-700"
-        :disabled="isExporting || !selectedChatId || selectedMessageTypes.length === 0"
-        @click="handleExport"
-      >
-        {{ isExporting ? '导出中...' : '开始导出' }}
-      </button>
+        <!-- Submit Button -->
+        <button
+          class="group relative w-full overflow-hidden rounded-md bg-blue-500 px-4 py-3 text-white font-medium shadow-sm transition-all duration-300 dark:bg-blue-600 hover:bg-blue-600 disabled:opacity-70 hover:shadow-md dark:hover:bg-blue-700"
+          :disabled="isExporting || !selectedChatId"
+          @click="handleExport"
+        >
+          <span v-if="isExporting" class="flex items-center justify-center">
+            <span class="mr-2 inline-block animate-spin">⟳</span>
+            <span>导出中...</span>
+          </span>
+          <span v-else class="flex items-center justify-center">
+            <span class="mr-2">↻</span>
+            <span>开始导出</span>
+          </span>
+          <span
+            class="absolute bottom-0 left-0 h-1 bg-blue-400 transition-all duration-500"
+            :class="{ 'w-full': isExporting, 'w-0': !isExporting }"
+          />
+        </button>
+      </div>
     </div>
 
     <!-- Export progress -->
     <div
       v-if="currentCommand"
-      class="rounded bg-white p-4 shadow dark:bg-gray-800 dark:text-gray-100"
+      class="overflow-hidden rounded-lg bg-white shadow-md transition-all duration-300 dark:bg-gray-800 dark:text-gray-100"
     >
-      <div class="mb-2 flex items-center justify-between">
-        <h2 class="text-lg font-semibold">
-          导出进度
-        </h2>
-        <span
-          class="rounded px-2 py-1 text-sm"
-          :class="{
-            'bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100': currentCommand.status === 'running',
-            'bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100': currentCommand.status === 'completed',
-            'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100': currentCommand.status === 'failed',
-          }"
-        >
-          {{ exportStatus }}
-        </span>
-      </div>
-
-      <!-- Progress bar -->
-      <div class="mb-4">
-        <div class="h-2 w-full rounded-full bg-gray-200 dark:bg-gray-700">
-          <div
-            class="h-2 rounded-full"
-            :class="{
-              'bg-blue-600': !isWaiting && currentCommand?.status !== 'failed',
-              'bg-yellow-500': isWaiting,
-              'bg-red-500': currentCommand?.status === 'failed',
-            }"
-            :style="{ width: `${exportProgress}%` }"
+      <div class="p-5">
+        <div class="mb-4 flex items-center justify-between">
+          <h2 class="flex items-center text-lg font-semibold">
+            <span class="mr-2">导出状态</span>
+            <span
+              v-if="currentCommand.status === 'running'"
+              class="inline-block animate-spin text-yellow-500"
+            >⟳</span>
+          </h2>
+          <StatusBadge
+            :status="commandStatus"
+            :label="exportStatus"
+            :icon="statusIcon"
           />
         </div>
-        <div class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-          {{ exportProgress }}%
+
+        <!-- Progress bar -->
+        <div class="mb-5">
+          <ProgressBar
+            :progress="exportProgress"
+            :status="commandStatus"
+          />
         </div>
-      </div>
 
-      <!-- 等待提示 -->
-      <div v-if="isWaiting" class="mt-2 rounded bg-yellow-100 p-2 text-yellow-800 dark:bg-yellow-800/20 dark:text-yellow-200">
-        <p class="flex items-center">
-          <span class="i-tabler-hourglass-high mr-2 animate-pulse" />
-          Telegram API 限制中...将在 {{ waitingTimeLeft }} 秒后恢复。
-        </p>
-      </div>
-
-      <!-- Status message -->
-      <div class="mb-4 text-sm">
-        {{ currentCommand.message }}
-        <template v-if="currentCommand.message?.includes('已处理')">
-          <span v-if="!!totalMessages && !!processedMessages">
-            ({{ processedMessages.toLocaleString() }} / {{ totalMessages.toLocaleString() }} 条)
-          </span>
-          <span v-else-if="exportDetails?.totalMessages">
-            (共 {{ exportDetails.totalMessages.toLocaleString() }} 条)
-          </span>
-        </template>
-      </div>
-
-      <!-- Export details -->
-      <div v-if="exportDetails" class="text-sm space-y-2">
-        <div v-if="!!exportDetails.totalMessages" class="flex justify-between">
-          <span>总消息数：</span>
-          <span>{{ exportDetails.totalMessages.toLocaleString() }}</span>
+        <!-- 等待提示 -->
+        <div v-if="isWaiting" class="animate-fadeIn mb-5 rounded-md bg-yellow-50 p-3 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200">
+          <p class="flex items-center">
+            <span class="mr-2 text-lg">⏱</span>
+            <span>Telegram API 限制中...将在 {{ waitingTimeLeft }} 秒后恢复。</span>
+          </p>
         </div>
-        <div v-if="!!exportDetails.processedMessages" class="flex justify-between">
-          <span>已处理消息：</span>
-          <span>
-            {{ exportDetails.processedMessages.toLocaleString() }}
-            <template v-if="!!exportDetails.totalMessages">
-              / {{ exportDetails.totalMessages.toLocaleString() }}
+
+        <!-- Status message -->
+        <div v-if="currentCommand.message" class="mb-4 text-sm text-gray-700 dark:text-gray-300">
+          <p class="mb-1 font-medium">
+            当前状态:
+          </p>
+          <p>
+            {{ currentCommand.message }}
+            <template v-if="currentCommand.message?.includes('已处理')">
+              <span
+                v-if="!!totalMessages && !!processedMessages"
+                class="text-blue-600 font-medium dark:text-blue-400"
+              >
+                ({{ formatNumber(processedMessages) }} / {{ formatNumber(totalMessages) }} 条)
+              </span>
+              <span
+                v-else-if="exportDetails?.totalMessages"
+                class="text-blue-600 font-medium dark:text-blue-400"
+              >
+                (共 {{ formatNumber(exportDetails.totalMessages) }} 条)
+              </span>
             </template>
-          </span>
+          </p>
         </div>
-        <div v-if="!!exportDetails.failedMessages" class="flex justify-between text-red-600">
-          <span>失败消息：</span>
-          <span>{{ exportDetails.failedMessages.toLocaleString() }}</span>
-        </div>
-        <div v-if="!!exportDetails.currentBatch && !!exportDetails.totalBatches" class="flex justify-between">
-          <span>当前批次：</span>
-          <span>{{ exportDetails.currentBatch }} / {{ exportDetails.totalBatches }}</span>
-        </div>
-        <div v-if="!!exportDetails.currentSpeed" class="flex justify-between">
-          <span>当前速度：</span>
-          <span>{{ formatSpeed(exportDetails.currentSpeed) }}</span>
-        </div>
-        <div v-if="!!exportDetails.estimatedTimeRemaining" class="flex justify-between">
-          <span>预计剩余时间：</span>
-          <span>{{ formatTime(exportDetails.estimatedTimeRemaining) }}</span>
-        </div>
-        <div v-if="!!exportDetails.totalDuration" class="flex justify-between">
-          <span>总耗时：</span>
-          <span>{{ formatTime(exportDetails.totalDuration) }}</span>
-        </div>
-        <div v-if="exportDetails.error" class="mt-4 rounded bg-red-100 p-2 text-red-800 dark:bg-red-900 dark:text-red-100">
-          <div v-if="typeof exportDetails.error === 'string'">
-            {{ exportDetails.error }}
+
+        <!-- Export details -->
+        <div v-if="exportDetails" class="mt-6 space-y-4">
+          <h3 class="text-gray-800 font-medium dark:text-gray-200">
+            导出详情
+          </h3>
+
+          <div class="rounded-md bg-gray-50 p-4 dark:bg-gray-700/50">
+            <div class="text-sm space-y-3">
+              <div v-if="exportDetails.totalMessages !== undefined" class="flex items-center justify-between">
+                <span class="text-gray-600 dark:text-gray-300">总消息数：</span>
+                <span class="font-medium">{{ formatNumber(exportDetails.totalMessages) }}</span>
+              </div>
+
+              <div v-if="exportDetails.processedMessages !== undefined" class="flex items-center justify-between">
+                <span class="text-gray-600 dark:text-gray-300">已处理消息：</span>
+                <span class="flex items-center font-medium">
+                  {{ formatNumber(exportDetails.processedMessages) }}
+                  <template v-if="exportDetails.totalMessages !== undefined">
+                    <span class="mx-1">/</span> {{ formatNumber(exportDetails.totalMessages) }}
+                  </template>
+                </span>
+              </div>
+
+              <div v-if="exportDetails.failedMessages" class="flex items-center justify-between text-red-600 dark:text-red-400">
+                <span>失败消息：</span>
+                <span class="font-medium">{{ formatNumber(exportDetails.failedMessages) }}</span>
+              </div>
+
+              <div v-if="exportDetails.currentBatch && exportDetails.totalBatches" class="flex items-center justify-between">
+                <span class="text-gray-600 dark:text-gray-300">当前批次：</span>
+                <span class="font-medium">{{ exportDetails.currentBatch }} / {{ exportDetails.totalBatches }}</span>
+              </div>
+            </div>
           </div>
-          <div v-else>
-            <div>{{ exportDetails.error.name }}: {{ exportDetails.error.message }}</div>
-            <pre v-if="exportDetails.error.stack" class="mt-2 overflow-auto text-xs">{{ exportDetails.error.stack }}</pre>
+
+          <div class="rounded-md bg-gray-50 p-4 dark:bg-gray-700/50">
+            <div class="text-sm space-y-3">
+              <div v-if="exportDetails.currentSpeed" class="flex items-center justify-between">
+                <span class="text-gray-600 dark:text-gray-300">当前速度：</span>
+                <span class="font-medium">{{ formatSpeed(exportDetails.currentSpeed) }}</span>
+              </div>
+
+              <div v-if="exportDetails.estimatedTimeRemaining" class="flex items-center justify-between">
+                <span class="text-gray-600 dark:text-gray-300">预计剩余时间：</span>
+                <span class="font-medium">{{ formatTime(exportDetails.estimatedTimeRemaining) }}</span>
+              </div>
+
+              <div v-if="exportDetails.totalDuration" class="flex items-center justify-between">
+                <span class="text-gray-600 dark:text-gray-300">总耗时：</span>
+                <span class="font-medium">{{ formatTime(exportDetails.totalDuration) }}</span>
+              </div>
+            </div>
           </div>
+
+          <div v-if="exportDetails.error" class="animate-fadeIn mt-4 rounded-md bg-red-50 p-4 text-red-700 dark:bg-red-900/50 dark:text-red-100">
+            <p class="mb-2 font-medium">
+              错误信息:
+            </p>
+            <div v-if="typeof exportDetails.error === 'string'" class="text-sm">
+              {{ exportDetails.error }}
+            </div>
+            <div v-else class="text-sm">
+              <div>{{ exportDetails.error.name }}: {{ exportDetails.error.message }}</div>
+              <pre v-if="exportDetails.error.stack" class="mt-3 overflow-auto rounded-md bg-red-100 p-2 text-xs dark:bg-red-900/50">{{ exportDetails.error.stack }}</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Completion message -->
+        <div
+          v-if="currentCommand.status === 'completed'"
+          class="animate-fadeIn mt-5 rounded-md bg-green-50 p-3 text-green-700 dark:bg-green-900/50 dark:text-green-100"
+        >
+          <p class="flex items-center">
+            <span class="mr-2 text-lg">✓</span>
+            <span>导出已完成！您可以在数据库中查看导出的消息。</span>
+          </p>
         </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-spin {
+  animation: spin 1.5s linear infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+</style>
