@@ -3,9 +3,10 @@
 import type { TelegramChat } from '@tg-search/core'
 import type { DatabaseMessageType } from '@tg-search/db'
 import type { ExportDetails } from '@tg-search/server'
-import { computed, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { useExport } from '../../apis/commands/useExport'
+import { useSession } from '../../composables/useSession'
 import CheckboxGroup from '../ui/CheckboxGroup.vue'
 import ProgressBar from '../ui/ProgressBar.vue'
 import RadioGroup from '../ui/RadioGroup.vue'
@@ -25,6 +26,8 @@ const {
   cleanup,
 } = useExport()
 
+const { checkConnection, isConnected } = useSession()
+
 // Cleanup when component is unmounted
 onUnmounted(() => {
   cleanup()
@@ -42,6 +45,8 @@ const selectedMethod = ref<'getMessage' | 'takeout'>('getMessage')
 const enableIncremental = ref<boolean>(false)
 // 自定义开始消息ID
 const customMinId = ref<number | undefined>(undefined)
+
+// const canExport = computed(() => isConnected.value && selectedChatId.value && selectedMessageTypes.value.length > 0)
 
 // Chat type options
 const chatTypeOptions = [
@@ -71,6 +76,7 @@ const statusIcon = computed((): string => {
   if (!currentCommand.value)
     return ''
 
+  // TODO: replace with icon
   const iconMap: Record<string, string> = {
     running: '⟳',
     waiting: '⏱',
@@ -126,34 +132,48 @@ const exportStatus = computed((): string => {
   return statusMap[currentCommand.value.status] || statusMap.default
 })
 
-// Start export command
+// 检查连接状态
+onMounted(async () => {
+  await checkConnection(false) // 不自动跳转到登录页
+})
+
+// Export operation
 async function handleExport() {
+  // 检查是否已连接到Telegram
+  if (!isConnected.value) {
+    toast.error('请先连接Telegram以使用导出功能')
+    return
+  }
+
+  // 验证所选项
   if (!selectedChatId.value) {
-    toast.error('请选择要导出的会话')
+    toast.error('请选择要导出的聊天')
     return
   }
 
   if (selectedMessageTypes.value.length === 0) {
-    toast.error('请选择要导出的消息类型')
+    toast.error('请至少选择一种消息类型')
     return
   }
 
   const toastId = toast.loading('正在准备导出...')
-  try {
-    const result = await executeExport({
-      chatId: selectedChatId.value,
-      messageTypes: selectedMessageTypes.value,
-      method: selectedMethod.value,
-      // 添加增量导出相关参数
-      incremental: enableIncremental.value,
-      minId: customMinId.value,
-    })
 
-    if (!result.success) {
-      toast.error(result.error || '导出失败', { id: toastId })
+  // 准备导出参数
+  const params = {
+    chatId: selectedChatId.value,
+    messageTypes: selectedMessageTypes.value,
+    method: selectedMethod.value,
+    incremental: enableIncremental.value,
+    minId: customMinId.value,
+  }
+
+  try {
+    const result = await executeExport(params)
+    if (result.success) {
+      toast.success('导出任务已开始', { id: toastId })
     }
     else {
-      toast.success('导出已开始', { id: toastId })
+      toast.error((result.error as Error)?.message || '导出失败', { id: toastId })
     }
   }
   catch (error) {
@@ -173,6 +193,7 @@ const exportDetails = computed(() => {
   }
 
   const metadata = currentCommand.value.metadata
+  // TODO: interface
   return {
     totalMessages: metadata.totalMessages as number | undefined,
     processedMessages: metadata.processedMessages as number | undefined,
@@ -198,6 +219,7 @@ const processedMessages = computed(() => {
 // Wait time countdown
 let waitTimerId: number | undefined
 
+// TODO: extract
 watch(() => currentCommand.value?.status, (status) => {
   if (status === 'waiting') {
     if (currentCommand.value?.metadata?.waitTime) {
@@ -265,6 +287,31 @@ function formatSpeed(messagesPerSecond: number | string): string {
 
 <template>
   <div class="space-y-5">
+    <!-- 未连接Telegram时的提示 -->
+    <div v-if="!isConnected" class="mb-4 rounded-md bg-yellow-50 p-4 dark:bg-yellow-900/30">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <div class="i-carbon-warning h-5 w-5 text-yellow-400" aria-hidden="true" />
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm text-yellow-800 font-medium dark:text-yellow-200">
+            未连接到Telegram
+          </h3>
+          <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+            <p>要使用导出功能，您需要先连接到Telegram。</p>
+          </div>
+          <div class="mt-3">
+            <router-link
+              to="/login"
+              class="rounded-md bg-yellow-50 px-2 py-1.5 text-sm text-yellow-800 font-medium dark:bg-yellow-900/50 hover:bg-yellow-100 dark:text-yellow-200 dark:hover:bg-yellow-800/50"
+            >
+              去连接
+            </router-link>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Export configuration -->
     <div class="overflow-hidden rounded-lg bg-white shadow-md dark:bg-gray-800 dark:text-gray-100">
       <div class="p-5">
