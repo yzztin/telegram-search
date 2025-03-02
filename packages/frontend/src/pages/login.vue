@@ -390,8 +390,6 @@ function toggleAdvancedSettings() {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900 lg:px-8 sm:px-6">
-    {{ state }}
-
     <div class="max-w-md w-full space-y-8">
       <!-- 标题 -->
       <div class="text-center">
