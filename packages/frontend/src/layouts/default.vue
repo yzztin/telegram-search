@@ -1,22 +1,32 @@
 <script setup lang="ts">
 import { onClickOutside } from '@vueuse/core'
 import { onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { useAuth } from '../apis/useAuth'
 import { useDarkStore } from '../composables/dark'
+import { useLanguage } from '../composables/useLanguage'
 import { useSession } from '../composables/useSession'
 
 const router = useRouter()
 const { logout } = useAuth()
 const { isDark } = useDarkStore()
 const { checkConnection, isConnected } = useSession()
+const { supportedLanguages, setLanguage, locale } = useLanguage()
+const { t } = useI18n()
 const showUserMenu = ref(false)
+const showLanguageMenu = ref(false)
 const userMenuRef = ref<HTMLElement | null>(null)
+const languageMenuRef = ref<HTMLElement | null>(null)
 
-// Use VueUse's onClickOutside to handle closing the menu
+// Use VueUse's onClickOutside to handle closing the menus
 onClickOutside(userMenuRef, () => {
   showUserMenu.value = false
+})
+
+onClickOutside(languageMenuRef, () => {
+  showLanguageMenu.value = false
 })
 
 // 检查用户是否已登录
@@ -42,6 +52,13 @@ async function handleLogin() {
   showUserMenu.value = false
   router.push('/login')
 }
+
+// 处理语言切换
+function handleLanguageChange(langCode: string) {
+  setLanguage(langCode)
+  showLanguageMenu.value = false
+  toast.success(t('header.language_changed'))
+}
 </script>
 
 <template>
@@ -55,6 +72,31 @@ async function handleLogin() {
 
         <div class="flex items-center gap-4">
           <ThemeToggle />
+
+          <!-- 语言切换 -->
+          <div ref="languageMenuRef" class="relative">
+            <IconButton
+              icon="i-carbon-language"
+              aria-label="Language"
+              @click="showLanguageMenu = !showLanguageMenu"
+            />
+
+            <!-- 语言菜单 -->
+            <div
+              v-if="showLanguageMenu"
+              class="absolute right-0 z-50 mt-2 w-48 border border-gray-200 rounded-md bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
+            >
+              <button
+                v-for="lang in supportedLanguages"
+                :key="lang.code"
+                class="w-full flex items-center justify-between px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                @click="handleLanguageChange(lang.code)"
+              >
+                <span>{{ lang.name }}</span>
+                <span v-if="locale === lang.code" class="i-carbon-checkmark h-4 w-4" />
+              </button>
+            </div>
+          </div>
 
           <IconButton
             icon="i-carbon-mac-command"

@@ -2,10 +2,12 @@ export default {
   header: {
     title: 'Telegram 搜索',
     login: '登录',
-    logout: '登出',
+    logout: '退出登录',
     usermenu: '用户菜单',
     setting: '设置',
-    commands: '命令',
+    commands: '命令中心',
+    language: '语言',
+    language_changed: '语言切换成功',
   },
   pages: {
     settings: {

@@ -6,6 +6,8 @@ export default {
     usermenu: 'User Menu',
     setting: 'setting',
     commands: 'commands',
+    language: 'Language',
+    language_changed: 'Language changed successfully',
   },
   pages: {
     settings: {
