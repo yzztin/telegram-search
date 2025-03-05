@@ -180,7 +180,7 @@ export class TakeoutManager {
   /**
    * Get messages using takeout API
    */
-  public async *getMessages(
+  public async* getMessages(
     chatId: number,
     limit: number,
     options?: GetTelegramMessageParams,

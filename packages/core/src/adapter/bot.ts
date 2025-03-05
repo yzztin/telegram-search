@@ -157,7 +157,7 @@ export class BotAdapter implements ITelegramBotAdapter {
     await this.bot.stop()
   }
 
-  async *getMessages(_chatId: number, _limit = 100): AsyncGenerator<TelegramMessage> {
+  async* getMessages(_chatId: number, _limit = 100): AsyncGenerator<TelegramMessage> {
     // Note: Bot API doesn't support getting message history
     // We can only get messages that are sent to the bot
     throw new Error('Bot API does not support getting message history')

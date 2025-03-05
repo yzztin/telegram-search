@@ -129,9 +129,9 @@ export class ClientAdapter implements ITelegramClientAdapter {
     }
   }
 
-  async *getMessages(chatId: number, limit = 100, options?: GetTelegramMessageParams): AsyncGenerator<TelegramMessage> {
+  async* getMessages(chatId: number, limit = 100, options?: GetTelegramMessageParams): AsyncGenerator<TelegramMessage> {
     try {
-      yield * this.messageManager.getMessages(chatId, limit, options)
+      yield* this.messageManager.getMessages(chatId, limit, options)
     }
     catch (error) {
       this.errorHandler.handleError(

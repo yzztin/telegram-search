@@ -40,7 +40,7 @@ export class MessageManager {
   /**
    * Get messages using normal API
    */
-  private async *getNormalMessages(
+  private async* getNormalMessages(
     chatId: number,
     limit?: number,
     options?: GetTelegramMessageParams,
@@ -135,18 +135,18 @@ export class MessageManager {
   /**
    * Get messages from a chat using specified method
    */
-  public async *getMessages(chatId: number, limit = 100, options?: GetTelegramMessageParams): AsyncGenerator<TelegramMessage> {
+  public async* getMessages(chatId: number, limit = 100, options?: GetTelegramMessageParams): AsyncGenerator<TelegramMessage> {
     try {
       if (options?.method === 'takeout') {
         try {
           // Try to use takeout first
-          yield * this.takeoutManager.getMessages(chatId, limit, options)
+          yield* this.takeoutManager.getMessages(chatId, limit, options)
         }
         catch (error: any) {
           // If takeout is not available, fallback to normal API
           if (error.message === 'TAKEOUT_NOT_AVAILABLE' || error.message?.includes('TAKEOUT_INIT_DELAY')) {
             this.logger.warn('Takeout session not available, using normal message fetch')
-            yield * this.getNormalMessages(chatId, limit, options)
+            yield* this.getNormalMessages(chatId, limit, options)
           }
           else {
             this.errorHandler.handleError(this.toError(error), '获取takeout消息', '获取takeout消息失败')
@@ -155,7 +155,7 @@ export class MessageManager {
         }
       }
       else {
-        yield * this.getNormalMessages(chatId, limit, options)
+        yield* this.getNormalMessages(chatId, limit, options)
       }
     }
     catch (error) {
