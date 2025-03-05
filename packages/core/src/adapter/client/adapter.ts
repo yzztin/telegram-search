@@ -1,8 +1,8 @@
 import type { DatabaseFolder, DatabaseNewChat } from '@tg-search/db'
-import type { Api } from 'telegram/tl'
 import type { ClientAdapterConfig, ConnectOptions, GetTelegramMessageParams, ITelegramClientAdapter, TelegramChatsResult, TelegramFolder, TelegramMessage } from '../../types'
 
 import { getConfig, useLogger } from '@tg-search/common'
+import { Api } from 'telegram/tl'
 
 import { MediaService } from '../../services/media'
 import { ConnectionManager } from './connection-manager'
@@ -141,6 +141,18 @@ export class ClientAdapter implements ITelegramClientAdapter {
       )
       throw error
     }
+  }
+
+  async getUserInfo(userId: string): Promise<Api.users.UserFull> {
+    return await this.connectionManager.getClient().invoke(new Api.users.GetFullUser({
+      id: userId,
+    }))
+  }
+
+  async getUsersInfo(userIds: string[]): Promise<Api.TypeUser[]> {
+    return await this.connectionManager.getClient().invoke(new Api.users.GetUsers({
+      id: userIds,
+    }))
   }
 
   async getHistory(chatId: number): Promise<Api.messages.TypeMessages & { count: number }> {
