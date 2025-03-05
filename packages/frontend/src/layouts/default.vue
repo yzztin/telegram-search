@@ -39,11 +39,11 @@ async function handleLogout() {
   showUserMenu.value = false
   const success = await logout()
   if (success) {
-    toast.success('已成功登出 Telegram')
+    toast.success(t('header.logout_success'))
     router.push('/login')
   }
   else {
-    toast.error('登出失败，请重试')
+    toast.error(t('header.logout_failed'))
   }
 }
 

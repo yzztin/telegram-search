@@ -8,6 +8,8 @@ export default {
     commands: '命令中心',
     language: '语言',
     language_changed: '语言切换成功',
+    logout_success: '退出登录成功',
+    logout_failed: '退出登录失败',
   },
   pages: {
     settings: {

@@ -8,6 +8,8 @@ export default {
     commands: 'commands',
     language: 'Language',
     language_changed: 'Language changed successfully',
+    logout_success: 'Logout successfully',
+    logout_failed: 'Logout failed',
   },
   pages: {
     settings: {
