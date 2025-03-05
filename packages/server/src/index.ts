@@ -18,6 +18,7 @@ import { setupCommandRoutes } from './routes/commands'
 import { setupConfigRoutes } from './routes/config'
 import { setupMessageRoutes } from './routes/message'
 import { setupSearchRoutes } from './routes/search'
+import { setupUserInfoRoutes } from './routes/user-info'
 import { setupWsAuthRoutes } from './routes/ws-auth'
 import { createErrorResponse } from './utils/response'
 
@@ -62,6 +63,7 @@ function setupRoutes(app: App) {
   setupMessageRoutes(app)
   setupSearchRoutes(app)
   setupWsAuthRoutes(app)
+  setupUserInfoRoutes(app)
 }
 
 // Server configuration

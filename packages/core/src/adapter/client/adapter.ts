@@ -143,16 +143,38 @@ export class ClientAdapter implements ITelegramClientAdapter {
     }
   }
 
-  async getUserInfo(userId: string): Promise<Api.users.UserFull> {
-    return await this.connectionManager.getClient().invoke(new Api.users.GetFullUser({
-      id: userId,
-    }))
+  async getMeInfo(): Promise<Api.User> {
+    return this.connectionManager.getMe()
   }
 
-  async getUsersInfo(userIds: string[]): Promise<Api.TypeUser[]> {
-    return await this.connectionManager.getClient().invoke(new Api.users.GetUsers({
+  async getUserInfo(userId: string): Promise<Api.User> {
+    const users = await this.connectionManager.getClient().invoke(new Api.users.GetUsers({
+      id: [userId],
+    }))
+
+    const user = users[0]
+
+    // Filter out empty user results
+    if (!user || user instanceof Api.UserEmpty) {
+      throw new Error(`User ${userId} not found`)
+    }
+
+    return user
+  }
+
+  async getUsersInfo(userIds: string[]): Promise<Api.User[]> {
+    const users = await this.connectionManager.getClient().invoke(new Api.users.GetUsers({
       id: userIds,
     }))
+
+    // Filter out empty or invalid user results
+    const validUsers = users.filter(user => user && !(user instanceof Api.UserEmpty))
+
+    if (validUsers.length === 0) {
+      throw new Error('No valid users found')
+    }
+
+    return validUsers as Api.User[]
   }
 
   async getHistory(chatId: number): Promise<Api.messages.TypeMessages & { count: number }> {

@@ -1,4 +1,4 @@
-import type { SuccessResponse } from '@tg-search/server'
+import type { SuccessResponse, UserInfoResponse } from '@tg-search/server'
 
 import { ref } from 'vue'
 
@@ -18,6 +18,14 @@ export function useAuth() {
 
     isConnected.value = response.data.connected
     return response.data.connected
+  }
+
+  async function getMeInfo(): Promise<UserInfoResponse> {
+    const response = await apiFetch<SuccessResponse<UserInfoResponse>>('/auth/me', {
+      method: 'GET',
+    })
+
+    return response.data
   }
 
   /**
@@ -45,5 +53,6 @@ export function useAuth() {
     error,
     logout,
     checkStatus,
+    getMeInfo,
   }
 }

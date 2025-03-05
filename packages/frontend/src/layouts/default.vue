@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { UserInfoResponse } from '@tg-search/server'
 import { onClickOutside } from '@vueuse/core'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -10,7 +11,7 @@ import { useLanguage } from '../composables/useLanguage'
 import { useSession } from '../composables/useSession'
 
 const router = useRouter()
-const { logout } = useAuth()
+const { logout, getMeInfo } = useAuth()
 const { isDark } = useDarkStore()
 const { checkConnection, isConnected } = useSession()
 const { supportedLanguages, setLanguage, locale } = useLanguage()
@@ -19,6 +20,7 @@ const showUserMenu = ref(false)
 const showLanguageMenu = ref(false)
 const userMenuRef = ref<HTMLElement | null>(null)
 const languageMenuRef = ref<HTMLElement | null>(null)
+const userInfo = ref<UserInfoResponse | null>(null)
 
 // Use VueUse's onClickOutside to handle closing the menus
 onClickOutside(userMenuRef, () => {
@@ -29,16 +31,25 @@ onClickOutside(languageMenuRef, () => {
   showLanguageMenu.value = false
 })
 
-// 检查用户是否已登录
+// Check if user is logged in and get user info
 onMounted(async () => {
   await checkConnection(false)
+  if (isConnected.value) {
+    try {
+      userInfo.value = await getMeInfo()
+    }
+    catch (err) {
+      console.error('Failed to get user info:', err)
+    }
+  }
 })
 
-// 处理注销
+// Handle logout
 async function handleLogout() {
   showUserMenu.value = false
   const success = await logout()
   if (success) {
+    userInfo.value = null
     toast.success(t('header.logout_success'))
     router.push('/login')
   }
@@ -47,13 +58,13 @@ async function handleLogout() {
   }
 }
 
-// 处理登录
+// Handle login
 async function handleLogin() {
   showUserMenu.value = false
   router.push('/login')
 }
 
-// 处理语言切换
+// Handle language change
 function handleLanguageChange(langCode: string) {
   setLanguage(langCode)
   showLanguageMenu.value = false
@@ -73,7 +84,7 @@ function handleLanguageChange(langCode: string) {
         <div class="flex items-center gap-4">
           <ThemeToggle />
 
-          <!-- 语言切换 -->
+          <!-- Language switcher -->
           <div ref="languageMenuRef" class="relative">
             <IconButton
               icon="i-carbon-language"
@@ -81,7 +92,7 @@ function handleLanguageChange(langCode: string) {
               @click="showLanguageMenu = !showLanguageMenu"
             />
 
-            <!-- 语言菜单 -->
+            <!-- Language menu -->
             <div
               v-if="showLanguageMenu"
               class="absolute right-0 z-50 mt-2 w-48 border border-gray-200 rounded-md bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
@@ -111,7 +122,7 @@ function handleLanguageChange(langCode: string) {
             @click="router.push('/settings')"
           />
 
-          <!-- 用户头像与下拉菜单 -->
+          <!-- User avatar and dropdown menu -->
           <div ref="userMenuRef" class="relative">
             <IconButton
               icon="i-carbon-user"
@@ -121,11 +132,20 @@ function handleLanguageChange(langCode: string) {
               @click="showUserMenu = !showUserMenu"
             />
 
-            <!-- 用户菜单 -->
+            <!-- User menu -->
             <div
               v-if="showUserMenu"
               class="absolute right-0 z-50 mt-2 w-48 border border-gray-200 rounded-md bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800"
             >
+              <div v-if="userInfo" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
+                <div>{{ userInfo.firstName }} {{ userInfo.lastName }}</div>
+                <div class="text-xs text-gray-500">
+                  @{{ userInfo.username }}
+                </div>
+              </div>
+
+              <div class="border-b border-gray-200 dark:border-gray-700 my-2" />
+
               <button
                 v-if="!isConnected"
                 class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"

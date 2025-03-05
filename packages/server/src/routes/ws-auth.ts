@@ -1,6 +1,7 @@
 import type { ITelegramClientAdapter } from '@tg-search/core'
 import type { Peer } from 'crossws'
 import type { App } from 'h3'
+import type { UserInfoResponse } from '../types/apis/user-info'
 import type { WsMessage } from '../utils/ws'
 
 import { useLogger } from '@tg-search/common'
@@ -99,6 +100,20 @@ export function setupWsAuthRoutes(app: App) {
     catch (error) {
       return createErrorResponse(error)
     }
+  }))
+
+  router.get('/me', defineEventHandler(async () => {
+    const client = await useTelegramClient()
+    const userInfo = await client.getMeInfo()
+
+    const response: UserInfoResponse = {
+      id: userInfo.id.toString(),
+      firstName: userInfo.firstName ?? '',
+      lastName: userInfo.lastName ?? '',
+      username: userInfo.username ?? '',
+    }
+
+    return createResponse<UserInfoResponse>(response)
   }))
 
   // 将旧的auth路由挂载到/auth路径

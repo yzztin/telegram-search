@@ -41,6 +41,10 @@ export class ConnectionManager {
     return this.client
   }
 
+  public async getMe(): Promise<Api.User> {
+    return this.client.getMe()
+  }
+
   /**
    * Check if the client is connected and authorized
    */

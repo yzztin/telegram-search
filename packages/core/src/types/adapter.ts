@@ -69,8 +69,22 @@ export interface ITelegramClientAdapter extends BaseTelegramAdapter {
    * Check if the client is connected
    */
   isConnected: () => Promise<boolean>
-  getUserInfo: (userId: string) => Promise<Api.users.UserFull>
-  getUsersInfo: (userIds: string[]) => Promise<Api.TypeUser[]>
+
+  /**
+   * Get me info
+   */
+  getMeInfo: () => Promise<Api.User>
+
+  /**
+   * Get user info
+   */
+  getUserInfo: (userId: string) => Promise<Api.User>
+
+  /**
+   * Get users info
+   */
+  getUsersInfo: (userIds: string[]) => Promise<Api.User[]>
+
   /**
    * Send verification code
    */
