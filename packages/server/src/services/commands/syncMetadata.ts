@@ -1,23 +1,18 @@
-import type { ITelegramClientAdapter } from '@tg-search/core'
+import type { ITelegramClientAdapter, MetadataSyncOptions } from '@tg-search/core'
 import type { Command, CommandOptions } from '../../types'
-import type { SyncOptions } from './../../../../core/src/services/sync'
 
 import { useLogger } from '@tg-search/common'
+import { MetadataSyncServices } from '@tg-search/core'
 import { z } from 'zod'
-
-import { SyncService } from './../../../../core/src/services/sync'
 
 const logger = useLogger()
 
-/**
- * Sync command schema
- */
-export const syncCommandSchema = z.object({})
+export const syncMetadataCommandSchema = z.object({})
 
 /**
- * Sync command handler
+ * Sync metadata command handler
  */
-export class SyncCommandHandler {
+export class SyncMetadataCommandHandler {
   private options?: CommandOptions
   private command: Command
 
@@ -57,10 +52,10 @@ export class SyncCommandHandler {
     this.options?.onProgress(this.command)
   }
 
-  async execute(client: ITelegramClientAdapter, params: SyncOptions) {
+  async execute(client: ITelegramClientAdapter, params: MetadataSyncOptions) {
     try {
       logger.debug('执行同步命令')
-      const syncService = new SyncService(client)
+      const syncService = new MetadataSyncServices(client)
       const result = await syncService.syncChats({
         ...params,
         onProgress: (progress, message, metadata) => {

@@ -1,22 +1,10 @@
 import type { ITelegramClientAdapter } from '@tg-search/core'
 
-/**
- * Supported command types for background tasks
- */
-export const commandTypes = ['export', 'import', 'sync', 'watch'] as const
-export type CommandType = typeof commandTypes[number]
-
-/**
- * Command execution status states
- */
-export const commandStatus = ['idle', 'running', 'success', 'error'] as const
-export type CommandStatus = typeof commandStatus[number]
-
-/**
- * Available methods for exporting messages
- */
 export const exportMethods = ['getMessage', 'takeout'] as const
 export type ExportMethod = typeof exportMethods[number]
+
+export const commandStatus = ['pending', 'running', 'completed', 'failed', 'waiting'] as const
+export type CommandStatus = typeof commandStatus[number]
 
 /**
  * Base command interface representing a background task
@@ -24,7 +12,7 @@ export type ExportMethod = typeof exportMethods[number]
 export interface Command {
   id: string
   type: 'export' | 'import' | 'stats' | 'sync'
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'waiting'
+  status: CommandStatus
   progress: number
   message: string
   result?: unknown
