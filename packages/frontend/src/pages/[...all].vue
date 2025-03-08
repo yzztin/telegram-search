@@ -8,7 +8,7 @@ const { t } = useI18n()
   <div class="min-h-screen flex flex-col items-center justify-center">
     <div class="animate-bounce">
       <div class="text-8xl text-gray-800">
-        <i class="fas fa-exclamation-circle" />
+        <i class="i-lucide-circle-alert" />
       </div>
       <h1 class="text-6xl text-gray-800 font-bold">
         404
@@ -21,7 +21,7 @@ const { t } = useI18n()
       to="/"
       class="mt-8 flex items-center gap-2 text-blue-500 transition-colors duration-200 hover:text-blue-600"
     >
-      <i class="fas fa-home" />
+      <i class="i-lucide-house" />
       <span>{{ t('pages.page_404.return_to_home') }}</span>
     </router-link>
   </div>
