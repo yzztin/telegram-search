@@ -13,6 +13,7 @@
     "up": "taze major -I"
   },
   "dependencies": {
+    "@formkit/auto-animate": "^0.8.2",
     "@iconify-json/lucide": "^1.2.31",
     "@iconify/vue": "^4.3.0",
     "@tanstack/vue-query": "^5.68.0",
