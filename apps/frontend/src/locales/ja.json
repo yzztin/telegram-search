@@ -44,7 +44,8 @@
       "provider": "プロバイダー",
       "model": "モデル",
       "api_key": "APIキー",
-      "api_base_url": "APIベースURL"
+      "api_base_url": "APIベースURL",
+      "confirm": "確認"
     },
     "index": {
       "chats": "チャット",

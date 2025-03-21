@@ -48,7 +48,8 @@
       "provider": "Provider",
       "model": "Model",
       "api_key": "API Key",
-      "api_base_url": "API Base URL"
+      "api_base_url": "API Base URL",
+      "confirm": "Confirm"
     },
     "index": {
       "chats": "Chats",

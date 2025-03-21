@@ -44,7 +44,8 @@
       "provider": "Поставщик",
       "model": "Модель",
       "api_key": "Ключ API",
-      "api_base_url": "Базовый URL API"
+      "api_base_url": "Базовый URL API",
+      "confirm": "Подтвердить"
     },
     "index": {
       "chats": "Чаты",

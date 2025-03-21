@@ -44,7 +44,8 @@
       "provider": "Fournisseur",
       "model": "Modèle",
       "api_key": "Clé API",
-      "api_base_url": "URL de base API"
+      "api_base_url": "URL de base API",
+      "confirm": "Confirmer"
     },
     "index": {
       "chats": "Discussions",

@@ -44,7 +44,8 @@
       "provider": "提供者",
       "model": "模型",
       "api_key": "API 密鑰",
-      "api_base_url": "API 基礎 URL"
+      "api_base_url": "API 基礎 URL",
+      "confirm": "確認"
     },
     "index": {
       "chats": "聊天",
