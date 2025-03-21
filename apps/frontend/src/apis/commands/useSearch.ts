@@ -1,26 +1,8 @@
 import type { SearchRequest } from '@tg-search/server'
-import type { SearchResponse, SearchResult } from '../../types/search'
 
 import { computed, ref } from 'vue'
 
 import { useCommandHandler } from '../../composables/useCommands'
-
-interface CommandMetadata {
-  command: string
-  duration?: number
-  total?: number
-  results?: SearchResult[]
-}
-
-interface Command {
-  id: string
-  type: string
-  status: 'pending' | 'completed' | 'failed'
-  progress: number
-  message: string
-  error?: Error
-  metadata?: CommandMetadata
-}
 
 /**
  * Search composable for managing search state and functionality
@@ -51,8 +33,9 @@ export function useSearch() {
 
   // Computed results from current command
   const results = computed(() => {
-    const commandResults = currentCommand.value?.metadata?.results
-    return commandResults ? commandResults as SearchResult[] : []
+    if (!currentCommand.value?.metadata?.results)
+      return []
+    return currentCommand.value.metadata.results
   })
 
   const total = computed(() => {
@@ -62,7 +45,7 @@ export function useSearch() {
   /**
    * Execute search with current parameters
    */
-  async function search(params?: Partial<SearchRequest>): Promise<SearchResponse> {
+  async function search(params?: Partial<SearchRequest>) {
     if (!query.value.trim() && !params?.query) {
       return { success: false, error: new Error('搜索词不能为空') }
     }
@@ -82,15 +65,7 @@ export function useSearch() {
       useVectorSearch: useVectorSearch.value,
     }
 
-    const rawResult = await executeCommand(searchParams)
-    const result = rawResult as unknown as Command
-
-    return {
-      success: result.status === 'completed',
-      error: result.error,
-      total: result.metadata?.total,
-      results: result.metadata?.results,
-    }
+    return executeCommand(searchParams)
   }
 
   /**

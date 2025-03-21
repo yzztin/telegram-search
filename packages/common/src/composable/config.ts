@@ -90,8 +90,6 @@ const DEFAULT_CONFIG = {
       apiKey: '',
       // Optional API base URL
       apiBase: '',
-      // Embedding dimensions
-      dimensions: 1536,
     },
   },
 } as const satisfies Config
