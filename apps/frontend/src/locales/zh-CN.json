@@ -216,7 +216,7 @@
       "last_message": "最后一条消息 : {date}",
       "loading": "加载中...",
       "messages_count": "{count} 条消息",
-      "not_chats_found": "未找到聊天",
+      "no_chats_found": "未找到聊天",
       "private_chats": "私人聊天"
     },
     "login": {

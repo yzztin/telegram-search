@@ -56,7 +56,7 @@
       "messages_count": "{count} 條訊息",
       "id": "ID: {id}",
       "channels": "頻道",
-      "not_chats_found": "未有找到聊天"
+      "no_chats_found": "未有找到聊天"
     },
     "commands": {
       "export": "匯出",

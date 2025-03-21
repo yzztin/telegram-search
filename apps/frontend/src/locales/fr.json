@@ -56,7 +56,7 @@
       "messages_count": "{count} messages",
       "id": "ID : {id}",
       "channels": "Canaux",
-      "not_chats_found": "Aucune discussion trouvée"
+      "no_chats_found": "Aucune discussion trouvée"
     },
     "commands": {
       "export": "Exporter",

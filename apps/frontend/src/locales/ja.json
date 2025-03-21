@@ -56,7 +56,7 @@
       "messages_count": "{count} 件のメッセージ",
       "id": "ID: {id}",
       "channels": "チャンネル",
-      "not_chats_found": "チャットが見つかりません"
+      "no_chats_found": "チャットが見つかりません"
     },
     "commands": {
       "export": "エクスポート",

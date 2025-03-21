@@ -60,7 +60,7 @@
       "messages_count": "{count} messages",
       "id": "ID: {id}",
       "channels": "Channels",
-      "not_chats_found": "No chats found"
+      "no_chats_found": "No chats found"
     },
     "commands": {
       "export": "Export",
