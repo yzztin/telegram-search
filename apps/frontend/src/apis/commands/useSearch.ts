@@ -1,4 +1,4 @@
-import type { SearchRequest } from '@tg-search/server'
+import type { SearchRequest, SearchResultItem } from '@tg-search/server'
 
 import { computed, ref } from 'vue'
 
@@ -32,14 +32,16 @@ export function useSearch() {
   })
 
   // Computed results from current command
-  const results = computed(() => {
+  const results = computed<SearchResultItem[]>(() => {
     if (!currentCommand.value?.metadata?.results)
       return []
-    return currentCommand.value.metadata.results
+    return currentCommand.value.metadata.results as SearchResultItem[]
   })
 
-  const total = computed(() => {
-    return currentCommand.value?.metadata?.total || 0
+  const total = computed<number>(() => {
+    if (!currentCommand.value?.metadata?.total)
+      return 0
+    return currentCommand.value.metadata.total as number
   })
 
   /**

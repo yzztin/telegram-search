@@ -39,7 +39,7 @@ async function handleSearch() {
       toast.error(result.error?.message || t('pages.search.search_failed'), { id: toastId })
     }
     else {
-      toast.success(t('pages.search.found_results', { total: result.total }), { id: toastId })
+      toast.success(t('pages.search.found_results', { total }), { id: toastId })
     }
   }
   catch (err) {
