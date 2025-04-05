@@ -2,9 +2,6 @@ name: CI
 
 on:
   push:
-    branches:
-      - main
-
   pull_request:
     branches:
       - main
@@ -76,4 +73,3 @@ jobs:
 
   #     - name: Test
   #       run: pnpm run test
-
