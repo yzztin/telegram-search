@@ -71,8 +71,7 @@ export default defineConfig({
       '/ws': {
         target: 'http://localhost:3000',
         changeOrigin: true,
-        // Remove /api prefix when forwarding to target
-        rewrite: path => path.replace(/^\/ws/, ''),
+        ws: true,
       },
     },
   },
