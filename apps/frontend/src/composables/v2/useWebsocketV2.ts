@@ -4,7 +4,7 @@ import { useWebSocket } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { watch } from 'vue'
 
-import { WS_API_BASE } from '../constants'
+import { WS_API_BASE } from '../../constants'
 import { useConnectionStore } from './useConnection'
 
 export function createWebsocketV2Context() {
