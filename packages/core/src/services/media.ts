@@ -4,7 +4,7 @@ import type { TelegramClient } from 'telegram'
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
 import process from 'node:process'
-import { getConfig, useLogger } from '@tg-search/common'
+import { useLogger, usePaths } from '@tg-search/common'
 
 export class MediaService {
   private client: TelegramClient
@@ -13,8 +13,7 @@ export class MediaService {
 
   constructor(client: TelegramClient) {
     this.client = client
-    const appConfig = getConfig()
-    this.mediaDir = appConfig.path.media
+    this.mediaDir = usePaths().mediaPath
   }
 
   /**

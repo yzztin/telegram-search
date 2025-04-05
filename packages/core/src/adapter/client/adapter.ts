@@ -3,7 +3,7 @@ import type { SendMessageParams } from 'telegram/client/messages'
 import type { ClientAdapterConfig, ConnectOptions, GetTelegramMessageParams, ITelegramClientAdapter, TelegramChatsResult, TelegramFolder, TelegramMessage } from '../../types'
 
 import process from 'node:process'
-import { getConfig, useLogger } from '@tg-search/common'
+import { useLogger, usePaths } from '@tg-search/common'
 import { Api } from 'telegram/tl'
 
 import { MediaService } from '../../services/media'
@@ -37,7 +37,6 @@ export class ClientAdapter implements ITelegramClientAdapter {
       systemVersion: 'Unknown',
       ...config,
     }
-    const appConfig = getConfig()
 
     // Initialize error handler
     this.errorHandler = new ErrorHandler()
@@ -71,7 +70,7 @@ export class ClientAdapter implements ITelegramClientAdapter {
     }
 
     // Initialize session and connection managers
-    this.sessionManager = new SessionManager(appConfig.path.session)
+    this.sessionManager = new SessionManager(usePaths().sessionPath)
     this.connectionManager = new ConnectionManager(
       this.sessionManager,
       config.apiId,

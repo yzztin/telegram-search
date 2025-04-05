@@ -8,8 +8,7 @@ import { join } from 'node:path'
  */
 export function generateDefaultConfig(): Config {
   const homeDir = os.homedir()
-  const sessionsDir = join(homeDir, '.telegram-search/sessions')
-  const mediaDir = join(homeDir, '.telegram-search/media')
+  const storageDir = join(homeDir, '.telegram-search')
 
   return {
   // Database settings
@@ -44,10 +43,7 @@ export function generateDefaultConfig(): Config {
 
     // Path settings
     path: {
-    // Session storage path
-      session: sessionsDir,
-      // Media storage path
-      media: mediaDir,
+      storage: storageDir,
     },
 
     // API settings

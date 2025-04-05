@@ -30,8 +30,7 @@ const configSchema = z.object({
     }),
   }),
   path: z.object({
-    session: z.string(),
-    media: z.string(),
+    storage: z.string(),
   }),
   api: z.object({
     telegram: z.object({

@@ -31,8 +31,7 @@ export interface MessageConfig {
 }
 
 export interface PathConfig {
-  session: string
-  media: string
+  storage: string
 }
 
 export interface ApiConfig {

@@ -120,8 +120,7 @@ export function initConfig() {
     const mergedConfig = defu<Config, Partial<Config>[]>(mainConfig, envConfig, generateDefaultConfig())
 
     // Resolve paths
-    mergedConfig.path.session = resolveHomeDir(mergedConfig.path.session)
-    mergedConfig.path.media = resolveHomeDir(mergedConfig.path.media)
+    mergedConfig.path.storage = resolveHomeDir(mergedConfig.path.storage)
 
     // Construct database URL if not provided
     if (!mergedConfig.database.url) {
