@@ -47,13 +47,12 @@ async function initCore(): Promise<ReturnType<typeof useLogger>> {
 
 // Error handling setup
 function setupErrorHandlers(logger: ReturnType<typeof useLogger>): void {
-  const handleFatalError = (error: unknown, type: string) => {
+  const handleError = (error: unknown, type: string) => {
     logger.withError(error).error(type)
-    process.exit(1)
   }
 
-  process.on('uncaughtException', error => handleFatalError(error, 'Uncaught exception'))
-  process.on('unhandledRejection', error => handleFatalError(error, 'Unhandled rejection'))
+  process.on('uncaughtException', error => handleError(error, 'Uncaught exception'))
+  process.on('unhandledRejection', error => handleError(error, 'Unhandled rejection'))
 }
 
 /**
