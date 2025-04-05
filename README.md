@@ -8,7 +8,7 @@
 
 - 使用 UserBot 可能存在封号风险，请谨慎使用。
 - 由于项目处于快速迭代阶段，可能会出现数据库不兼容的情况，建议定期备份数据。
-- 获取 API key: #111
+- 获取 API key: [#111](https://github.com/GramSearch/telegram-search/issues/111)
 
 ## 🚀 快速开始
 
