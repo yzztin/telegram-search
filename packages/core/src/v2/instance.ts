@@ -1,6 +1,6 @@
 import type { CoreContext } from './context'
 
-import { getConfig } from '@tg-search/common'
+import { useConfig } from '@tg-search/common'
 
 import { createCoreContext } from './context'
 import { afterConnectedEventHandler, authEventHandler, useEventHandler } from './event-handler'
@@ -17,7 +17,7 @@ export type ClientInstanceEvent = ClientInstanceEventFromCore & ClientInstanceEv
 
 export function createCoreInstance(): CoreContext {
   const ctx = createCoreContext()
-  const config = getConfig()
+  const config = useConfig()
 
   const { register: registerEventHandler } = useEventHandler(ctx, config)
   registerEventHandler(authEventHandler)

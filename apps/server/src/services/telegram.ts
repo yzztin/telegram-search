@@ -1,6 +1,6 @@
 import type { ITelegramClientAdapter } from '@tg-search/core'
 
-import { getConfig, useLogger } from '@tg-search/common'
+import { useConfig, useLogger } from '@tg-search/common'
 import { createAdapter } from '@tg-search/core'
 
 const logger = useLogger()
@@ -16,7 +16,7 @@ export async function useTelegramClient(): Promise<ITelegramClientAdapter> {
     return client
 
   // Create new client instance
-  const config = getConfig()
+  const config = useConfig()
   const telegramConfig = config.api.telegram
 
   // Validate required config

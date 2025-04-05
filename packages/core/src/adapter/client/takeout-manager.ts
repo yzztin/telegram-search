@@ -2,7 +2,7 @@ import type { TelegramClient } from 'telegram'
 import type { GetTelegramMessageParams, TelegramMessage } from '../../types'
 import type { MessageConverter } from './utils/message-converter'
 
-import { getConfig, useLogger } from '@tg-search/common'
+import { useConfig, useLogger } from '@tg-search/common'
 import bigInt from 'big-integer'
 import { Api } from 'telegram/tl'
 
@@ -80,7 +80,7 @@ export class TakeoutManager {
       return
     }
 
-    const appConfig = getConfig()
+    const appConfig = useConfig()
     // maxRetries = 0 means infinite retries
     const maxRetries = appConfig.message?.export?.maxTakeoutRetries ?? 3
 

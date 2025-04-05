@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import { toast } from 'vue-sonner'
-import { useConnectionStore } from '../composables/useConnection'
+import { useConnectionStore } from '../composables/v2/useConnection'
 
 const connectionStore = useConnectionStore()
 

@@ -1,7 +1,7 @@
 import { dirname } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { getConfig, getDatabaseDSN, initConfig, initDB, initLogger, useLogger } from '@tg-search/common'
+import { getDatabaseDSN, initConfig, initDB, initLogger, useConfig, useLogger } from '@tg-search/common'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
@@ -17,7 +17,7 @@ async function main() {
 
   // Initialize config
   initConfig()
-  const config = getConfig()
+  const config = useConfig()
   initDB()
   logger.log('正在运行数据库迁移...')
 

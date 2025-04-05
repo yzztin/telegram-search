@@ -1,8 +1,7 @@
 import type { Config } from '../types/config'
 
 import * as fs from 'node:fs'
-import * as os from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import process from 'node:process'
 import { defu } from 'defu'
 import * as yaml from 'yaml'
@@ -70,7 +69,7 @@ function saveConfig(config: Config, configPath: string) {
 
   try {
     // Create config directory if it doesn't exist
-    const configDir = join(configPath).split(join(os.homedir(), '.telegram-search/session')).join(join(os.homedir(), '.telegram-search/session'))
+    const configDir = dirname(configPath)
     if (!fs.existsSync(configDir)) {
       fs.mkdirSync(configDir, { recursive: true })
     }
@@ -95,19 +94,20 @@ function saveConfig(config: Config, configPath: string) {
  */
 export function initConfig() {
   if (config) {
-    return
+    return config
   }
 
   const logger = useLogger()
 
   try {
-    // Find config directory
+    // Find config file path
     const configPath = findConfigFile()
     logger.debug(`Using config file: ${configPath}`)
+    const configDir = dirname(configPath)
 
-    // Load environment-specific config first (if exists)
+    // Load environment-specific config if exists
     const envConfig = process.env.NODE_ENV
-      ? loadYamlConfig(join(join(configPath).split(join(os.homedir(), '.telegram-search/session')).join(join(os.homedir(), '.telegram-search/session')), `config.${process.env.NODE_ENV}.yaml`))
+      ? loadYamlConfig(join(configDir, `config.${process.env.NODE_ENV}.yaml`))
       : {}
 
     // Load main config
@@ -150,7 +150,7 @@ export function initConfig() {
 /**
  * Get current config
  */
-export function getConfig(): Config {
+export function useConfig(): Config {
   if (!config) {
     initConfig()
   }
@@ -162,16 +162,16 @@ export function getConfig(): Config {
  * Update config
  * This will merge the new config with the existing one and save it to file
  */
-export function updateConfig(newConfig: Config): Config {
+export function updateConfig(newConfig: Partial<Config>): Config {
   const logger = useLogger()
 
   try {
     // Get current config and config file path
-    const currentConfig = getConfig()
+    const currentConfig = useConfig()
     const configPath = findConfigFile()
 
     // Merge new config with current config
-    const mergedConfig = defu({}, currentConfig, newConfig)
+    const mergedConfig = defu<Config, Partial<Config>[]>({}, newConfig, currentConfig)
 
     // Validate merged config
     validateConfig(mergedConfig)

@@ -1,9 +1,9 @@
-import { getConfig, getDatabaseDSN, initConfig, initLogger } from '@tg-search/common'
+import { getDatabaseDSN, initConfig, initLogger, useConfig } from '@tg-search/common'
 import { defineConfig } from 'drizzle-kit'
 
 initLogger()
 initConfig()
-const config = getConfig()
+const config = useConfig()
 
 export default defineConfig({
   schema: './src/schema/*',

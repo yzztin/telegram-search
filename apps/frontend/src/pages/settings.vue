@@ -1,19 +1,21 @@
 <script setup lang="ts">
 import type { Config } from '@tg-search/common'
+import { storeToRefs } from 'pinia'
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { toast, Toaster } from 'vue-sonner'
-import { useConfig } from '../apis/useConfig'
+import { useConfigStore } from '../apis/useConfig'
 import SelectDropdown from '../components/ui/SelectDropdown.vue'
 
-// Initialize config composable
-const { config, loading, error, getConfig, updateConfig } = useConfig()
+// Initialize config store
+const configStore = useConfigStore()
+const { config, loading, error } = storeToRefs(useConfigStore())
 const { t } = useI18n()
 const isEditing = ref(false)
 const validationError = ref<string | null>(null)
 
 //
-// 数字类型字段的验证函数
+// Validate number fields
 function validateNumberField(value: number, fieldName: string, min = 1, max = 1000): string | null {
   if (Number.isNaN(value)) {
     return t('pages.settings.number_is_nan', { fieldName })
@@ -32,7 +34,7 @@ const embeddingProviderOptions = [
   { label: 'Ollama', value: 'ollama' },
 ]
 
-// 验证所有数字字段
+// Validate all number fields
 function validateConfig(config: Config): string | null {
   const fields = [
     { value: config.message.export.batchSize, name: t('pages.settings.batch_size'), max: 1000 },
@@ -50,7 +52,7 @@ function validateConfig(config: Config): string | null {
   return null
 }
 
-// 处理数字输入
+// Handle number input
 function handleNumberInput(event: Event, path: string[]) {
   const input = event.target as HTMLInputElement
   const value = Number(input.value)
@@ -58,7 +60,7 @@ function handleNumberInput(event: Event, path: string[]) {
   if (!config.value)
     return
 
-  // 使用 lodash 的 get 和 set 来安全地访问和修改嵌套属性
+  // Use lodash get and set to safely access and modify nested properties
   let target = config.value
   for (let i = 0; i < path.length - 1; i++) {
     target = target[path[i] as keyof typeof target] as any
@@ -67,14 +69,14 @@ function handleNumberInput(event: Event, path: string[]) {
   const lastKey = path[path.length - 1]
   target[lastKey as keyof typeof target] = value as any
 
-  // 验证新值
+  // Validate new value
   validationError.value = validateNumberField(value, lastKey)
 }
 
-// 加载配置
+// Load config
 async function loadConfig() {
   try {
-    await getConfig()
+    await configStore.fetchConfig()
   }
   catch (err) {
     console.error('Failed to load config:', err)
@@ -82,13 +84,13 @@ async function loadConfig() {
   }
 }
 
-// 保存配置
+// Save config
 async function saveConfig() {
   if (!config.value)
     return
 
   try {
-    // 确保所有数字字段的类型正确
+    // Ensure all number fields have correct type
     const safeConfig: Config = {
       ...config.value,
       database: {
@@ -115,17 +117,17 @@ async function saveConfig() {
       },
     }
 
-    // 验证配置
+    // Validate config
     const configValidationError = validateConfig(safeConfig)
     if (configValidationError) {
       toast.error(configValidationError)
       return
     }
-    await updateConfig(safeConfig)
+    await configStore.updateConfig(safeConfig)
     isEditing.value = false
     toast.success(t('pages.settings.save_success'))
 
-    // 修复：确保 validationError 存在再设置
+    // Fix: Only set validationError if it exists
     if (validationError.value && validationError.value !== undefined)
       validationError.value = null
   }
@@ -135,10 +137,10 @@ async function saveConfig() {
   }
 }
 
-// 重置配置
+// Reset config
 function resetConfig() {
   isEditing.value = false
-  // 修复：确保 validationError 存在再设置
+  // Fix: Only set validationError if it exists
   if (validationError.value && validationError.value !== undefined)
     validationError.value = null
 
@@ -146,7 +148,7 @@ function resetConfig() {
   toast(t('pages.settings.reset_config'))
 }
 
-// 加载初始配置
+// Load initial config
 loadConfig()
 </script>
 

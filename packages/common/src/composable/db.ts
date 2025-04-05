@@ -3,7 +3,7 @@ import postgres from 'postgres'
 
 import { getDatabaseDSN } from '../config/dsn'
 import { useLogger } from '../helper/logger'
-import { getConfig } from './config'
+import { useConfig } from './config'
 
 let dbInstance: ReturnType<typeof drizzle>
 
@@ -12,7 +12,7 @@ export function initDB() {
   logger.debug('Initializing database...')
 
   // Database connection
-  const config = getConfig()
+  const config = useConfig()
   const connectionString = getDatabaseDSN(config)
   const client = postgres(connectionString, {
     max: 1,

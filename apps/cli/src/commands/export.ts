@@ -2,7 +2,7 @@ import type { ExportFormat, ExportMethod, ExportOptions } from '@tg-search/core'
 import type { DatabaseNewChat } from '@tg-search/db'
 
 import * as input from '@inquirer/prompts'
-import { getConfig, useLogger } from '@tg-search/common'
+import { useConfig, useLogger } from '@tg-search/common'
 import { ExportService } from '@tg-search/core'
 
 import { TelegramCommand } from '../command'
@@ -147,7 +147,7 @@ export class ExportCommand extends TelegramCommand {
       startTime,
       endTime,
       limit,
-      batchSize: options.batchSize || getConfig().message.export.batchSize,
+      batchSize: options.batchSize || useConfig().message.export.batchSize,
       incremental,
       minId: minId || options.minId,
       maxId: maxId || options.maxId,

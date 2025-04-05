@@ -1,5 +1,6 @@
 import type { Config } from '@tg-search/common'
 
+import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { apiFetch, useApi } from '../composables/api'
@@ -7,14 +8,14 @@ import { apiFetch, useApi } from '../composables/api'
 /**
  * Vue composable for managing config state and operations
  */
-export function useConfig() {
+export const useConfigStore = defineStore('config', () => {
   const config = ref<Config | null>(null)
   const { loading, error, request } = useApi()
 
   /**
    * Get current config
    */
-  async function getConfig(): Promise<Config> {
+  async function fetchConfig(): Promise<Config> {
     const data = await request<Config>(() =>
       apiFetch('/config'),
     )
@@ -39,7 +40,7 @@ export function useConfig() {
     config,
     loading,
     error,
-    getConfig,
+    fetchConfig,
     updateConfig,
   }
-}
+})

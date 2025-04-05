@@ -1,6 +1,6 @@
 import type { App, H3Event } from 'h3'
 
-import { getConfig, updateConfig, useLogger } from '@tg-search/common'
+import { updateConfig, useConfig, useLogger } from '@tg-search/common'
 import { createRouter, defineEventHandler, readBody } from 'h3'
 import { z } from 'zod'
 
@@ -55,7 +55,7 @@ export function setupConfigRoutes(app: App) {
 
   // Get current config
   router.get('/', defineEventHandler(() => {
-    const config = getConfig()
+    const config = useConfig()
     return createResponse(config)
   }))
 

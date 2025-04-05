@@ -1,7 +1,7 @@
 import type { TelegramAdapter } from '@tg-search/core'
 
 import process from 'node:process'
-import { getConfig, initDB, useLogger } from '@tg-search/common'
+import { initDB, useConfig, useLogger } from '@tg-search/common'
 import { createAdapter } from '@tg-search/core'
 import { Command as Commander } from 'commander'
 
@@ -70,7 +70,7 @@ export function setupCli() {
 
         // Initialize Telegram client if needed
         if (command.meta.requiresConnection) {
-          const config = getConfig()
+          const config = useConfig()
           client = await createAdapter({
             type: 'client',
             apiId: Number(config.api.telegram.apiId),

@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { useAuthWs } from '../apis/useAuthWs' // 新版基于WebSocket的验证
-import { useConfig } from '../apis/useConfig'
+import { useConfigStore } from '../apis/useConfig'
 import { ConnectionStatus } from '../composables/useWebSocket'
 import { ErrorCode } from '../types/error'
 
@@ -63,7 +64,9 @@ const {
   submitTwoFactorAuth,
   resetLoginState,
 } = useAuthWs() // 新版WebSocket API
-const { config, getConfig } = useConfig()
+
+const { fetchConfig } = useConfigStore()
+const { config } = storeToRefs(useConfigStore())
 
 // 登录成功后的重定向路径
 const returnPath = ref('/')
@@ -168,7 +171,7 @@ async function initializeLoginPage() {
   }
 
   // 获取配置并初始化
-  await getConfig()
+  await fetchConfig()
   initializeFromConfig()
 
   // 检查登录状态

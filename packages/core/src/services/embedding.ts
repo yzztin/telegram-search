@@ -1,6 +1,6 @@
 import type { EmbeddingModelConfig } from '../types'
 
-import { getConfig, useLogger } from '@tg-search/common'
+import { useConfig, useLogger } from '@tg-search/common'
 
 import { EmbeddingAdapter } from '../adapter/embedding/adapter'
 /**
@@ -9,7 +9,7 @@ import { EmbeddingAdapter } from '../adapter/embedding/adapter'
 export class EmbeddingService {
   private embedding
   private logger = useLogger()
-  private config = getConfig()
+  private config = useConfig()
 
   constructor() {
     this.embedding = new EmbeddingAdapter({

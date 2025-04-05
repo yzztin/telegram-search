@@ -491,8 +491,8 @@ async function handleLogout(peer: Peer, state: ClientState) {
  * 更新客户端API配置
  */
 async function updateClientConfig(phoneNumber: string, apiId: number, apiHash: string): Promise<void> {
-  const { getConfig, updateConfig } = await import('@tg-search/common')
-  const config = getConfig()
+  const { useConfig, updateConfig } = await import('@tg-search/common')
+  const config = useConfig()
   config.api.telegram = {
     ...config.api.telegram,
     apiId: apiId.toString(),

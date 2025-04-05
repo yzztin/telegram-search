@@ -4,7 +4,7 @@ import type { TelegramMessage } from '../types/message'
 
 import * as fs from 'node:fs/promises'
 import * as path from 'node:path'
-import { getConfig, useLogger } from '@tg-search/common'
+import { useConfig, useLogger } from '@tg-search/common'
 import { createMessages, findMaxMessageId, findMinMessageId, updateChat } from '@tg-search/db'
 
 const logger = useLogger()
@@ -134,7 +134,7 @@ export class ExportService {
       startTime,
       endTime,
       limit,
-      batchSize = getConfig().message.export.batchSize,
+      batchSize = useConfig().message.export.batchSize,
       method = 'takeout',
       onProgress,
       minId,
