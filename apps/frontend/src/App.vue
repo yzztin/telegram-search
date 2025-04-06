@@ -1,12 +1,6 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
 import { Toaster } from 'vue-sonner'
-import { createWebsocketV2Context } from './composables/v2/useWebsocketV2'
 import DefaultLayout from './layouts/default.vue'
-
-onMounted(() => {
-  createWebsocketV2Context()
-})
 </script>
 
 <template>

@@ -24,9 +24,8 @@ alwaysApply: true
 例子：
 
 ```ts
-const logger = useLogger()
-logger.withFields({ a: 1 }).log('Hello, world!')
-logger.withErr(new Error()).error('failed')
+useLogger().withFields({ a: 1 }).log('Hello, world!')
+useLogger().withErr(new Error()).error('failed')
 
 ## Telegram 细节
 

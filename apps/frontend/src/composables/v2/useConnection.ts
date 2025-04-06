@@ -1,18 +1,28 @@
-import type { createWebsocketV2Context } from './useWebsocketV2'
-
+import { useLocalStorage } from '@vueuse/core'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-interface ConnectionContext extends ReturnType<typeof createWebsocketV2Context> {
+import { useWebsocketV2 } from './useWebsocketV2'
+
+interface ConnectionContext {
   phoneNumber?: string
 }
 
 export const useConnectionStore = defineStore('connection', () => {
-  const connection = ref(new Map<string, ConnectionContext>())
-  const activeSessionId = ref('')
+  const wsContext = useWebsocketV2()
+
+  const storageConnections = useLocalStorage('connection/connections', new Map<string, ConnectionContext>())
+  const storageActiveSessionId = useLocalStorage('connection/active-session-id', '')
+
+  const connection = ref(storageConnections.value)
+  const auth = ref({
+    needCode: false,
+    needPassword: false,
+    isLoggedIn: false,
+  })
 
   const activeSession = computed(() => {
-    return connection.value.get(activeSessionId.value)
+    return connection.value.get(storageActiveSessionId.value)
   })
 
   const setConnection = (clientId: string, context: ConnectionContext) => {
@@ -23,45 +33,36 @@ export const useConnectionStore = defineStore('connection', () => {
     return connection.value.get(clientId)
   }
 
-  function useAuth() {
-    const needCode = ref(false)
-    const needPassword = ref(false)
-
-    const isLoggedIn = ref(false)
-
+  function handleAuth() {
     function login(phoneNumber: string) {
-      activeSession.value?.sendEvent('auth:login', {
+      getConnection(storageActiveSessionId.value)!.phoneNumber = phoneNumber
+
+      wsContext.sendEvent('auth:login', {
         phoneNumber,
       })
     }
 
     function submitCode(code: string) {
-      activeSession.value?.sendEvent('auth:code', {
+      wsContext.sendEvent('auth:code', {
         code,
       })
     }
 
     function submitPassword(password: string) {
-      activeSession.value?.sendEvent('auth:password', {
+      wsContext.sendEvent('auth:password', {
         password,
       })
     }
 
-    return {
-      needCode,
-      needPassword,
-      isLoggedIn,
-      login,
-      submitCode,
-      submitPassword,
-    }
+    return { login, submitCode, submitPassword }
   }
 
   return {
     setConnection,
     getConnection,
     activeSession,
-    activeSessionId,
-    useAuth,
+    activeSessionId: storageActiveSessionId,
+    auth,
+    handleAuth,
   }
 })

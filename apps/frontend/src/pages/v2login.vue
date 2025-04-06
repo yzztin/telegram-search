@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue'
+import { storeToRefs } from 'pinia'
+import { ref, watch, watchEffect } from 'vue'
 import { toast } from 'vue-sonner'
 import { useConnectionStore } from '../composables/v2/useConnection'
 
-const connectionStore = useConnectionStore()
-
 type LoginStep = 'phone' | 'code' | 'password' | 'complete'
+
+const connectionStore = useConnectionStore()
+const { activeSession } = storeToRefs(connectionStore)
 
 const state = ref({
   isLoading: false,
@@ -13,7 +15,7 @@ const state = ref({
   currentStep: 'phone' as LoginStep,
   showAdvancedSettings: false,
 
-  phoneNumber: '',
+  phoneNumber: activeSession.value?.phoneNumber ?? '',
   verificationCode: '',
   twoFactorPassword: '',
 
@@ -22,22 +24,19 @@ const state = ref({
 })
 
 const {
-  needCode,
-  needPassword,
   login,
   submitCode,
   submitPassword,
-} = connectionStore.useAuth()
+} = connectionStore.handleAuth()
 
-// Watch for state changes based on auth requirements
-watchEffect(() => {
-  if (needCode.value) {
+watch(() => connectionStore.auth.needCode, (value) => {
+  if (value)
     state.value.currentStep = 'code'
-  }
+})
 
-  if (needPassword.value) {
+watch(() => connectionStore.auth.needPassword, (value) => {
+  if (value)
     state.value.currentStep = 'password'
-  }
 })
 
 async function handleLogin() {

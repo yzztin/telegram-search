@@ -1,27 +1,31 @@
 import type { WsEventToServer, WsMessageToClient } from '@tg-search/server'
 
 import { useWebSocket } from '@vueuse/core'
-import { storeToRefs } from 'pinia'
 import { watch } from 'vue'
 
 import { WS_API_BASE } from '../../constants'
 import { useConnectionStore } from './useConnection'
 
-export function createWebsocketV2Context() {
-  const socket = useWebSocket<string>(WS_API_BASE)
+let wsContext: ReturnType<typeof createWebsocketV2Context>
+
+export function createWebsocketV2Context(sessionId?: string) {
+  const url = sessionId ? `${WS_API_BASE}?sessionId=${sessionId}` : WS_API_BASE
+  const socket = useWebSocket<string>(url.toString())
   const connectionStore = useConnectionStore()
-  const { activeSessionId } = storeToRefs(useConnectionStore())
 
   function createWsMessage<T extends keyof WsEventToServer>(
     type: T,
-    payload: Parameters<WsEventToServer[T]>[0],
+    data: Parameters<WsEventToServer[T]>[0],
   ): Extract<WsMessageToClient, { type: T }> {
-    return { type, payload } as Extract<WsMessageToClient, { type: T }>
+    return { type, data } as Extract<WsMessageToClient, { type: T }>
   }
 
   // https://github.com/moeru-ai/airi/blob/b55a76407d6eb725d74c5cd4bcb17ef7d995f305/apps/realtime-audio/src/pages/index.vue#L29-L37
-  function sendEvent<T extends keyof WsEventToServer>(event: T, payload: Parameters<WsEventToServer[T]>[0]) {
-    socket.send(JSON.stringify(createWsMessage(event, payload)))
+  function sendEvent<T extends keyof WsEventToServer>(event: T, data: Parameters<WsEventToServer[T]>[0]) {
+    // eslint-disable-next-line no-console
+    console.log('[WebSocket] Sending event', event, data)
+
+    socket.send(JSON.stringify(createWsMessage(event, data)))
   }
 
   // https://github.com/moeru-ai/airi/blob/b55a76407d6eb725d74c5cd4bcb17ef7d995f305/apps/realtime-audio/src/pages/index.vue#L95-L123
@@ -32,25 +36,31 @@ export function createWebsocketV2Context() {
     try {
       const message = JSON.parse(rawMessage)
 
-      switch (message.type) {
-        case 'server:connected':
+      // eslint-disable-next-line no-console
+      console.log('[WebSocket] Message received', message)
+
+      try {
+        switch (message.type) {
+          case 'server:connected':
+            connectionStore.setConnection(message.data.sessionId, {})
+            connectionStore.activeSessionId = message.data.sessionId
+            break
+
+          case 'auth:needCode':
+            connectionStore.auth.needCode = true
+            break
+
+          case 'auth:needPassword':
+            connectionStore.auth.needPassword = true
+            break
+
+          default:
           // eslint-disable-next-line no-console
-          console.log('[WebSocket] Connected', message.data)
-          connectionStore.setConnection(message.data.sessionId, { sendEvent })
-          activeSessionId.value = message.data.sessionId
-          break
-
-        case 'auth:needCode':
-          connectionStore.useAuth().needCode.value = true
-          break
-
-        case 'auth:needPassword':
-          connectionStore.useAuth().needPassword.value = true
-          break
-
-        default:
-          // eslint-disable-next-line no-console
-          console.log('[WebSocket] Message received', message)
+            console.log('[WebSocket] Unknown message', message)
+        }
+      }
+      catch (error) {
+        console.error('[WebSocket] Failed to process message', error)
       }
     }
     catch {
@@ -61,4 +71,11 @@ export function createWebsocketV2Context() {
   return {
     sendEvent,
   }
+}
+
+export function useWebsocketV2(sessionId?: string) {
+  if (!wsContext)
+    wsContext = createWebsocketV2Context(sessionId)
+
+  return wsContext
 }
