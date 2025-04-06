@@ -18,8 +18,6 @@ export function handleMessageEvent(
   state: ClientState,
   message: WsMessageToServer,
 ) {
-  const logger = useLogger()
-
   const { peer, ctx } = state
   if (!ctx) {
     sendWsError(peer, 'Client not initialized')
@@ -36,7 +34,7 @@ export function handleMessageEvent(
     sendWsEvent(peer, 'message:fetch:progress', data)
   }
 
-  logger.withFields(message).debug('handleMessageEvent')
+  useLogger().withFields(message).debug('handleMessageEvent')
 
   switch (message.type) {
     case 'message:fetch':

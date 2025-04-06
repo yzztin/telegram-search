@@ -17,8 +17,6 @@ export function handleConnectionEvent(
   state: ClientState,
   message: WsMessageToServer,
 ) {
-  const logger = useLogger()
-
   const { peer, ctx } = state
   if (!ctx) {
     sendWsError(peer, 'Client not initialized')
@@ -27,7 +25,7 @@ export function handleConnectionEvent(
 
   const { emitter } = ctx
 
-  logger.withFields(message).debug('handleConnectionEvent')
+  useLogger().withFields(message).debug('handleConnectionEvent')
 
   switch (message.type) {
     case 'auth:login':

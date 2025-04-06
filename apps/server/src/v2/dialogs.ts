@@ -23,8 +23,6 @@ export function handleDialogsEvent(
   state: ClientState,
   message: WsMessageToServer,
 ) {
-  const logger = useLogger()
-
   const { peer, ctx } = state
   if (!ctx) {
     sendWsError(peer, 'Client not initialized')
@@ -33,7 +31,7 @@ export function handleDialogsEvent(
 
   const { emitter } = ctx
 
-  logger.withFields(message).debug('handleDialogsEvent')
+  useLogger().withFields(message).debug('handleDialogsEvent')
 
   switch (message.type) {
     case 'dialog:fetch':
