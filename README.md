@@ -19,6 +19,7 @@
 ```bash
 git clone https://github.com/GramSearch/telegram-search.git
 cd telegram-search
+git checkout release
 ```
 
 2. 安装依赖：

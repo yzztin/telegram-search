@@ -19,6 +19,7 @@ A powerful Telegram chat history search tool that supports vector search and sem
 ```bash
 git clone https://github.com/GramSearch/telegram-search.git
 cd telegram-search
+git checkout release
 ```
 
 2. Install dependencies:
