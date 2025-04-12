@@ -1,20 +1,24 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import { useSyncChats } from '../../apis/commands/useSyncChats'
 import { useSyncMetadata } from '../../apis/commands/useSyncMetadata'
-import { useChats } from '../../apis/useChats'
 import NeedLogin from '../../components/NeedLogin.vue'
 import ChatSelector from '../../components/sync/ChatSelector.vue'
 import SyncStatus from '../../components/sync/SyncStatus.vue'
 import { useSession } from '../../composables/useSession'
+import { useChats } from '../../store/useChats'
 
 const { t } = useI18n()
-const { chats, loadChats } = useChats()
+const chatStore = useChats()
+const { chats } = storeToRefs(chatStore)
+const { loadChats } = chatStore
 const { executeChatsSync, currentCommand: chatsSyncCommand, syncProgress: chatsSyncProgress } = useSyncChats()
 const { executeMetadataSync, currentCommand: metadataSyncCommand, syncProgress: metadataSyncProgress } = useSyncMetadata()
-const { checkConnection, isConnected } = useSession()
+const { checkConnection } = useSession()
+const { isConnected } = storeToRefs(useSession())
 
 const selectedChats = ref<number[]>([])
 const priorities = ref<Record<number, number>>({})

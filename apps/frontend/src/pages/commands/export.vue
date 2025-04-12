@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import type { TelegramChat } from '@tg-search/core'
 import type { DatabaseMessageType } from '@tg-search/db'
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import { useExport } from '../../apis/commands/useExport'
-import { useChats } from '../../apis/useChats'
 import ExportStatus from '../../components/export/ExportStatus.vue'
 import NeedLogin from '../../components/NeedLogin.vue'
 import { useChatTypeOptions, useExportMethodOptions, useMessageTypeOptions } from '../../composables/useOptions'
 import { useSession } from '../../composables/useSession'
+import { useChats } from '../../store/useChats'
 
 const {
   executeExport,
@@ -17,10 +18,13 @@ const {
   exportProgress,
   cleanup,
 } = useExport()
-const { checkConnection, isConnected } = useSession()
+const { checkConnection } = useSession()
+const { isConnected } = storeToRefs(useSession())
 
 const { t } = useI18n()
-const { chats, loadChats } = useChats()
+const chatStore = useChats()
+const { chats } = storeToRefs(chatStore)
+const { loadChats } = chatStore
 const chatTypeOptions = useChatTypeOptions()
 const messageTypeOptions = useMessageTypeOptions()
 const exportMethodOptions = useExportMethodOptions()
