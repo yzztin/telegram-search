@@ -26,8 +26,8 @@ alwaysApply: true
 ```ts
 useLogger().withFields({ a: 1 }).log('Hello, world!')
 useLogger().withErr(new Error()).error('failed')
+```
 
 ## Telegram 细节
 
 - Message ID 是递增的，如果涉及到对 Message 的处理，优先考虑使用 ID，而不是时间戳。
-```

@@ -2,6 +2,8 @@
 
 [CN](./README.md) | [TODO](https://github.com/GramSearch/telegram-search/issues/23)
 
+[![](https://dcbadge.limes.pink/api/server/AturAqBgFw)](https://discord.gg/AturAqBgFw)
+
 A powerful Telegram chat history search tool that supports vector search and semantic matching. Based on OpenAI's semantic vector technology, it makes your Telegram message retrieval smarter and more precise.
 
 ## ⚠️ **Note**
