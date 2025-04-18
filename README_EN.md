@@ -1,13 +1,14 @@
 # Telegram Search
 
-[CN](./README.md) | [TODO](https://github.com/GramSearch/telegram-search/issues/23)
+[简体中文](./README.md) | [TODO](https://github.com/GramSearch/telegram-search/issues/23)
 
-[![](https://dcbadge.limes.pink/api/server/AturAqBgFw)](https://discord.gg/AturAqBgFw)
+[![](https://dcbadge.limes.pink/api/server/bdS4AAxKVr)](https://discord.gg/bdS4AAxKVr)
 
 A powerful Telegram chat history search tool that supports vector search and semantic matching. Based on OpenAI's semantic vector technology, it makes your Telegram message retrieval smarter and more precise.
 
 ## ⚠️ **Note**
 
+- PR are welcome!
 - Using UserBot comes with the risk of account suspension, please use with caution.
 - Due to the project being in a rapid iteration phase, database incompatibility may occur. It's recommended to back up your data regularly.
 - Get the API key: [#111](https://github.com/GramSearch/telegram-search/issues/111)

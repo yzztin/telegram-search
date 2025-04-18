@@ -1,6 +1,6 @@
 # Telegram Search
 
-[EN](./README_EN.md) | [TODO](https://github.com/GramSearch/telegram-search/issues/23)
+[English](./README_EN.md) | [TODO](https://github.com/GramSearch/telegram-search/issues/23)
 
 [![](https://dcbadge.limes.pink/api/server/bdS4AAxKVr)](https://discord.gg/bdS4AAxKVr)
 
@@ -8,6 +8,7 @@
 
 ## ⚠️ **注意**
 
+- 欢迎 PR！
 - 使用 UserBot 可能存在封号风险，请谨慎使用。
 - 由于项目处于快速迭代阶段，可能会出现数据库不兼容的情况，建议定期备份数据。
 - 获取 API key: [#111](https://github.com/GramSearch/telegram-search/issues/111)
