@@ -21,38 +21,38 @@ services:
       - "-c"
       - "shared_preload_libraries=vector"
 
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: pnpm run dev:server
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/tg_search
-    ports:
-      - "3333:3333"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      postgres:
-        condition: service_healthy
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: pnpm run dev:server
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=postgres://postgres:postgres@postgres:5432/tg_search
+  #   ports:
+  #     - "3333:3333"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
 
-  frontend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: pnpm run dev:frontend
-    environment:
-      - NODE_ENV=development
-      - BACKEND_URL=http://backend:3333
-    ports:
-      - "3000:3000"
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      - backend
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: pnpm run dev:frontend
+  #   environment:
+  #     - NODE_ENV=development
+  #     - BACKEND_URL=http://backend:3333
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   depends_on:
+  #     - backend
 
 volumes:
   postgres_data:
