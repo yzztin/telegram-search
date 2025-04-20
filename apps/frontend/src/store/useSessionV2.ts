@@ -2,11 +2,11 @@ import type { CoreUserInfo } from '@tg-search/core'
 import type { SuccessResponse } from '@tg-search/server'
 
 import { useLocalStorage } from '@vueuse/core'
-import { defineStore } from 'pinia'
+import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 
-import { apiFetch } from '../api'
-import { useWebsocketV2 } from './useWebsocketV2'
+import { apiFetch } from '../composables/api'
+import { useWebsocketV2 } from '../composables/useWebsocketV2'
 
 export interface SessionContext {
   phoneNumber?: string
@@ -14,13 +14,13 @@ export interface SessionContext {
   me?: CoreUserInfo
 }
 
-export const useSessionStore = defineStore('session-v2', () => {
+export const useSessionStore = defineStore('session', () => {
   let wsContext: ReturnType<typeof useWebsocketV2>
 
   const storageSessions = useLocalStorage('session/sessions', new Map<string, SessionContext>())
   const storageActiveSessionId = useLocalStorage('session/active-session-id', '')
 
-  const auth = ref({
+  const authStatus = ref({
     needCode: false,
     needPassword: false,
   })
@@ -46,6 +46,17 @@ export const useSessionStore = defineStore('session-v2', () => {
     storageActiveSessionId.value = sessionId
   }
 
+  const attemptLogin = async () => {
+    const activeSession = getActiveSession()
+    if (!activeSession?.isConnected && activeSession?.phoneNumber) {
+      handleAuth().login(activeSession.phoneNumber)
+    }
+
+    if (activeSession?.isConnected) {
+      wsContext.sendEvent('entity:getMe', undefined)
+    }
+  }
+
   onMounted(async () => {
     if (!storageActiveSessionId.value) {
       // FIXME: reimplement this
@@ -58,15 +69,7 @@ export const useSessionStore = defineStore('session-v2', () => {
 
     wsContext = useWebsocketV2(storageActiveSessionId.value)
 
-    // Try to connect to Telegram
-    const activeSessionComputed = getActiveSession()
-    if (!activeSessionComputed?.isConnected && activeSessionComputed?.phoneNumber) {
-      handleAuth().login(activeSessionComputed.phoneNumber)
-    }
-
-    if (activeSessionComputed?.isConnected) {
-      wsContext.sendEvent('entity:getMe', undefined)
-    }
+    await attemptLogin()
   })
 
   function handleAuth() {
@@ -102,10 +105,16 @@ export const useSessionStore = defineStore('session-v2', () => {
     sessions: storageSessions,
     activeSessionId: storageActiveSessionId,
     activeSessionComputed,
-    auth,
+    auth: authStatus,
     getWsContext,
     handleAuth,
     getActiveSession,
     setActiveSession,
+    attemptLogin,
+    isLoggedIn: computed(() => activeSessionComputed.value?.isConnected),
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useSessionStore, import.meta.hot))
+}

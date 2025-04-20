@@ -9,9 +9,9 @@ import { createEmbeddingResolver } from './resolvers/embedding-resolver'
 import { createLinkResolver } from './resolvers/link-resolver'
 import { createUserResolver } from './resolvers/user-resolver'
 import { createConnectionService } from './services/connection'
-import { createDialogService } from './services/dialogs'
+import { createDialogService } from './services/dialog'
 import { createEntityService } from './services/entity'
-import { createMessageService } from './services/messages'
+import { createMessageService } from './services/message'
 import { createSessionService } from './services/session'
 import { createTakeoutService } from './services/takeout'
 
@@ -78,7 +78,7 @@ export function afterConnectedEventHandler(
   emitter.on('auth:connected', () => {
     const { processMessage, fetchMessages } = useService(ctx, createMessageService)
     const { fetchDialogs } = useService(ctx, createDialogService)
-    useService(ctx, createTakeoutService)
+    const { takeoutMessages } = useService(ctx, createTakeoutService)
     const { getMeInfo } = useService(ctx, createEntityService)
 
     registry.register('embedding', createEmbeddingResolver())
@@ -107,6 +107,16 @@ export function afterConnectedEventHandler(
 
     emitter.on('entity:getMe', async () => {
       await getMeInfo()
+    })
+
+    emitter.on('takeout:run', async ({ chatIds }) => {
+      logger.withFields({ chatIds }).debug('Running takeout')
+
+      for (const chatId of chatIds) {
+        for await (const message of takeoutMessages(chatId, { limit: 100 })) {
+          emitter.emit('message:process', { message })
+        }
+      }
     })
 
     // TODO: get dialogs from cache

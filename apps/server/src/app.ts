@@ -4,7 +4,7 @@ import type { App } from 'h3'
 import type { WsMessageToServer } from './v2/ws-event'
 
 import { useLogger } from '@tg-search/common'
-import { createCoreInstance, destoryCoreInstance } from '@tg-search/core'
+import { createCoreInstance } from '@tg-search/core'
 import { createRouter, defineEventHandler, defineWebSocketHandler, getQuery } from 'h3'
 
 import { createResponse } from './utils/response'
@@ -13,6 +13,7 @@ import { handleDialogsEvent, registerDialogsEventHandler } from './v2/dialogs'
 import { handleEntityEvent, registerEntityEventHandler } from './v2/entity'
 import { handleMessageEvent, registerMessageEventHandler } from './v2/messages'
 import { registerWsMessageRoute, routeWsMessage } from './v2/routes'
+import { handleTakeoutEvent, registerTakeoutEventHandler } from './v2/takeout'
 import { sendWsError, sendWsEvent } from './v2/ws-event'
 
 // function setupServer(app: App, port: number) {
@@ -102,17 +103,27 @@ export function setupWsRoutes(app: App) {
       registerMessageEventHandler(state)
       registerDialogsEventHandler(state)
       registerEntityEventHandler(state)
+      registerTakeoutEventHandler(state)
 
       registerWsMessageRoute('auth', handleConnectionEvent)
       registerWsMessageRoute('message', handleMessageEvent)
       registerWsMessageRoute('dialog', handleDialogsEvent)
       registerWsMessageRoute('entity', handleEntityEvent)
+      registerWsMessageRoute('takeout', handleTakeoutEvent)
+
+      // state.ctx?.emitter.on()
+      // const events = state.ctx?.emitter.eventNames()
+      // events?.forEach((event) => {
+      //   state.ctx?.emitter.on(event, (data) => {
+      //     sendWsEvent(peer, event, data)
+      //   })
+      // })
 
       state.ctx?.emitter.on('core:error', ({ error }: { error?: string | Error | unknown }) => {
         sendWsError(peer, error)
       })
 
-      sendWsEvent(peer, 'server:connected', { sessionId })
+      sendWsEvent(peer, 'server:connected', { sessionId, connected: state.isConnected ?? false })
 
       clientStates.set(sessionId, state)
     },
@@ -145,12 +156,12 @@ export function setupWsRoutes(app: App) {
     },
 
     close(peer) {
-      const sessionId = useSessionId(peer)
-      const state = useSessionState(sessionId)
+      // const sessionId = useSessionId(peer)
+      // const state = useSessionState(sessionId)
 
-      if (state && state.ctx) {
-        destoryCoreInstance(state.ctx)
-      }
+      // if (state && state.ctx) {
+      //   destoryCoreInstance(state.ctx)
+      // }
 
       useLogger().withFields({ peerId: peer.id }).debug('[/ws] Websocket connection closed')
     },

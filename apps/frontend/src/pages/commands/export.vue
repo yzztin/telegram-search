@@ -2,7 +2,7 @@
 import type { TelegramChat } from '@tg-search/core'
 import type { DatabaseMessageType } from '@tg-search/db'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { toast } from 'vue-sonner'
 import { useExport } from '../../apis/commands/useExport'
@@ -10,7 +10,7 @@ import ExportStatus from '../../components/export/ExportStatus.vue'
 import NeedLogin from '../../components/NeedLogin.vue'
 import { useChatTypeOptions, useExportMethodOptions, useMessageTypeOptions } from '../../composables/useOptions'
 import { useChats } from '../../store/useChats'
-import { useSessionStore } from '../../store/useSession'
+import { useSessionStore } from '../../store/useSessionV2'
 
 const {
   executeExport,
@@ -18,13 +18,12 @@ const {
   exportProgress,
   cleanup,
 } = useExport()
-const { checkConnection } = useSessionStore()
-const { isConnected } = storeToRefs(useSessionStore())
+const sessionStore = useSessionStore()
+const { isLoggedIn } = storeToRefs(sessionStore)
 
 const { t } = useI18n()
 const chatStore = useChats()
 const { chats } = storeToRefs(chatStore)
-const { loadChats } = chatStore
 const chatTypeOptions = useChatTypeOptions()
 const messageTypeOptions = useMessageTypeOptions()
 const exportMethodOptions = useExportMethodOptions()
@@ -54,11 +53,6 @@ const chatOptions = computed(() => {
     id: chat.id,
     label: chat.title || `Chat ${chat.id}`,
   }))
-})
-
-onMounted(async () => {
-  loadChats()
-  await checkConnection(false)
 })
 
 onUnmounted(() => {
@@ -145,7 +139,7 @@ async function handleExport() {
   startTime.value = Date.now()
 
   // 检查是否已连接到Telegram
-  if (!isConnected.value) {
+  if (!isLoggedIn.value) {
     toast.error(t('component.export_command.not_connect'))
     return
   }
@@ -233,7 +227,7 @@ watch(() => currentCommand.value?.status, (newStatus) => {
 
 <template>
   <div class="space-y-5">
-    <NeedLogin :is-connected="isConnected" />
+    <NeedLogin :is-connected="isLoggedIn" />
 
     <!-- Export configuration -->
     <div class="overflow-hidden rounded-lg bg-white dark:bg-gray-800 dark:text-gray-100">

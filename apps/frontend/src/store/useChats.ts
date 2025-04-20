@@ -1,7 +1,7 @@
 import type { TelegramChat } from '@tg-search/core'
 
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { acceptHMRUpdate, defineStore } from 'pinia'
+import { computed, onMounted, ref } from 'vue'
 
 import { apiFetch, useApi } from '../composables/api'
 
@@ -29,6 +29,10 @@ export const useChats = defineStore('chats', () => {
     }
   }
 
+  onMounted(() => {
+    loadChats()
+  })
+
   return {
     chats,
     exportedChats,
@@ -38,3 +42,7 @@ export const useChats = defineStore('chats', () => {
     loadChats,
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useChats, import.meta.hot))
+}

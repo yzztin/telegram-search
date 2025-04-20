@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useChats } from '../store/useChats'
@@ -8,7 +8,6 @@ import { useChats } from '../store/useChats'
 // Initialize API client and router
 const chatStore = useChats()
 const { loading, error, exportedChats } = storeToRefs(chatStore)
-const { loadChats } = chatStore
 const router = useRouter()
 const { t } = useI18n()
 // Computed properties for filtered and categorized chats
@@ -20,11 +19,6 @@ const channelChats = computed(() => exportedChats.value.filter(chat => chat.type
 function goToChat(chatId: number) {
   router.push(`/chat/${chatId}`)
 }
-
-// Load chats on component mount
-onMounted(async () => {
-  await loadChats()
-})
 </script>
 
 <template>
