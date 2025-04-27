@@ -51,7 +51,7 @@ export const useSessionStore = defineStore('session', () => {
     }
 
     if (activeSession?.isConnected) {
-      wsContext.sendEvent('entity:getMe', undefined)
+      wsContext.sendEvent('entity:me:fetch', undefined)
     }
   }
 

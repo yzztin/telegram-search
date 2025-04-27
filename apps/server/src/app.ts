@@ -78,7 +78,7 @@ export function setupWsRoutes(app: App) {
       logger.withFields({ type: event.type }).debug('Message received')
 
       try {
-        if (event.type === 'server:registerEvent') {
+        if (event.type === 'server:event:register') {
           if (!event.data.event.startsWith('server:')) {
             const eventName = event.data.event as keyof FromCoreEvent
 

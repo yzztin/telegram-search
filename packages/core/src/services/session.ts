@@ -10,7 +10,7 @@ import { StringSession } from 'telegram/sessions'
 import { withResult } from '../utils/result'
 
 export interface SessionEventToCore {
-  'session:save': (data: { phoneNumber: string, session: string }) => void
+  'session:update': (data: { phoneNumber: string, session: string }) => void
   'session:clean': (data: { phoneNumber: string }) => void
 }
 

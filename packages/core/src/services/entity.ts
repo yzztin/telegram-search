@@ -12,11 +12,11 @@ export interface CoreUserInfo {
 }
 
 export interface EntityEventToCore {
-  'entity:getMe': () => void
+  'entity:me:fetch': () => void
 }
 
 export interface EntityEventFromCore {
-  'entity:me': (data: CoreUserInfo) => void
+  'entity:me:data': (data: CoreUserInfo) => void
 }
 
 export type EntityEvent = EntityEventFromCore & EntityEventToCore
@@ -40,7 +40,7 @@ export function createEntityService(ctx: CoreContext) {
       // photoUrl: apiUser.photo?.url,
     }
 
-    emitter.emit('entity:me', user)
+    emitter.emit('entity:me:data', user)
 
     return withResult(user, null)
   }

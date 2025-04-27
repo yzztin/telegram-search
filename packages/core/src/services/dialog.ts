@@ -21,7 +21,7 @@ export interface DialogEventToCore {
 }
 
 export interface DialogEventFromCore {
-  'dialog:list': (data: { dialogs: CoreDialog[] }) => void
+  'dialog:data': (data: { dialogs: CoreDialog[] }) => void
 }
 
 export type DialogEvent = DialogEventFromCore & DialogEventToCore
@@ -71,7 +71,7 @@ export function createDialogService(ctx: CoreContext) {
 
     useLogger().withFields({ count: dialogs.length }).debug('Fetched dialogs')
 
-    emitter.emit('dialog:list', { dialogs })
+    emitter.emit('dialog:data', { dialogs })
 
     return withResult(dialogs, null)
   }

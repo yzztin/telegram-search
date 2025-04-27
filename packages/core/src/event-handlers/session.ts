@@ -13,7 +13,7 @@ export function registerSessionEventHandlers(ctx: CoreContext) {
       await sessionService.cleanSession(phoneNumber)
     })
 
-    emitter.on('session:save', async ({ phoneNumber, session }) => {
+    emitter.on('session:update', async ({ phoneNumber, session }) => {
       logger.withFields({ phoneNumber }).debug('Saving session')
       await sessionService.saveSession(phoneNumber, session)
     })

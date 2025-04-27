@@ -26,7 +26,7 @@ export function createWebsocketV2Context(sessionId: string) {
   const registerEventHandler: WsRegisterEventHandler<keyof WsEventToClient> = (event, handler) => {
     eventHandlers.set(event, handler)
 
-    sendEvent('server:registerEvent', { event })
+    sendEvent('server:event:register', { event })
   }
 
   registerServerEventHandlers(registerEventHandler)

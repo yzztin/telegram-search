@@ -38,7 +38,7 @@ onClickOutside(commandMenuRef, () => {
 // onMounted(async () => {
 //   if (isConnected.value && !me.value) {
 //     const { sendEvent } = getWsContext()
-//     sendEvent('entity:getMe', undefined)
+//     sendEvent('entity:me:fetch', undefined)
 //   }
 // })
 

@@ -10,14 +10,6 @@ import { Api, TelegramClient } from 'telegram'
 import { waitForEvent } from '../utils/promise'
 import { withResult } from '../utils/result'
 
-export interface CoreUserInfo {
-  id: string
-  firstName: string
-  lastName: string
-  username: string
-  photoUrl?: string
-}
-
 export interface ConnectionEventToCore {
   'auth:login': (data: { phoneNumber: string }) => void
   'auth:logout': () => void
@@ -144,14 +136,14 @@ export function createConnectionService(ctx: CoreContext) {
         const sessionString = await client.session.save() as unknown as string
         logger.withFields({ sessionString }).debug('Saving session')
 
-        emitter.emit('session:save', { phoneNumber, session: sessionString })
+        emitter.emit('session:update', { phoneNumber, session: sessionString })
 
         ctx.setClient(client)
 
         emitter.emit('auth:connected', { client })
 
         // Emit me info
-        emitter.emit('entity:getMe')
+        emitter.emit('entity:me:fetch')
 
         return withResult(client, null)
       }

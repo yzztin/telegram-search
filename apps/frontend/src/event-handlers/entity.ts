@@ -8,7 +8,7 @@ export function registerEntityEventHandlers(
 ) {
   const connectionStore = useSessionStore()
 
-  registerEventHandler('entity:me', (data) => {
+  registerEventHandler('entity:me:data', (data) => {
     connectionStore.getActiveSession()!.me = data
   })
 }
