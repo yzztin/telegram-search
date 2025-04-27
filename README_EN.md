@@ -2,7 +2,8 @@
 
 [简体中文](./README.md) | [TODO](https://github.com/GramSearch/telegram-search/issues/23)
 
-[![](https://dcbadge.limes.pink/api/server/bdS4AAxKVr)](https://discord.gg/bdS4AAxKVr)
+[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+Gs3SH2qAPeFhYmU9)
+[![Discord](https://dcbadge.limes.pink/api/server/NzYsmJSgCT)](https://discord.gg/NzYsmJSgCT)
 
 A powerful Telegram chat history search tool that supports vector search and semantic matching. Based on OpenAI's semantic vector technology, it makes your Telegram message retrieval smarter and more precise.
 
