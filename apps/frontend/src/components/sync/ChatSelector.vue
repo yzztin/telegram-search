@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { TelegramChat } from '@tg-search/core'
+import type { CoreDialog } from '@tg-search/core'
 import { computed, ref, watch } from 'vue'
 import { usePagination } from '../../composables/usePagination'
 import Pagination from '../ui/Pagination.vue'
 import SelectDropdown from '../ui/SelectDropdown.vue'
 
 const props = defineProps<{
-  chats: TelegramChat[]
+  chats: CoreDialog[]
 }>()
 
 const selectedChats = defineModel<number[]>('selectedChats', {
@@ -36,14 +36,14 @@ const filteredChats = computed(() => {
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     filtered = filtered.filter(chat =>
-      chat.title?.toLowerCase().includes(query)
+      chat.name?.toLowerCase().includes(query)
       || chat.id.toString().includes(query),
     )
   }
 
   return filtered.map(chat => ({
     id: chat.id,
-    title: chat.title || `Chat ${chat.id}`,
+    title: chat.name || `Chat ${chat.id}`,
     subtitle: `ID: ${chat.id}`,
     type: chat.type,
   })).sort((a, b) => {

@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import type { CommandStatus } from '@tg-search/server'
 import { computed } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 const props = withDefaults(defineProps<Props>(), {
   status: 'pending',
@@ -10,7 +8,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 interface Props {
   progress: number
-  status?: CommandStatus
+  status?: 'pending' | 'waiting' | 'running' | 'completed' | 'failed'
   showPercentage?: boolean
 }
 

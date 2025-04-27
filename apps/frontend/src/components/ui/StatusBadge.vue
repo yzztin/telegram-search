@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import type { CommandStatus } from '@tg-search/server'
 import { computed } from 'vue'
 
 interface Props {
-  status: CommandStatus
+  status: 'pending' | 'waiting' | 'running' | 'completed' | 'failed'
   label: string
   icon?: string
 }
