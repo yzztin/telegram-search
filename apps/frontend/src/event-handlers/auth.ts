@@ -8,11 +8,11 @@ export function registerAuthEventHandlers(
 ) {
   const connectionStore = useSessionStore()
 
-  registerEventHandler('auth:needCode', () => {
+  registerEventHandler('auth:code:needed', () => {
     connectionStore.auth.needCode = true
   })
 
-  registerEventHandler('auth:needPassword', () => {
+  registerEventHandler('auth:password:needed', () => {
     connectionStore.auth.needPassword = true
   })
 

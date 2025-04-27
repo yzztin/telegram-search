@@ -18,8 +18,8 @@ export interface ConnectionEventToCore {
 }
 
 export interface ConnectionEventFromCore {
-  'auth:needCode': () => void
-  'auth:needPassword': () => void
+  'auth:code:needed': () => void
+  'auth:password:needed': () => void
   'auth:connected': (data: { client?: TelegramClient }) => void
 }
 
@@ -116,13 +116,13 @@ export function createConnectionService(ctx: CoreContext) {
             phoneNumber,
             phoneCode: async () => {
               logger.debug('Waiting for code')
-              emitter.emit('auth:needCode')
+              emitter.emit('auth:code:needed')
               const { code } = await waitForEvent(emitter, 'auth:code')
               return code
             },
             password: async () => {
               logger.debug('Waiting for password')
-              emitter.emit('auth:needPassword')
+              emitter.emit('auth:password:needed')
               const { password } = await waitForEvent(emitter, 'auth:password')
               return password
             },
