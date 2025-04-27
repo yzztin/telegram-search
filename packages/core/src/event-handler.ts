@@ -10,6 +10,7 @@ import { registerDialogEventHandlers } from './event-handlers/dialog'
 import { registerEntityEventHandlers } from './event-handlers/entity'
 import { registerMessageEventHandlers } from './event-handlers/message'
 import { registerSessionEventHandlers } from './event-handlers/session'
+import { registerStorageEventHandlers } from './event-handlers/storage'
 import { registerTakeoutEventHandlers } from './event-handlers/takeout'
 import { useResolverRegistry } from './registry'
 import { createEmbeddingResolver } from './resolvers/embedding-resolver'
@@ -39,6 +40,7 @@ export function authEventHandler(
 
   registerAuthEventHandlers(ctx)(connectionService, sessionService)
   registerSessionEventHandlers(ctx)(sessionService)
+  registerStorageEventHandlers(ctx)
   registerConfigEventHandlers(ctx)(configService)
 
   return () => {}

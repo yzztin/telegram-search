@@ -6,6 +6,7 @@ import type { ConnectionEventFromCore, ConnectionEventToCore } from './services/
 import type { DialogEventFromCore, DialogEventToCore } from './services/dialog'
 import type { EntityEventFromCore, EntityEventToCore } from './services/entity'
 import type { MessageEventFromCore, MessageEventToCore } from './services/message'
+import type { StorageEventFromCore, StorageEventToCore } from './services/storage'
 import type { TakeoutEventFromCore, TakeoutEventToCore } from './services/takeout'
 
 import { useLogger } from '@tg-search/common'
@@ -20,6 +21,7 @@ export type FromCoreEvent = ClientInstanceEventFromCore
   & TakeoutEventFromCore
   & SessionEventFromCore
   & EntityEventFromCore
+  & StorageEventFromCore
   & ConfigEventFromCore
 
 export type ToCoreEvent = ClientInstanceEventToCore
@@ -29,6 +31,7 @@ export type ToCoreEvent = ClientInstanceEventToCore
   & TakeoutEventToCore
   & SessionEventToCore
   & EntityEventToCore
+  & StorageEventToCore
   & ConfigEventToCore
 
 export type CoreEvent = FromCoreEvent & ToCoreEvent
