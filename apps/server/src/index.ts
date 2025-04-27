@@ -10,12 +10,9 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
 import { setupWsRoutes } from './app'
-import { createErrorResponse } from './utils/response'
 
 export type * from './app'
-export type * from './types/api'
-export type * from './utils/response'
-export type * from './utils/ws-event'
+export type * from './ws-event'
 
 async function initCore(): Promise<ReturnType<typeof useLogger>> {
   initLogger()
@@ -70,7 +67,10 @@ function configureServer(logger: ReturnType<typeof useLogger>) {
         error: error instanceof Error ? error.message : 'Unknown error',
       }).error('Request failed')
 
-      return createErrorResponse(error)
+      return Response.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
     },
   })
 

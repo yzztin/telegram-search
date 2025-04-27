@@ -1,13 +1,13 @@
 import type { CoreContext, CoreEventData, FromCoreEvent, ToCoreEvent } from '@tg-search/core'
 import type { Peer } from 'crossws'
 import type { App } from 'h3'
-import type { WsMessageToServer } from './utils/ws-event'
+import type { WsMessageToServer } from './ws-event'
 
 import { useLogger } from '@tg-search/common'
 import { createCoreInstance } from '@tg-search/core'
 import { defineWebSocketHandler } from 'h3'
 
-import { sendWsEvent } from './utils/ws-event'
+import { sendWsEvent } from './ws-event'
 
 export interface ClientState {
   ctx?: CoreContext
