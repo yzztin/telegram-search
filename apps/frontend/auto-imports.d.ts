@@ -31,7 +31,7 @@ declare global {
   const createSharedComposable: typeof import('@vueuse/core')['createSharedComposable']
   const createTemplatePromise: typeof import('@vueuse/core')['createTemplatePromise']
   const createUnrefFn: typeof import('@vueuse/core')['createUnrefFn']
-  const createWebsocketV2Context: typeof import('./src/composables/useWebsocketV2')['createWebsocketV2Context']
+  const createWebsocketV2Context: typeof import('./src/composables/useWebsocket')['createWebsocketV2Context']
   const customRef: typeof import('vue')['customRef']
   const debouncedRef: typeof import('@vueuse/core')['debouncedRef']
   const debouncedWatch: typeof import('@vueuse/core')['debouncedWatch']
@@ -306,7 +306,7 @@ declare global {
   const useWebSocket: typeof import('@vueuse/core')['useWebSocket']
   const useWebWorker: typeof import('@vueuse/core')['useWebWorker']
   const useWebWorkerFn: typeof import('@vueuse/core')['useWebWorkerFn']
-  const useWebsocketV2: typeof import('./src/composables/useWebsocketV2')['useWebsocketV2']
+  const useWebsocketV2: typeof import('./src/composables/useWebsocket')['useWebsocketV2']
   const useWindowFocus: typeof import('@vueuse/core')['useWindowFocus']
   const useWindowScroll: typeof import('@vueuse/core')['useWindowScroll']
   const useWindowSize: typeof import('@vueuse/core')['useWindowSize']
@@ -336,8 +336,8 @@ declare global {
   export type { PaginationOptions } from './src/composables/usePagination'
   import('./src/composables/usePagination')
   // @ts-ignore
-  export type { ClientEventHandler, ClientRegisterEventHandler } from './src/composables/useWebsocketV2'
-  import('./src/composables/useWebsocketV2')
+  export type { ClientSendEventFn, ClientCreateWsMessageFn } from './src/composables/useWebsocket'
+  import('./src/composables/useWebsocket')
 }
 
 // for vue template auto import
@@ -365,7 +365,7 @@ declare module 'vue' {
     readonly createSharedComposable: UnwrapRef<typeof import('@vueuse/core')['createSharedComposable']>
     readonly createTemplatePromise: UnwrapRef<typeof import('@vueuse/core')['createTemplatePromise']>
     readonly createUnrefFn: UnwrapRef<typeof import('@vueuse/core')['createUnrefFn']>
-    readonly createWebsocketV2Context: UnwrapRef<typeof import('./src/composables/useWebsocketV2')['createWebsocketV2Context']>
+    readonly createWebsocketV2Context: UnwrapRef<typeof import('./src/composables/useWebsocket')['createWebsocketV2Context']>
     readonly customRef: UnwrapRef<typeof import('vue')['customRef']>
     readonly debouncedRef: UnwrapRef<typeof import('@vueuse/core')['debouncedRef']>
     readonly debouncedWatch: UnwrapRef<typeof import('@vueuse/core')['debouncedWatch']>
@@ -615,7 +615,7 @@ declare module 'vue' {
     readonly useWebSocket: UnwrapRef<typeof import('@vueuse/core')['useWebSocket']>
     readonly useWebWorker: UnwrapRef<typeof import('@vueuse/core')['useWebWorker']>
     readonly useWebWorkerFn: UnwrapRef<typeof import('@vueuse/core')['useWebWorkerFn']>
-    readonly useWebsocketV2: UnwrapRef<typeof import('./src/composables/useWebsocketV2')['useWebsocketV2']>
+    readonly useWebsocketV2: UnwrapRef<typeof import('./src/composables/useWebsocket')['useWebsocketV2']>
     readonly useWindowFocus: UnwrapRef<typeof import('@vueuse/core')['useWindowFocus']>
     readonly useWindowScroll: UnwrapRef<typeof import('@vueuse/core')['useWindowScroll']>
     readonly useWindowSize: UnwrapRef<typeof import('@vueuse/core')['useWindowSize']>
