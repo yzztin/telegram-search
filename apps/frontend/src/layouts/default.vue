@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import ThemeToggle from '../components/ThemeToggle.vue'
 import DropdownMenu from '../components/ui/DropdownMenu.vue'
-import { useSessionStore } from '../store/useSessionV2'
+import { useSessionStore } from '../store/useSession'
 
 const router = useRouter()
 const isDark = usePreferredDark()

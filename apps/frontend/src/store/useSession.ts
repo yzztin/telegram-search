@@ -5,7 +5,7 @@ import { defu } from 'defu'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import { useWebsocketV2 } from '../composables/useWebsocketV2'
+import { useWebsocketV2 } from '../composables/useWebsocket'
 
 export interface SessionContext {
   phoneNumber?: string

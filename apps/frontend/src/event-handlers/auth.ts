@@ -1,6 +1,6 @@
 import type { ClientRegisterEventHandler } from '.'
 
-import { useSessionStore } from '../store/useSessionV2'
+import { useSessionStore } from '../store/useSession'
 
 export function registerAuthEventHandlers(
   registerEventHandler: ClientRegisterEventHandler,

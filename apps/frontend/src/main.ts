@@ -9,7 +9,7 @@ import { routes } from 'vue-router/auto-routes'
 import App from './App.vue'
 import en from './locales/en.json'
 import zhCN from './locales/zh-CN.json'
-import { useSessionStore } from './store/useSessionV2'
+import { useSessionStore } from './store/useSession'
 
 import '@unocss/reset/tailwind.css'
 import './styles/main.css'
