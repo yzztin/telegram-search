@@ -9,7 +9,7 @@ export interface BaseResponse {
 }
 
 /**
- * Success response with generic data type and optional pagination
+ * Success response with  data type and optional pagination
  */
 export type SuccessResponse<T> = BaseResponse & {
   success: true
@@ -65,7 +65,7 @@ export interface PaginationParams {
 }
 
 /**
- * Generic paginated response structure
+ *  paginated response structure
  */
 export interface PaginatedResponse<T> {
   total: number

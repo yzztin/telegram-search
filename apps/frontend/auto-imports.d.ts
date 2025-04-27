@@ -336,7 +336,7 @@ declare global {
   export type { PaginationOptions } from './src/composables/usePagination'
   import('./src/composables/usePagination')
   // @ts-ignore
-  export type { WsEventHandler, WsRegisterEventHandler } from './src/composables/useWebsocketV2'
+  export type { ClientEventHandler, ClientRegisterEventHandler } from './src/composables/useWebsocketV2'
   import('./src/composables/useWebsocketV2')
 }
 
