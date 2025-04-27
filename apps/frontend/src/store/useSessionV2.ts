@@ -1,8 +1,9 @@
 import type { CoreUserInfo } from '@tg-search/core'
 
 import { useLocalStorage } from '@vueuse/core'
+import { defu } from 'defu'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { useWebsocketV2 } from '../composables/useWebsocketV2'
 
@@ -36,11 +37,10 @@ export const useSessionStore = defineStore('session', () => {
     return storageSessions.value.get(storageActiveSessionId.value)
   }
 
-  const setActiveSession = (sessionId: string, session: SessionContext) => {
-    if (storageSessions.value.has(sessionId))
-      return
+  const updateActiveSession = (sessionId: string, partialSession: Partial<SessionContext>) => {
+    const mergedSession = defu({}, partialSession, storageSessions.value.get(sessionId))
 
-    storageSessions.value.set(sessionId, session)
+    storageSessions.value.set(sessionId, mergedSession)
     storageActiveSessionId.value = sessionId
   }
 
@@ -56,19 +56,15 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   onMounted(async () => {
-    // TODO: reimplement this
-    // if (!storageActiveSessionId.value) {
-    //   // FIXME: reimplement this
-    //   const response = await apiFetch<SuccessResponse<{ sessionId: string }>>('/v2/session', {
-    //     method: 'POST',
-    //   })
-
-    //   storageActiveSessionId.value = response.data?.sessionId
-    // }
-
     wsContext = useWebsocketV2(storageActiveSessionId.value)
 
     await attemptLogin()
+  })
+
+  watch(() => activeSessionComputed.value?.isConnected, (isConnected) => {
+    if (!isConnected) {
+      attemptLogin()
+    }
   })
 
   function handleAuth() {
@@ -108,7 +104,7 @@ export const useSessionStore = defineStore('session', () => {
     getWsContext,
     handleAuth,
     getActiveSession,
-    setActiveSession,
+    updateActiveSession,
     attemptLogin,
     isLoggedIn: computed(() => activeSessionComputed.value?.isConnected),
   }

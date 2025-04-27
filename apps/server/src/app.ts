@@ -13,7 +13,7 @@ export interface ClientState {
   ctx?: CoreContext
   peer: Peer
 
-  isConnected?: boolean
+  isConnected: boolean
   phoneNumber?: string
 
   registedEvents?: Set<keyof FromCoreEvent>
@@ -31,20 +31,21 @@ export function setupWsRoutes(app: App) {
     return urlSessionId || crypto.randomUUID()
   }
 
-  function useSessionState(sessionId: UUID) {
+  function useSessionState(sessionId: UUID): Omit<ClientState, 'peer'> {
     if (!clientStates.has(sessionId)) {
       const ctx = createCoreInstance()
-      clientStates.set(sessionId, {
+      const state = {
         ctx,
         isConnected: false,
-        registedEvents: new Set(),
-      })
-      logger.withFields({ sessionId }).debug('Session restored')
+        registedEvents: new Set<keyof FromCoreEvent>(),
+      }
+      clientStates.set(sessionId, state)
 
-      return { ctx }
+      logger.withFields({ sessionId }).debug('Session created')
+      return state
     }
 
-    return clientStates.get(sessionId)
+    return clientStates.get(sessionId)!
   }
 
   app.use('/ws', defineWebSocketHandler({
@@ -60,12 +61,16 @@ export function setupWsRoutes(app: App) {
 
     async open(peer) {
       const sessionId = useSessionId(peer)
+      if (!clientStates.has(sessionId)) {
+        logger.withFields({ sessionId }).debug('Session restored')
+      }
       const state = { ...useSessionState(sessionId), peer }
 
       logger.withFields({ peer: peer.id }).debug('Websocket connection opened')
 
-      sendWsEvent(peer, 'server:connected', { sessionId, connected: state.isConnected ?? false })
+      sendWsEvent(peer, 'server:connected', { sessionId, connected: state.isConnected })
 
+      // TODO: is this necessary?
       clientStates.set(sessionId, state)
     },
 
@@ -85,8 +90,6 @@ export function setupWsRoutes(app: App) {
             if (!state.registedEvents?.has(eventName)) {
               state.registedEvents?.add(eventName)
 
-              logger.withFields({ eventName }).debug('Register event')
-
               state.ctx?.emitter.on(eventName, (...args) => {
                 try {
                   // ensure args[0] can be stringified
@@ -104,7 +107,6 @@ export function setupWsRoutes(app: App) {
           }
         }
         else {
-          logger.withFields({ type: event.type }).debug('Emit event to core')
           state.ctx?.emitter.emit(event.type, event.data as CoreEventData<keyof ToCoreEvent>)
         }
 
