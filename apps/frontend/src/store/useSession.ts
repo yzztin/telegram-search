@@ -3,7 +3,7 @@ import type { CoreUserInfo } from '@tg-search/core'
 import { useLocalStorage } from '@vueuse/core'
 import { defu } from 'defu'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import { useWebsocketV2 } from '../composables/useWebsocket'
 
@@ -55,11 +55,11 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
-  onMounted(async () => {
+  const init = async () => {
     wsContext = useWebsocketV2(storageActiveSessionId.value)
 
     await attemptLogin()
-  })
+  }
 
   watch(() => activeSessionComputed.value?.isConnected, (isConnected) => {
     if (!isConnected) {
@@ -97,6 +97,7 @@ export const useSessionStore = defineStore('session', () => {
   }
 
   return {
+    init,
     sessions: storageSessions,
     activeSessionId: storageActiveSessionId,
     activeSessionComputed,

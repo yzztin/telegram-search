@@ -1,7 +1,7 @@
 import type { CoreDialog } from '@tg-search/core'
 
 import { defineStore } from 'pinia'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 
 import { useSessionStore } from './useSession'
 
@@ -10,11 +10,14 @@ export const useChatStore = defineStore('chat', () => {
   const sessionStore = useSessionStore()
   const { getWsContext } = sessionStore
 
-  onMounted(() => {
+  const init = () => {
     if (chats.value.length === 0) {
       getWsContext()?.sendEvent('dialog:fetch')
     }
-  })
+  }
 
-  return { chats }
+  return {
+    init,
+    chats,
+  }
 })

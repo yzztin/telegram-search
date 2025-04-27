@@ -9,8 +9,8 @@ import { routes } from 'vue-router/auto-routes'
 import App from './App.vue'
 import en from './locales/en.json'
 import zhCN from './locales/zh-CN.json'
+import { useChatStore } from './store/useChat'
 import { useSessionStore } from './store/useSession'
-
 import '@unocss/reset/tailwind.css'
 import './styles/main.css'
 import 'uno.css'
@@ -40,5 +40,6 @@ app.use(autoAnimatePlugin)
 app.mount('#app')
 
 router.beforeEach(() => {
-  useSessionStore()
+  useSessionStore().init()
+  useChatStore().init()
 })
