@@ -61,9 +61,18 @@ export function getDatabaseDSN(config: Config): string {
   return database.url || `postgres://${database.user}:${database.password}@${database.host}:${database.port}/${database.database}`
 }
 
+export function resolveStoragePath(path: string): string {
+  if (path.startsWith('~')) {
+    path = path.replace('~', homedir())
+  }
+
+  const resolvedPath = resolve(path)
+  return resolvedPath
+}
+
 export async function initConfig(): Promise<Config> {
   const configPath = await useConfigPath()
-  const storagePath = join(homedir(), '.telegram-search')
+  const storagePath = resolveStoragePath(join(homedir(), '.telegram-search'))
   logger.withFields({ storagePath }).debug('Storage path')
 
   const configData = readFileSync(configPath, 'utf-8')
@@ -78,6 +87,7 @@ export async function initConfig(): Promise<Config> {
   }
 
   validatedConfig.output.database.url = getDatabaseDSN(validatedConfig.output)
+  validatedConfig.output.path.storage = resolveStoragePath(validatedConfig.output.path.storage)
 
   config = validatedConfig.output
 
@@ -95,6 +105,9 @@ export async function updateConfig(newConfig: Partial<Config>): Promise<Config> 
     logger.withFields({ issues: validatedConfig.issues }).error('Failed to validate config')
     throw new Error('Failed to validate config')
   }
+
+  validatedConfig.output.database.url = getDatabaseDSN(validatedConfig.output)
+  validatedConfig.output.path.storage = resolveStoragePath(validatedConfig.output.path.storage)
 
   logger.withFields({ config: validatedConfig.output }).debug('Updating config')
   writeFileSync(configPath, stringify(validatedConfig.output))

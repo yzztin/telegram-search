@@ -1,7 +1,7 @@
 import type { CoreContext } from '../context'
 import type { PromiseResult } from '../utils/result'
 
-import fs from 'node:fs/promises'
+import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { useLogger } from '@tg-search/common'
 import { getSessionPath, useConfig } from '@tg-search/common/composable'
@@ -35,7 +35,7 @@ export function createSessionService(ctx: CoreContext) {
     const sessionFilePath = getSessionFilePath(phoneNumber)
 
     try {
-      await fs.unlink(sessionFilePath)
+      await unlink(sessionFilePath)
       logger.withFields({ sessionFile: sessionFilePath, phoneNumber }).debug('Deleted session file')
       return withResult(null, null)
     }
@@ -52,10 +52,10 @@ export function createSessionService(ctx: CoreContext) {
 
       try {
         // Ensure session directory exists
-        await fs.mkdir(path.dirname(sessionFilePath), { recursive: true })
+        await mkdir(path.dirname(sessionFilePath), { recursive: true })
 
         try {
-          const session = await fs.readFile(sessionFilePath, 'utf-8')
+          const session = await readFile(sessionFilePath, 'utf-8')
           return withResult(new StringSession(session), null)
         }
         catch (error) {
@@ -76,13 +76,13 @@ export function createSessionService(ctx: CoreContext) {
 
       try {
         try {
-          await fs.access(path.dirname(sessionFilePath))
+          await access(path.dirname(sessionFilePath))
         }
         catch {
-          await fs.mkdir(path.dirname(sessionFilePath), { recursive: true })
+          await mkdir(path.dirname(sessionFilePath), { recursive: true })
         }
 
-        await fs.writeFile(sessionFilePath, session, 'utf-8')
+        await writeFile(sessionFilePath, session, 'utf-8')
         logger.withFields({ sessionFilePath, phoneNumber }).debug('Saving session to file')
         return withResult(null, null)
       }
