@@ -32,6 +32,7 @@ async function initCore(): Promise<ReturnType<typeof useLogger>> {
 }
 
 function setupErrorHandlers(logger: ReturnType<typeof useLogger>): void {
+  // TODO: fix type
   const handleError = (error: any, type: string) => {
     logger.withFields({ cause: String(error?.cause), cause_json: JSON.stringify(error?.cause) }).withError(error).error(type)
   }
@@ -118,7 +119,7 @@ async function bootstrap() {
   // const server = createServer(listener).listen(port)
   // server.on('upgrade', handleUpgrade)
 
-  logger.withFields({ port }).debug('Server started')
+  logger.debug('Server started')
 
   const shutdown = () => process.exit(0)
   process.on('SIGINT', shutdown)
