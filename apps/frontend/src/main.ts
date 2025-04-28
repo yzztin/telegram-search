@@ -40,6 +40,9 @@ app.use(autoAnimatePlugin)
 app.mount('#app')
 
 router.beforeEach(() => {
+  // eslint-disable-next-line no-console
+  console.log('[main] init stores')
+
   useSessionStore().init()
   useChatStore().init()
 })

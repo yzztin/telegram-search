@@ -32,8 +32,8 @@ async function initCore(): Promise<ReturnType<typeof useLogger>> {
 }
 
 function setupErrorHandlers(logger: ReturnType<typeof useLogger>): void {
-  const handleError = (error: unknown, type: string) => {
-    logger.withError(error).error(type)
+  const handleError = (error: any, type: string) => {
+    logger.withFields({ cause: String(error?.cause), cause_json: JSON.stringify(error?.cause) }).withError(error).error(type)
   }
 
   process.on('uncaughtException', error => handleError(error, 'Uncaught exception'))
