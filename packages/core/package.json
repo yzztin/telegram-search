@@ -25,7 +25,6 @@
     "@xsai/embed": "catalog:",
     "big-integer": "^1.6.52",
     "defu": "^6.1.4",
-    "drizzle": "^1.4.0",
     "drizzle-orm": "^0.42.0",
     "eventemitter3": "^5.0.1",
     "grammy": "^1.36.1",
