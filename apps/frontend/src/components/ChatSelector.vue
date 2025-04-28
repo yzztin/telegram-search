@@ -77,6 +77,8 @@ function toggleSelection(id: number): void {
     newSelection.push(id)
   else
     newSelection.splice(index, 1)
+
+  selectedChats.value = newSelection
 }
 
 // Reset page when filters change

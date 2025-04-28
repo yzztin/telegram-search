@@ -53,7 +53,7 @@ export function createMessageService(ctx: CoreContext) {
 
   // TODO: worker_threads?
   function processMessage(message: Api.Message) {
-    useLogger().withFields(message).debug('Process message')
+    useLogger().withFields({ id: message.id }).debug('Process message')
     emitter.emit('message:record', { message })
     // emitter.emit('storage:save:messages', { messages })
   }
