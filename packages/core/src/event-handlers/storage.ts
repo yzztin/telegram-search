@@ -25,6 +25,9 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
 
     const dbChats = await listJoinedChats()
     const chatsMessageStats = await getChatMessagesStats()
+
+    logger.withFields({ dbChatsSize: dbChats.length, chatsMessageStatsSize: chatsMessageStats.length }).debug('Chat message stats')
+
     const dialogs = dbChats.map((chat) => {
       const chatMessageStats = chatsMessageStats.find(stats => stats.chat_id === chat.chat_id)
       return {

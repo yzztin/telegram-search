@@ -6,6 +6,7 @@ import { registerConfigEventHandlers } from './config'
 import { registerDialogEventHandlers } from './dialog'
 import { registerEntityEventHandlers } from './entity'
 import { registerServerEventHandlers } from './server'
+import { registerStorageEventHandlers } from './storage'
 import { registerTakeoutEventHandlers } from './takeout'
 
 export type ClientEventHandler<T extends keyof WsEventToClient> = (data: WsEventToClientData<T>) => void
@@ -36,4 +37,5 @@ export function registerAllEventHandlers(
   registerTakeoutEventHandlers(registerEventHandler)
   registerConfigEventHandlers(registerEventHandler)
   registerDialogEventHandlers(registerEventHandler)
+  registerStorageEventHandlers(registerEventHandler)
 }

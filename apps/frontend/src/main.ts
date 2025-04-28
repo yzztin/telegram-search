@@ -41,7 +41,7 @@ app.mount('#app')
 
 router.beforeEach(() => {
   // eslint-disable-next-line no-console
-  console.log('[main] init stores')
+  console.log('[Main] init stores')
 
   useSessionStore().init()
   useChatStore().init()

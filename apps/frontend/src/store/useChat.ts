@@ -12,7 +12,7 @@ export const useChatStore = defineStore('chat', () => {
 
   const init = () => {
     if (chats.value.length === 0) {
-      getWsContext()?.sendEvent('storage:')
+      getWsContext()?.sendEvent('storage:fetch:dialogs')
     }
   }
 
