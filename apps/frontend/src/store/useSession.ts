@@ -5,7 +5,7 @@ import { defu } from 'defu'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
-import { useWebsocketV2 } from '../composables/useWebsocket'
+import { useWebsocket } from '../composables/useWebsocket'
 
 export interface SessionContext {
   phoneNumber?: string
@@ -14,8 +14,6 @@ export interface SessionContext {
 }
 
 export const useSessionStore = defineStore('session', () => {
-  let wsContext: ReturnType<typeof useWebsocketV2>
-
   const storageSessions = useLocalStorage('session/sessions', new Map<string, SessionContext>())
   const storageActiveSessionId = useLocalStorage('session/active-session-id', crypto.randomUUID())
 
@@ -27,10 +25,7 @@ export const useSessionStore = defineStore('session', () => {
   const activeSessionComputed = computed(() => storageSessions.value.get(storageActiveSessionId.value))
 
   const getWsContext = () => {
-    if (!wsContext)
-      wsContext = useWebsocketV2(storageActiveSessionId.value)
-
-    return wsContext
+    return useWebsocket(storageActiveSessionId.value)
   }
 
   const getActiveSession = () => {
@@ -51,12 +46,14 @@ export const useSessionStore = defineStore('session', () => {
     }
 
     if (activeSession?.isConnected) {
-      wsContext.sendEvent('entity:me:fetch', undefined)
+      getWsContext().sendEvent('entity:me:fetch', undefined)
     }
   }
 
   const init = async () => {
-    wsContext = useWebsocketV2(storageActiveSessionId.value)
+    if (!storageActiveSessionId.value || storageActiveSessionId.value === '') {
+      storageActiveSessionId.value = crypto.randomUUID()
+    }
 
     await attemptLogin()
   }
@@ -71,26 +68,26 @@ export const useSessionStore = defineStore('session', () => {
     function login(phoneNumber: string) {
       storageSessions.value.get(storageActiveSessionId.value)!.phoneNumber = phoneNumber
 
-      wsContext.sendEvent('auth:login', {
+      getWsContext().sendEvent('auth:login', {
         phoneNumber,
       })
     }
 
     function submitCode(code: string) {
-      wsContext.sendEvent('auth:code', {
+      getWsContext().sendEvent('auth:code', {
         code,
       })
     }
 
     function submitPassword(password: string) {
-      wsContext.sendEvent('auth:password', {
+      getWsContext().sendEvent('auth:password', {
         password,
       })
     }
 
     function logout() {
       getActiveSession()!.isConnected = false
-      wsContext.sendEvent('auth:logout', undefined)
+      getWsContext().sendEvent('auth:logout', undefined)
     }
 
     return { login, submitCode, submitPassword, logout }

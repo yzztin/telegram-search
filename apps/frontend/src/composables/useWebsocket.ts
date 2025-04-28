@@ -74,7 +74,7 @@ export function createWebsocketV2Context(sessionId: string) {
   }
 }
 
-export function useWebsocketV2(sessionId: string) {
+export function useWebsocket(sessionId: string) {
   if (!wsContext)
     wsContext = createWebsocketV2Context(sessionId)
 
