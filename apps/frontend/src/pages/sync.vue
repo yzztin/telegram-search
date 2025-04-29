@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Action } from '../types/action'
+
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
+
 import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 import { useSyncTaskStore } from '../store/useSyncTask'

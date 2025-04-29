@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { Action } from '../types/action'
+
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
+
 import { useSessionStore } from '../store/useSession'
 
 type LoginStep = 'phone' | 'code' | 'password' | 'complete'

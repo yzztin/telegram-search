@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { Action } from '../types/action'
+
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
+
 import SelectDropdown from '../components/ui/SelectDropdown.vue'
 import { useSessionStore } from '../store/useSession'
 import { useSettingsStore } from '../store/useSettings'

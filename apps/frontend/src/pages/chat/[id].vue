@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Action } from '../../types/action'
+
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 

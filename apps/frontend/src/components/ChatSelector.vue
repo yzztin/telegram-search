@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import type { CoreDialog } from '@tg-search/core'
+
 import { computed, ref, watch } from 'vue'
+
 import { usePagination } from '../composables/usePagination'
 import Pagination from './ui/Pagination.vue'
 import SelectDropdown from './ui/SelectDropdown.vue'

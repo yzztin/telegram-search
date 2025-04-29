@@ -1,10 +1,11 @@
 import { autoAnimatePlugin } from '@formkit/auto-animate/vue'
 import { VueQueryPlugin } from '@tanstack/vue-query'
 import { createPinia } from 'pinia'
+import { setupLayouts } from 'virtual:generated-layouts'
 import { createApp } from 'vue'
 import { createI18n } from 'vue-i18n'
 import { createRouter, createWebHistory } from 'vue-router'
-import { routes } from 'vue-router/auto-routes'
+import { routes as generatedRoutes } from 'vue-router/auto-routes'
 
 import App from './App.vue'
 import en from './locales/en.json'
@@ -17,6 +18,7 @@ import 'uno.css'
 
 const app = createApp(App)
 const pinia = createPinia()
+const routes = setupLayouts(generatedRoutes)
 const router = createRouter({
   routes,
   history: createWebHistory(import.meta.env.BASE_URL),

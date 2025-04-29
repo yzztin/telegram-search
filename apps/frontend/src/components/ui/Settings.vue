@@ -2,6 +2,7 @@
 import { useDark, useToggle } from '@vueuse/core'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+
 import { useSessionStore } from '../../store/useSession'
 
 const emit = defineEmits<{
