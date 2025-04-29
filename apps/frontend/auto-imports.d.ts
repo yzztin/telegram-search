@@ -32,6 +32,7 @@ declare global {
   const createTemplatePromise: typeof import('@vueuse/core')['createTemplatePromise']
   const createUnrefFn: typeof import('@vueuse/core')['createUnrefFn']
   const createWebsocketContext: typeof import('./src/composables/useWebsocket')['createWebsocketContext']
+  const createWebsocketV2Context: typeof import('./src/composables/useWebsocket')['createWebsocketV2Context']
   const customRef: typeof import('vue')['customRef']
   const debouncedRef: typeof import('@vueuse/core')['debouncedRef']
   const debouncedWatch: typeof import('@vueuse/core')['debouncedWatch']

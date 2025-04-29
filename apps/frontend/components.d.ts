@@ -9,7 +9,8 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AlertCard: typeof import('./src/components/ui/AlertCard.vue')['default']
-    ChatGroup: typeof import('./src/components/ui/ChatGroup.vue')['default']
+    ChatGroup: typeof import('./src/components/layout/ChatGroup.vue')['default']
+    ChatsCollapse: typeof import('./src/components/layout/ChatsCollapse.vue')['default']
     ChatSelector: typeof import('./src/components/ChatSelector.vue')['default']
     CheckboxGroup: typeof import('./src/components/ui/CheckboxGroup.vue')['default']
     ComposeMessage: typeof import('./src/components/ui/ComposeMessage.vue')['default']
@@ -30,6 +31,7 @@ declare module 'vue' {
     SearchSelect: typeof import('./src/components/ui/SearchSelect.vue')['default']
     SelectDropdown: typeof import('./src/components/ui/SelectDropdown.vue')['default']
     Settings: typeof import('./src/components/ui/Settings.vue')['default']
+    SidebarSelector: typeof import('./src/components/layout/SidebarSelector.vue')['default']
     SlotButton: typeof import('./src/components/ui/SlotButton.vue')['default']
     StatusBadge: typeof import('./src/components/ui/StatusBadge.vue')['default']
     StepIndicator: typeof import('./src/components/ui/StepIndicator.vue')['default']

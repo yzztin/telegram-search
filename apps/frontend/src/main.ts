@@ -10,11 +10,9 @@ import { routes as generatedRoutes } from 'vue-router/auto-routes'
 import App from './App.vue'
 import en from './locales/en.json'
 import zhCN from './locales/zh-CN.json'
-import { useChatStore } from './store/useChat'
-import { useSessionStore } from './store/useSession'
 import '@unocss/reset/tailwind.css'
-import './styles/main.css'
 import 'uno.css'
+import './styles/main.css'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -40,11 +38,3 @@ app.use(VueQueryPlugin)
 app.use(pinia)
 app.use(autoAnimatePlugin)
 app.mount('#app')
-
-router.beforeEach(() => {
-  // eslint-disable-next-line no-console
-  console.log('[Main] init stores')
-
-  useSessionStore().init()
-  useChatStore().init()
-})

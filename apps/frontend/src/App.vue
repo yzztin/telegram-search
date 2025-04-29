@@ -1,6 +1,18 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { RouterView } from 'vue-router'
 import { Toaster } from 'vue-sonner'
+
+import { useChatStore } from './store/useChat'
+import { useSessionStore } from './store/useSession'
+
+onMounted(() => {
+  // eslint-disable-next-line no-console
+  console.log('[Main] init stores')
+
+  useSessionStore().init()
+  useChatStore().init()
+})
 </script>
 
 <template>
