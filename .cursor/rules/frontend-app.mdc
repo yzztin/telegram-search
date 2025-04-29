@@ -1,0 +1,36 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Frontend Application
+
+[apps/frontend](mdc:apps/frontend) 是项目的前端应用，提供用户界面和搜索功能。
+
+## 主要组件
+
+- **入口文件**: [apps/frontend/src/main.ts](mdc:apps/frontend/src/main.ts) 应用的入口文件
+
+- **页面**: [apps/frontend/src/pages](mdc:apps/frontend/src/pages) 包含所有页面组件
+
+- **组件**: [apps/frontend/src/components](mdc:apps/frontend/src/components) 包含可复用的 UI 组件
+
+- **状态管理**: [apps/frontend/src/store](mdc:apps/frontend/src/store) 包含应用状态管理逻辑
+
+- **Composables**: [apps/frontend/src/composables](mdc:apps/frontend/src/composables) 包含可复用的组合式函数
+
+- **事件处理**: [apps/frontend/src/event-handlers](mdc:apps/frontend/src/event-handlers) 处理各种事件
+
+- **样式**: [apps/frontend/src/styles](mdc:apps/frontend/src/styles) 包含全局样式定义
+
+- **布局**: [apps/frontend/src/layouts](mdc:apps/frontend/src/layouts) 包含页面布局组件
+
+- **国际化**: [apps/frontend/src/locales](mdc:apps/frontend/src/locales) 包含多语言翻译文件
+
+## 构建配置
+
+[apps/frontend/vite.config.ts](mdc:apps/frontend/vite.config.ts) 包含前端应用的构建配置。
+
+## UnoCSS 样式
+
+[apps/frontend/uno.config.ts](mdc:apps/frontend/uno.config.ts) 配置了 UnoCSS 样式系统。

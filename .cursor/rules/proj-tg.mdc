@@ -7,7 +7,7 @@ alwaysApply: true
 
 ## 项目结构
 
-我们有前端（package/frontend）、后端（package/server）、数据库 （package/db/schema）、模型 （package/db/model）、核心 Adapter（package/core/adapter）。
+我们有前端（[apps/frontend](mdc:apps/frontend)）、后端（[apps/server](mdc:apps/server)）、数据库模型和核心 Adapter（[packages/core](mdc:packages/core)）、公共工具（[packages/common](mdc:packages/common)）。
 
 ## Packages
 
@@ -15,11 +15,11 @@ alwaysApply: true
 
 数据库 ORM 使用 drizzle，使用 gram.js 操作 Telegram。
 
-使用 ni 和 pnpm 作为包管理器，例如 `ni dev:server`。
+项目使用 pnpm 作为包管理器，例如 `pnpm run dev:server`。对于安装了 ni 工具的环境，也可以使用 `ni` 和 `nr` 简化命令，例如 `nr dev:server`。
 
 ## Logger
 
-@guiiai/logg 是我们的 Logger 库，我在 package/common 里面封装了一层，使用的时候直接 `useLogger()` 就好。
+@guiiai/logg 是我们的 Logger 库，在 [packages/common](mdc:packages/common) 里面封装了一层，使用的时候直接 `useLogger()` 就好。
 
 例子：
 
@@ -31,3 +31,4 @@ useLogger().withErr(new Error()).error('failed')
 ## Telegram 细节
 
 - Message ID 是递增的，如果涉及到对 Message 的处理，优先考虑使用 ID，而不是时间戳。
+- 使用 [packages/core/src/context.ts](mdc:packages/core/src/context.ts) 进行 Telegram 客户端的上下文管理。

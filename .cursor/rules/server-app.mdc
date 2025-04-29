@@ -1,0 +1,28 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Server Application
+
+[apps/server](mdc:apps/server) 是项目的后端服务，负责处理 API 请求、WebSocket 连接以及与 Telegram API 的交互。
+
+## 主要组件
+
+- **入口文件**: [apps/server/src/index.ts](mdc:apps/server/src/index.ts) 服务的入口文件
+
+- **应用设置**: [apps/server/src/app.ts](mdc:apps/server/src/app.ts) 包含 Express 应用的设置和路由配置
+
+- **WebSocket 事件**: [apps/server/src/ws-event.ts](mdc:apps/server/src/ws-event.ts) 处理 WebSocket 事件
+
+## 配置文件
+
+[apps/server/config.yaml](mdc:apps/server/config.yaml) 包含服务器的配置信息。
+
+## 核心功能
+
+- 提供 RESTful API 接口
+- 处理 WebSocket 连接
+- 与 Telegram API 交互
+- 管理数据库操作
+- 提供消息搜索功能
