@@ -1,170 +1,289 @@
-<script setup lang="ts">
-import { onClickOutside, usePreferredDark } from '@vueuse/core'
-import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+<script lang="ts" setup>
+import type { CoreDialog } from '@tg-search/core'
+import type { Action } from '../types/action'
+import type { Page } from '../types/page'
+import { useDark } from '@vueuse/core'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
-import ThemeToggle from '../components/ThemeToggle.vue'
-import DropdownMenu from '../components/ui/DropdownMenu.vue'
+import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 
-const router = useRouter()
-const isDark = usePreferredDark()
-
-const showUserMenu = ref(false)
-const showLanguageMenu = ref(false)
-const showCommandMenu = ref(false)
-
-const userMenuRef = ref<HTMLElement | null>(null)
-const languageMenuRef = ref<HTMLElement | null>(null)
-const commandMenuRef = ref<HTMLElement | null>(null)
-
 const sessionStore = useSessionStore()
-const { handleAuth } = sessionStore
-const { activeSessionComputed } = storeToRefs(sessionStore)
 
-onClickOutside(userMenuRef, () => {
-  showUserMenu.value = false
+const { getWsContext } = sessionStore
+const wsContext = getWsContext()
+
+const settingsDialog = ref(false)
+
+const headerState = reactive<{
+  title: string
+  actions: Action[]
+  hidden: boolean
+  collapsed: boolean
+}>({
+  title: '',
+  actions: [
+  ],
+  hidden: false,
+  collapsed: false,
 })
 
-onClickOutside(languageMenuRef, () => {
-  showLanguageMenu.value = false
+const pages = ref<Page[]>([
+  {
+    name: '主页',
+    icon: 'i-lucide-home',
+    path: '/',
+  },
+  {
+    name: '嵌入',
+    icon: 'i-lucide-folder-open',
+    path: '/embed',
+  },
+  {
+    name: '同步',
+    icon: 'i-lucide-folder-sync',
+    path: '/sync',
+  },
+  {
+    name: '配置',
+    icon: 'i-lucide-settings',
+    path: '/settings',
+  },
+])
+const currentPage = ref<Page | undefined>()
+const selectedChatId = ref<number | null>(null)
+
+const chatTypes = ref([
+  {
+    name: '私聊',
+    icon: 'i-lucide-user',
+    type: 'user',
+  },
+  {
+    name: '群聊',
+    icon: 'i-lucide-users',
+    type: 'group',
+  },
+  {
+    name: '频道',
+    icon: 'i-lucide-hash',
+    type: 'channel',
+  },
+])
+
+const search = ref('')
+
+const chatStore = useChatStore()
+
+const chats = computed(() => chatStore.chats)
+const chatsFiltered = computed(() => {
+  return chats.value.filter(chat => chat.name.toLowerCase().includes(search.value.toLowerCase()))
 })
 
-onClickOutside(commandMenuRef, () => {
-  showCommandMenu.value = false
-})
+const router = useRouter()
 
-// onMounted(async () => {
-//   if (isConnected.value && !me.value) {
-//     const { sendEvent } = getWsContext()
-//     sendEvent('entity:me:fetch', undefined)
-//   }
-// })
+const showActions = ref(false)
 
-async function handleLogout() {
-  showUserMenu.value = false
-  handleAuth().logout()
-  toast.success('Logout successfully')
-  router.push('/login')
+const isDark = useDark()
+
+const currentTheme = ref('default')
+
+function setTheme(theme: string) {
+  currentTheme.value = theme
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
 }
 
-async function handleLogin() {
-  showUserMenu.value = false
-  router.push('/login')
+// 初始化主题
+onMounted(() => {
+  if (!sessionStore.getActiveSession()?.isConnected && router.currentRoute.value.path !== '/login') {
+    router.push('/login')
+  }
+  wsContext.sendEvent('entity:me:fetch', undefined)
+  wsContext.sendEvent('dialog:fetch', undefined)
+  const savedTheme = localStorage.getItem('theme') || 'default'
+  setTheme(savedTheme)
+})
+
+// 监听主题变化
+watch(currentTheme, (newTheme) => {
+  localStorage.setItem('theme', newTheme)
+})
+
+function changeTitle(newTitle: string) {
+  headerState.title = newTitle
+}
+
+function setHidden(hidden: boolean) {
+  headerState.hidden = hidden
+}
+
+function setActions(actions: Action[]) {
+  // @ts-expect-error: headerState.actions is readonly but we need to modify it
+  headerState.actions = actions
+}
+
+function setCollapsed(collapsed: boolean) {
+  headerState.collapsed = collapsed
+}
+
+function clearSelectedChatAndPage() {
+  selectedChatId.value = null
+  currentPage.value = undefined
+}
+
+function handleClick(chat: CoreDialog) {
+  router.push(`/chat/${chat.id}?type=${chat.type}`)
+  clearSelectedChatAndPage()
+  setActions([])
+  selectedChatId.value = chat.id
+}
+
+function handlePageClick(page: Page) {
+  clearSelectedChatAndPage()
+  setActions([])
+  currentPage.value = page
+  changeTitle(page.name)
+  router.push(page.path)
+}
+
+function toggleSettingsDialog() {
+  settingsDialog.value = !settingsDialog.value
+}
+
+function toggleActions() {
+  showActions.value = !showActions.value
 }
 </script>
 
 <template>
-  <div class="min-h-screen" :class="{ dark: isDark }">
-    <header class="sticky top-0 z-50 border-b bg-white transition-colors duration-300 dark:border-gray-800 dark:bg-gray-900">
-      <div class="mx-auto h-14 flex items-center justify-between px-4 container">
-        <RouterLink to="/" class="text-lg font-semibold transition-colors duration-300 dark:text-white">
-          Telegram Search
-        </RouterLink>
-
-        <div class="flex items-center gap-4">
-          <IconButton
-            icon="i-lucide-folder-sync"
-            with-transition
-            aria-label="Sync Command"
-            @click="router.push('/sync')"
-          />
-
-          <!-- User menu -->
-          <DropdownMenu
-            icon="i-lucide-user"
-            label="User Menu"
-          >
-            <div v-if="activeSessionComputed?.me" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-              <div>{{ activeSessionComputed.me.firstName }} {{ activeSessionComputed.me.lastName }}</div>
-              <div class="text-xs text-gray-500">
-                @{{ activeSessionComputed.me.username }}
-              </div>
-            </div>
-
-            <div v-if="activeSessionComputed?.me?.username" class="my-2 border-b border-gray-200 dark:border-gray-700" />
-
-            <button
-              v-if="!activeSessionComputed?.isConnected"
-              class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-              @click="handleLogin"
+  <div class="h-screen w-full flex overflow-hidden bg-background" :class="{ dark: isDark }">
+    <Dialog v-model="settingsDialog">
+      <Settings
+        @toggle-settings-dialog-emit="toggleSettingsDialog"
+        @set-theme-emit="setTheme"
+      />
+    </Dialog>
+    <div class="z-40 h-full w-64 border-r border-r-secondary bg-background dark:border-r-secondary">
+      <div class="h-full flex flex-col overflow-hidden">
+        <div class="p-2">
+          <div class="relative">
+            <div
+              class="i-lucide-search absolute left-2 top-1/2 h-4 w-4 text-xl text-secondary-foreground -translate-y-1/2 dark:text-secondary-foreground"
+            />
+            <input
+              v-model="search" type="text"
+              class="border-input w-full border border-secondary rounded-md bg-muted px-3 py-2 pl-9 text-sm text-foreground ring-offset-background dark:border-secondary dark:bg-muted"
+              placeholder="Search"
             >
-              <div class="flex items-center">
-                <div class="i-lucide-log-in mr-2 h-4 w-4" />
-                <span>Login</span>
-              </div>
-            </button>
-
-            <button
-              v-if="activeSessionComputed?.isConnected"
-              class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-              @click="handleLogout"
+          </div>
+        </div>
+        <!-- Main menu -->
+        <div class="mt-2 p-2">
+          <ul class="space-y-1">
+            <li
+              v-for="page in pages" :key="page.path"
+              :class="{ 'bg-muted dark:bg-muted': currentPage?.path === page.path }"
+              class="transition-colors hover:bg-muted dark:hover:bg-muted"
+              @click="handlePageClick(page)"
             >
-              <div class="flex items-center">
-                <div class="i-lucide-log-out mr-2 h-4 w-4" />
-                <span>Logout</span>
-              </div>
-            </button>
-          </DropdownMenu>
+              <IconButton class="w-full flex items-center gap-3 rounded-md px-3 py-2 text-sm text-foreground" :icon="page.icon">
+                <span>{{ page.name }}</span>
+              </IconButton>
+            </li>
+          </ul>
+        </div>
 
-          <ThemeToggle />
-
-          <IconButton
-            icon="i-lucide-settings"
-            with-transition
-            aria-label="Settings"
-            @click="router.push('/settings')"
+        <!-- Chats -->
+        <div v-for="chatType in chatTypes" :key="chatType.type" class="mt-4">
+          <ChatGroup
+            :title="chatType.name" :chats="chatsFiltered.filter(chat => chat.type === chatType.type)"
+            :icon="chatType.icon" :type="chatType.type" :selected-chat-id="selectedChatId" @click="handleClick"
           />
         </div>
+        <!-- User profile -->
+        <div class="mt-auto border-t border-t-secondary p-4 dark:border-t-secondary">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full bg-muted">
+                <img
+                  alt="Me" src="https://api.dicebear.com/6.x/bottts/svg?seed=RainbowBird"
+                  class="h-full w-full object-cover"
+                >
+              </div>
+              <div class="flex flex-col">
+                <span class="text-sm text-foreground font-medium">{{ sessionStore.getActiveSession()?.me?.username }}</span>
+                <span class="text-xs text-secondary-foreground">{{ sessionStore.getActiveSession()?.isConnected ? '已链接' : '未链接' }}</span>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <button
+                class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-foreground hover:bg-muted"
+                @click="toggleSettingsDialog"
+              >
+                <div class="i-lucide-settings h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </header>
-
-    <!-- Main content -->
-    <main class="mx-auto bg-white p-4 transition-colors duration-300 container dark:bg-gray-900">
-      <slot />
-    </main>
-
-    <!-- Global Dialog Wrapper -->
-    <div class="pointer-events-none fixed left-0 top-0 z-100 h-screen w-screen">
-      <slot name="dialog" />
+    </div>
+    <div class="flex flex-1 flex-col overflow-hidden">
+      <header v-show="!headerState.hidden" class="h-14 flex items-center border-b border-b-secondary px-4 dark:border-b-secondary">
+        <div class="flex items-center gap-2">
+          <span class="text-foreground font-medium">{{ headerState.title }}</span>
+        </div>
+        <div class="ml-auto flex items-center gap-2">
+          <TransitionGroup name="action">
+            <template v-if="showActions || headerState.collapsed">
+              <button
+                v-for="(action, index) in headerState.actions" :key="index"
+                class="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-foreground transition-colors hover:bg-muted"
+                :class="{ 'opacity-50': action.disabled, 'cursor-not-allowed': action.disabled }"
+                :disabled="action.disabled"
+                @click="action.onClick"
+              >
+                <div :class="action.icon" class="h-5 w-5" />
+                <span v-if="action.name" class="text-sm">{{ action.name }}</span>
+              </button>
+            </template>
+          </TransitionGroup>
+          <button v-if="!headerState.collapsed" class="rounded-md p-2 text-foreground transition-colors hover:bg-muted" @click="toggleActions">
+            <div
+              class="i-lucide-ellipsis h-5 w-5 transition-transform duration-300"
+              :class="{ 'rotate-90': showActions }"
+            />
+          </button>
+        </div>
+      </header>
+      <main class="flex flex-1 flex-col overflow-hidden">
+        <div class="flex-1 overflow-auto p-4">
+          <slot v-bind="{ changeTitle, setActions, setHidden, setCollapsed }" />
+        </div>
+      </main>
     </div>
   </div>
 </template>
 
-<style>
-:deep(dialog) {
-  pointer-events: auto;
+<style scoped>
+.action-enter-active,
+.action-leave-active {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Menu animations */
-.menu-enter-active {
-  animation: menu-in 0.2s ease-out;
+.action-enter-from,
+.action-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
 }
 
-.menu-leave-active {
-  animation: menu-out 0.2s ease-in;
+.action-enter-to,
+.action-leave-from {
+  opacity: 1;
+  transform: translateX(0);
 }
 
-@keyframes menu-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes menu-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
+.action-move {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 </style>

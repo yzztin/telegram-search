@@ -105,7 +105,7 @@ watch([selectedType, searchQuery], () => {
         <input
           v-model="searchQuery"
           type="text"
-          class="w-full border border-gray-300 rounded-md px-4 py-2 dark:border-gray-600 focus:border-blue-500 dark:bg-gray-700 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+          class="w-full border border-secondary rounded-md bg-muted px-4 py-2 focus:border-primary focus:ring-2 focus:ring-primary"
           placeholder="Search"
         >
       </div>
@@ -118,20 +118,20 @@ watch([selectedType, searchQuery], () => {
         :key="chat.id"
         class="relative w-full flex active:scale-98 cursor-pointer items-center border rounded-lg p-4 text-left transition-all duration-300 space-x-3 hover:shadow-md hover:-translate-y-0.5"
         :class="{
-          'border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md scale-102': isSelected(chat.id),
-          'border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600': !isSelected(chat.id),
+          'border-primary bg-primary/10 shadow-md scale-102': isSelected(chat.id),
+          'border-secondary hover:border-primary': !isSelected(chat.id),
         }"
         @click="toggleSelection(chat.id)"
       >
         <div class="min-w-0 flex-1">
           <div class="focus:outline-none">
-            <p class="flex items-center gap-2 text-sm text-gray-900 font-medium dark:text-gray-100">
+            <p class="flex items-center gap-2 text-sm font-medium">
               {{ chat.title }}
-              <span v-if="isSelected(chat.id)" class="text-blue-500 dark:text-blue-400">
+              <span v-if="isSelected(chat.id)" class="text-primary">
                 <div class="i-lucide-circle-check h-4 w-4" />
               </span>
             </p>
-            <p class="truncate text-sm text-gray-500 dark:text-gray-400">
+            <p class="truncate text-sm text-secondary-foreground">
               {{ chat.subtitle }}
             </p>
           </div>
@@ -148,7 +148,7 @@ watch([selectedType, searchQuery], () => {
     />
 
     <!-- No Results Message -->
-    <div v-if="filteredChats.length === 0" class="py-8 text-center text-gray-500 dark:text-gray-400">
+    <div v-if="filteredChats.length === 0" class="py-8 text-center text-secondary-foreground">
       No chats found
     </div>
   </div>
