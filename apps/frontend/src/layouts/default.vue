@@ -1,8 +1,6 @@
 <script lang="ts" setup>
-import type { Action } from '../types/action'
-
 import { useDark } from '@vueuse/core'
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 
 import ChatsCollapse from '../components/layout/ChatsCollapse.vue'
@@ -12,29 +10,22 @@ import Settings from '../components/ui/Settings.vue'
 import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 
-const sessionStore = useSessionStore()
+const router = useRouter()
+const isDark = useDark()
+const currentTheme = ref('default')
 
+const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
 const wsContext = getWsContext()
 
 const settingsDialog = ref(false)
-
 const searchParams = ref('')
 
 const chatStore = useChatStore()
-
 const chats = computed(() => chatStore.chats)
 const chatsFiltered = computed(() => {
   return chats.value.filter(chat => chat.name.toLowerCase().includes(searchParams.value.toLowerCase()))
 })
-
-const router = useRouter()
-
-const showActions = ref(false)
-
-const isDark = useDark()
-
-const currentTheme = ref('default')
 
 function setTheme(theme: string) {
   currentTheme.value = theme
@@ -60,10 +51,6 @@ function toggleSettingsDialog() {
   settingsDialog.value = !settingsDialog.value
 }
 
-function toggleActions() {
-  showActions.value = !showActions.value
-}
-
 type ChatGroup = 'user' | 'group' | 'channel' | ''
 const activeChatGroup = ref<ChatGroup>('user')
 
@@ -80,7 +67,7 @@ function toggleActiveChatGroup(group: ChatGroup) {
     class="h-screen w-full flex overflow-hidden bg-background text-sm font-medium"
     :class="{ dark: isDark }"
   >
-    <div class="w-[25%] flex flex-col h-dvh border-r border-r-secondary">
+    <div class="w-[20%] flex flex-col h-dvh border-r border-r-secondary">
       <div class="relative p-4">
         <div
           class="i-lucide-search absolute left-7 top-1/2 -translate-y-1/2 h-4 w-4"
@@ -108,8 +95,14 @@ function toggleActiveChatGroup(group: ChatGroup) {
 
         <SidebarSelector
           path="/sync"
-          icon="i-lucide-message-circle"
+          icon="i-lucide-refresh-cw"
           name="同步"
+        />
+
+        <SidebarSelector
+          path="/settings"
+          icon="i-lucide-settings"
+          name="设置"
         />
       </div>
 

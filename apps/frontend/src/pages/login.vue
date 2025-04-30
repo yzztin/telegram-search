@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Action } from '../types/action'
-
 import { storeToRefs } from 'pinia'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -9,12 +7,6 @@ import { toast } from 'vue-sonner'
 import { useSessionStore } from '../store/useSession'
 
 type LoginStep = 'phone' | 'code' | 'password' | 'complete'
-
-const props = defineProps<{
-  changeTitle?: (title: string) => void
-  setActions?: (actions: Action[]) => void
-  setCollapsed?: (collapsed: boolean) => void
-}>()
 
 const router = useRouter()
 
@@ -75,9 +67,6 @@ onMounted(() => {
   if (isLoggedIn.value) {
     redirectRoot()
   }
-  props.setActions?.([])
-  props.changeTitle?.('登录')
-  props.setCollapsed?.(true)
 })
 
 async function handleLogin() {
