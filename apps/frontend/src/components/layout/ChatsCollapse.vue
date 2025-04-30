@@ -43,19 +43,20 @@ function toggleActive() {
 
       <div
         :class="active ? 'i-lucide-chevron-down' : 'i-lucide-chevron-right'"
-        class="h-4 w-4 cursor-pointer px-6"
+        class="h-4 w-4 cursor-pointer px-6 transition-transform duration-200"
       />
     </div>
 
     <div
       v-show="active"
-      class="overflow-y-auto overflow-x-hidden"
+      v-auto-animate
+      class="overflow-y-auto overflow-x-hidden transition-all duration-300"
     >
       <div
         v-for="chat in chats.filter(chat => chat.type === type)"
         :key="chat.id"
         :class="{ 'bg-muted': isActiveChat(chat.id.toString()) }"
-        class="py-2 cursor-pointer hover:bg-muted flex flex-row justify-start items-center gap-2 px-6"
+        class="py-2 cursor-pointer hover:bg-muted flex flex-row justify-start items-center gap-2 px-6 transition-all duration-200 hover:-translate-y-0.5"
         @click="router.push(`/chat/${chat.id}`)"
       >
         <img
