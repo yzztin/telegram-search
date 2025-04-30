@@ -14,9 +14,6 @@
     /* Bundler mode */
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "types": [
-      "vite-plugin-vue-layouts/client"
-    ],
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "isolatedModules": true,

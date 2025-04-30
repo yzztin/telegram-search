@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import IconButton from '../components/ui/IconButton.vue'
@@ -41,13 +41,13 @@ onMounted(() => {
     </div>
 
     <div class="ml-auto flex items-center gap-2">
-        <IconButton
-          icon="i-lucide-pencil"
-          :disabled="isEditing"
-          @click="isEditing = !isEditing"
-        >
-          Edit
-        </IconButton>
+      <IconButton
+        icon="i-lucide-pencil"
+        :disabled="isEditing"
+        @click="isEditing = !isEditing"
+      >
+        Edit
+      </IconButton>
 
       <IconButton
         icon="i-lucide-save"
