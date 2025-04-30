@@ -43,6 +43,9 @@ export function createDialogService(ctx: CoreContext) {
       }
 
       const { id, type, name } = getEntityInfo(dialog.entity)
+      if (type === 'unknown') {
+        continue
+      }
 
       let messageCount = 0
       let lastMessage: string | undefined

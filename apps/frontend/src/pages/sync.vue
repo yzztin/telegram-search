@@ -9,7 +9,7 @@ import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 import { useSyncTaskStore } from '../store/useSyncTask'
 
-const selectedChats = ref<string[]>([])
+const selectedChats = ref<number[]>([])
 
 const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
@@ -24,7 +24,7 @@ const loadingToast = ref<string | number>()
 function handleSync() {
   const wsContext = getWsContext()
   wsContext.sendEvent('takeout:run', {
-    chatIds: selectedChats.value,
+    chatIds: selectedChats.value.map(id => id.toString()),
   })
 
   loadingToast.value = toast.loading('开始同步...')

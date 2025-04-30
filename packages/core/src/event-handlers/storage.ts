@@ -43,14 +43,13 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
   })
 
   emitter.on('storage:record:dialogs', async ({ dialogs }) => {
-    logger.withFields({ size: dialogs.length }).debug('Recording dialogs')
+    logger.withFields({
+      size: dialogs.length,
+      users: dialogs.filter(d => d.type === 'user').length,
+      groups: dialogs.filter(d => d.type === 'group').length,
+      channels: dialogs.filter(d => d.type === 'channel').length,
+    }).debug('Recording dialogs')
 
-    const dbChats = dialogs.map(dialog => ({
-      chatId: dialog.id.toString(),
-      chatName: dialog.name,
-      chatType: dialog.type, // FIXME: user
-    }))
-
-    await recordJoinedChats(dbChats)
+    await recordJoinedChats(dialogs)
   })
 }
