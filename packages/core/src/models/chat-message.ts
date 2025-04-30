@@ -2,6 +2,7 @@
 
 import type { SQL } from 'drizzle-orm'
 import type { CoreMessage } from '../utils/message'
+import type { CorePagination } from '../utils/pagination'
 
 import { env } from 'node:process'
 import { useLogger } from '@tg-search/common'
@@ -72,7 +73,57 @@ export async function recordMessagesWithoutEmbedding(messages: CoreMessage[]) {
   await useDrizzle()
     .insert(chatMessagesTable)
     .values(dbMessages)
-    .onConflictDoNothing()
+    .onConflictDoNothing({
+      target: [chatMessagesTable.platform_message_id],
+    })
+}
+
+export async function fetchMessages(chatId: string, pagination: CorePagination) {
+  const dbMessagesResults = await useDrizzle()
+    .select()
+    .from(chatMessagesTable)
+    .where(eq(chatMessagesTable.in_chat_id, chatId))
+    .orderBy(desc(chatMessagesTable.created_at))
+    .limit(pagination.limit)
+    .offset(pagination.offset)
+
+  const coreMessages = dbMessagesResults.map((message) => {
+    return {
+      uuid: message.id,
+
+      platform: message.platform,
+      platformMessageId: message.platform_message_id,
+      chatId: message.in_chat_id,
+
+      fromId: message.from_id,
+      fromName: message.from_name,
+
+      content: message.content,
+
+      reply: {
+        isReply: message.is_reply,
+        replyToId: message.reply_to_id,
+        replyToName: message.reply_to_name,
+      },
+      forward: {
+        isForward: false,
+        // forwardFromChatId: message.forward_from_chat_id,
+        // forwardFromChatName: message.forward_from_chat_name,
+        // forwardFromMessageId: message.forward_from_message_id,
+      },
+
+      vectors: {
+        vector1024: [],
+        vector768: [],
+        vector1536: [],
+      },
+
+      createdAt: message.created_at,
+      updatedAt: message.updated_at,
+    } satisfies CoreMessage
+  })
+
+  return coreMessages
 }
 
 export async function findLastNMessages(chatId: string, n: number) {

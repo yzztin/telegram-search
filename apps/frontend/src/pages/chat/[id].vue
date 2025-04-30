@@ -2,6 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { useMessageStore } from '../../store/useMessage'
 import { useSessionStore } from '../../store/useSession'
@@ -11,7 +12,10 @@ const id = route.params.id
 
 const messageStore = useMessageStore()
 const { messagesByChat } = storeToRefs(messageStore)
-const chatMessages = computed(() => messagesByChat.value.get(id.toString()) ?? [])
+const chatMessages = computed(() =>
+  messagesByChat.value.get(id.toString())?.sort((a, b) => 
+    a.createdAt >= b.createdAt ? 1 : -1
+  ) ?? [])
 
 const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
@@ -36,13 +40,17 @@ function sendMessage() {
     content: messageInput.value,
   })
   messageInput.value = ''
+
+  toast.success('Message sent')
 }
 
 onMounted(() => {
-  getWsContext()?.sendEvent('message:fetch', {
+  getWsContext()?.sendEvent('storage:fetch:messages', {
     chatId: id.toString(),
     pagination: { offset: 0, limit: 50 },
   })
+
+  toast.loading('Loading messages from database...')
 })
 </script>
 

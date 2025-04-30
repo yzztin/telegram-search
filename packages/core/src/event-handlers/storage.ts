@@ -3,7 +3,7 @@ import type { CoreDialog } from '../services'
 
 import { useLogger } from '@tg-search/common'
 
-import { recordMessagesWithoutEmbedding } from '../models/chat-message'
+import { fetchMessages, recordMessagesWithoutEmbedding } from '../models/chat-message'
 import { getChatMessagesStats } from '../models/chat-message-stats'
 import { listJoinedChats, recordJoinedChats } from '../models/chats'
 
@@ -11,10 +11,11 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
   const { emitter } = ctx
   const logger = useLogger('core:storage:event')
 
-  // emitter.on('storage:fetch:messages', async ({ chatId, pagination }) => {
-  //   logger.withFields({ chatId, pagination }).debug('Fetching messages')
-  //   const messages = await findLastNMessages(chatId, pagination.limit)
-  // })
+  emitter.on('storage:fetch:messages', async ({ chatId, pagination }) => {
+    logger.withFields({ chatId, pagination }).debug('Fetching messages')
+    const messages = await fetchMessages(chatId, pagination)
+    emitter.emit('storage:messages', { messages })
+  })
 
   emitter.on('storage:record:messages', async ({ messages }) => {
     logger.withFields({ messages }).debug('Recording messages')
@@ -36,8 +37,8 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
         name: chat.chat_name,
         type: chat.chat_type,
         messageCount: chatMessageStats?.message_count,
-      }
-    }) satisfies CoreDialog[]
+      } satisfies CoreDialog
+    })
 
     emitter.emit('storage:dialogs', { dialogs })
   })
