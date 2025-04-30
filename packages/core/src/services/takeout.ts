@@ -1,4 +1,5 @@
 import type { CoreContext } from '../context'
+import type { CorePagination } from '../utils/pagination'
 import type { PromiseResult } from '../utils/result'
 import type { CoreTask } from '../utils/task'
 
@@ -29,7 +30,8 @@ export type TakeoutEvent = TakeoutEventFromCore & TakeoutEventToCore
 
 export interface TakeoutOpts {
   chatId: string
-  limit?: number
+  pagination: CorePagination
+
   startTime?: Date
   endTime?: Date
 
@@ -114,12 +116,12 @@ export function createTakeoutService(ctx: CoreContext) {
 
       emitProgress(taskId, 1, 'Init takeout session')
 
-      let offsetId = 0
+      let offsetId = options.pagination.offset
       let hasMore = true
       let processedCount = 0
       let hash: bigint = BigInt(0)
 
-      const limit = options.limit || 100
+      const limit = options.pagination.limit
       const minId = options.minId || 0
       const maxId = options.maxId || 0
       const startTime = options.startTime || new Date(0)

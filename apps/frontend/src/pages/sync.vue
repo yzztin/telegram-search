@@ -4,7 +4,7 @@ import { ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import ChatSelector from '../components/ChatSelector.vue'
-import IconButton from '../components/ui/IconButton.vue'
+import IconButton from '../components/ui/Button/IconButton.vue'
 import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 import { useSyncTaskStore } from '../store/useSyncTask'

@@ -1,10 +1,6 @@
 import type { CoreMessage } from '../utils/message'
+import type { CorePagination } from '../utils/pagination'
 import type { CoreDialog } from './dialog'
-
-export interface CorePagination {
-  page: number
-  limit: number
-}
 
 export interface StorageEventToCore {
   'storage:fetch:messages': (data: { chatId: string, pagination: CorePagination }) => void

@@ -1,3 +1,4 @@
+import { useLogger } from '@tg-search/common'
 import { Api } from 'telegram'
 
 export interface CoreMessage {
@@ -45,14 +46,16 @@ export interface CoreMessageVector {
   vector768?: number[]
 }
 
-export function convertToCoreMessage(message: Api.Message): CoreMessage {
-  // Get sender info
-  let fromId = ''
-  const fromName = '' // TODO: user resolver
-  if (message.fromId instanceof Api.PeerUser) {
-    fromId = message.fromId.userId.toString()
-    // Note: fromName will need to be resolved separately since it requires async user lookup
+export function convertToCoreMessage(message: Api.Message): CoreMessage | null {
+  const sender = message.sender
+  if (!(sender instanceof Api.User)) {
+    useLogger().withFields({ messageId: message.id }).warn('Message sender is not a user')
+    return null
   }
+
+  const fromId = sender.id.toString()
+  const fromName = `${sender.firstName ?? ''} ${sender.lastName ?? ''}`
+  const content = message.message ?? ''
 
   // Get forward info
   const forward: CoreMessageForward = {
@@ -82,10 +85,10 @@ export function convertToCoreMessage(message: Api.Message): CoreMessage {
     uuid: crypto.randomUUID(),
     platform: 'telegram',
     platformMessageId: message.id.toString(),
-    chatId: message.peerId.toString(),
+    chatId: message.chatId?.toString() ?? '0',
     fromId,
     fromName,
-    content: message.message || '',
+    content,
     reply,
     forward,
     vectors,

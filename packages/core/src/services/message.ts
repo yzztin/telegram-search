@@ -1,5 +1,7 @@
 import type { EntityLike } from 'telegram/define'
 import type { CoreContext } from '../context'
+import type { CoreMessage } from '../utils/message'
+import type { CorePagination } from '../utils/pagination'
 import type { PromiseResult } from '../utils/result'
 
 import { useLogger } from '@tg-search/common'
@@ -11,22 +13,25 @@ import { withResult } from '../utils/result'
 import { withRetry } from '../utils/retry'
 
 export interface MessageEventToCore {
-  'message:fetch': (data: { chatId: string }) => void
+  'message:fetch': (data: { chatId: string, pagination: CorePagination }) => void
 
   'message:fetch:abort': (data: { taskId: string }) => void
 
-  'message:process': (data: { message: Api.Message[] }) => void
+  'message:process': (data: { messages: Api.Message[] }) => void
 }
 
 export interface MessageEventFromCore {
   'message:fetch:progress': (data: { taskId: string, progress: number }) => void
+
+  'message:data': (data: { messages: CoreMessage[] }) => void
 }
 
 export type MessageEvent = MessageEventFromCore & MessageEventToCore
 
 export interface FetchMessageOpts {
   chatId: string
-  limit?: number
+  pagination: CorePagination
+
   startTime?: Date
   endTime?: Date
 
@@ -43,11 +48,14 @@ export function createMessageService(ctx: CoreContext) {
   const { emitter, getClient, withError } = ctx
 
   // TODO: worker_threads?
-  function processMessage(messages: Api.Message[]) {
+  function processMessages(messages: Api.Message[]) {
     useLogger().withFields({ count: messages.length }).debug('Process messages')
 
-    const coreMessages = messages.map(message => convertToCoreMessage(message))
+    const coreMessages = messages
+      .map(message => convertToCoreMessage(message))
+      .filter(message => message !== null)
 
+    emitter.emit('message:data', { messages: coreMessages })
     emitter.emit('storage:record:messages', { messages: coreMessages })
   }
 
@@ -74,7 +82,7 @@ export function createMessageService(ctx: CoreContext) {
   }
 
   return {
-    processMessage,
+    processMessages,
 
     getHistory,
 
@@ -87,11 +95,11 @@ export function createMessageService(ctx: CoreContext) {
         return
       }
 
-      let offsetId = 0
+      let offsetId = options.pagination.offset
       let hasMore = true
       let processedCount = 0
 
-      const limit = options.limit || 100
+      const limit = options.pagination.limit
       const minId = options?.minId
       const maxId = options?.maxId
       const startTime = options?.startTime
@@ -154,9 +162,6 @@ export function createMessageService(ctx: CoreContext) {
             if (endTime && messageTime > endTime) {
               continue
             }
-
-            // TODO: process bulk messages
-            processMessage([message])
 
             yield message
             processedCount++

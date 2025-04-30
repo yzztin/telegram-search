@@ -29,17 +29,12 @@ export async function recordMessagesWithoutEmbedding(messages: CoreMessage[]) {
 
     const text = message.content
 
-    if (text === '') {
-      return ''
-    }
-    else {
-      // embedding = await embed({
-      //   baseURL: env.EMBEDDING_API_BASE_URL!,
-      //   apiKey: env.EMBEDDING_API_KEY!,
-      //   model: env.EMBEDDING_MODEL!,
-      //   input: text,
-      // })
-    }
+    // embedding = await embed({
+    //   baseURL: env.EMBEDDING_API_BASE_URL!,
+    //   apiKey: env.EMBEDDING_API_KEY!,
+    //   model: env.EMBEDDING_MODEL!,
+    //   input: text,
+    // })
 
     const values: Partial<Omit<typeof chatMessagesTable.$inferSelect, 'id' | 'created_at' | 'updated_at'>> = {
       platform: message.platform,
@@ -70,9 +65,13 @@ export async function recordMessagesWithoutEmbedding(messages: CoreMessage[]) {
     return values
   })
 
+  if (dbMessages.length === 0) {
+    return
+  }
+
   await useDrizzle()
     .insert(chatMessagesTable)
-    .values(dbMessages.filter(m => m !== ''))
+    .values(dbMessages)
     .onConflictDoNothing()
 }
 

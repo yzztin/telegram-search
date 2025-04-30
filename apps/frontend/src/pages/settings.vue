@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
-import IconButton from '../components/ui/IconButton.vue'
+import IconButton from '../components/ui/Button/IconButton.vue'
 import SelectDropdown from '../components/ui/SelectDropdown.vue'
 import { useSessionStore } from '../store/useSession'
 import { useSettingsStore } from '../store/useSettings'

@@ -1,7 +1,11 @@
+import type { Api } from 'telegram'
 import type { CoreContext } from '../context'
 import type { createTakeoutService } from '../services'
 
 import { useLogger } from '@tg-search/common'
+import { useConfig } from '@tg-search/common/composable'
+
+import { usePagination } from '../utils/pagination'
 
 export function registerTakeoutEventHandlers(ctx: CoreContext) {
   const { emitter } = ctx
@@ -10,11 +14,23 @@ export function registerTakeoutEventHandlers(ctx: CoreContext) {
   return (takeoutService: ReturnType<typeof createTakeoutService>) => {
     emitter.on('takeout:run', async ({ chatIds }) => {
       logger.withFields({ chatIds }).debug('Running takeout')
+      const pagination = usePagination()
+      const batchSize = useConfig().message.batch.size
+      let messages: Api.Message[] = []
 
       for (const chatId of chatIds) {
-        for await (const message of takeoutService.takeoutMessages(chatId, { limit: 100 })) {
-          emitter.emit('message:process', { message })
+        for await (const message of takeoutService.takeoutMessages(chatId, { pagination })) {
+          messages.push(message)
+
+          if (messages.length >= batchSize) {
+            emitter.emit('message:process', { messages })
+            messages = []
+          }
         }
+      }
+
+      if (messages.length > 0) {
+        emitter.emit('message:process', { messages })
       }
     })
   }
