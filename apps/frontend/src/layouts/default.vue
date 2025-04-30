@@ -1,18 +1,17 @@
 <script lang="ts" setup>
-import { useDark } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterView, useRouter } from 'vue-router'
+import { RouterView } from 'vue-router'
 
 import ChatsCollapse from '../components/layout/ChatsCollapse.vue'
+import SettingsDialog from '../components/layout/SettingsDialog.vue'
 import SidebarSelector from '../components/layout/SidebarSelector.vue'
-import Dialog from '../components/ui/Dialog.vue'
-import Settings from '../components/ui/Settings.vue'
 import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
+import { useSettingsStore } from '../store/useSettings'
 
-const router = useRouter()
-const isDark = useDark()
-const currentTheme = ref('default')
+const settingsStore = useSettingsStore()
+const { isDark, theme } = storeToRefs(settingsStore)
 
 const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
@@ -27,32 +26,25 @@ const chatsFiltered = computed(() => {
   return chats.value.filter(chat => chat.name.toLowerCase().includes(searchParams.value.toLowerCase()))
 })
 
-function setTheme(theme: string) {
-  currentTheme.value = theme
-  document.documentElement.setAttribute('data-theme', theme)
-  localStorage.setItem('theme', theme)
-}
+type ChatGroup = 'user' | 'group' | 'channel' | ''
+const activeChatGroup = ref<ChatGroup>('user')
+
+watch(theme, (newTheme) => {
+  document.documentElement.setAttribute('data-theme', newTheme)
+}, { immediate: true })
 
 onMounted(() => {
-  if (!sessionStore.getActiveSession()?.isConnected && router.currentRoute.value.path !== '/login') {
-    router.push('/login')
-  }
+  // if (!sessionStore.getActiveSession()?.isConnected && router.currentRoute.value.path !== '/login') {
+  //   router.push('/login')
+  // }
+
   wsContext.sendEvent('entity:me:fetch', undefined)
   wsContext.sendEvent('dialog:fetch', undefined)
-  const savedTheme = localStorage.getItem('theme') || 'default'
-  setTheme(savedTheme)
-})
-
-watch(currentTheme, (newTheme) => {
-  localStorage.setItem('theme', newTheme)
 })
 
 function toggleSettingsDialog() {
   settingsDialog.value = !settingsDialog.value
 }
-
-type ChatGroup = 'user' | 'group' | 'channel' | ''
-const activeChatGroup = ref<ChatGroup>('user')
 
 function toggleActiveChatGroup(group: ChatGroup) {
   if (activeChatGroup.value === group)
@@ -169,11 +161,8 @@ function toggleActiveChatGroup(group: ChatGroup) {
       <RouterView />
     </div>
 
-    <Dialog v-model="settingsDialog">
-      <Settings
-        @toggle-settings-dialog-emit="toggleSettingsDialog"
-        @set-theme-emit="setTheme"
-      />
-    </Dialog>
+    <SettingsDialog
+      v-model:show-dialog="settingsDialog"
+    />
   </div>
 </template>
