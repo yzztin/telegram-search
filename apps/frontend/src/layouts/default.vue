@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { useDark } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterView } from 'vue-router'
@@ -6,12 +7,14 @@ import { RouterView } from 'vue-router'
 import ChatsCollapse from '../components/layout/ChatsCollapse.vue'
 import SettingsDialog from '../components/layout/SettingsDialog.vue'
 import SidebarSelector from '../components/layout/SidebarSelector.vue'
+import IconButton from '../components/ui/IconButton.vue'
 import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 import { useSettingsStore } from '../store/useSettings'
 
 const settingsStore = useSettingsStore()
-const { isDark, theme } = storeToRefs(settingsStore)
+const { theme } = storeToRefs(settingsStore)
+const isDark = useDark()
 
 const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
@@ -57,7 +60,6 @@ function toggleActiveChatGroup(group: ChatGroup) {
 <template>
   <div
     class="h-screen w-full flex overflow-hidden bg-background text-sm font-medium"
-    :class="{ dark: isDark }"
   >
     <div class="w-[20%] flex flex-col h-dvh border-r border-r-secondary">
       <div class="relative p-4">
@@ -147,12 +149,17 @@ function toggleActiveChatGroup(group: ChatGroup) {
           </div>
         </div>
         <div class="flex items-center">
-          <button
+          <IconButton
+            :icon="isDark ? 'i-lucide-sun' : 'i-lucide-moon'"
+            class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-foreground hover:bg-muted"
+            @click="() => { isDark = !isDark }"
+          />
+
+          <IconButton
+            icon="i-lucide-settings"
             class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-foreground hover:bg-muted"
             @click="toggleSettingsDialog"
-          >
-            <div class="i-lucide-settings h-4 w-4" />
-          </button>
+          />
         </div>
       </div>
     </div>

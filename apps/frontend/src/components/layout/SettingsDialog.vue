@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useToggle } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
@@ -11,11 +10,10 @@ const router = useRouter()
 const showDialog = defineModel<boolean>('showDialog', { required: true })
 
 const settingsStore = useSettingsStore()
-const { isDark, theme, themesOptions } = storeToRefs(settingsStore)
+const { theme, themesOptions } = storeToRefs(settingsStore)
 
 const sessionStore = useSessionStore()
 const { logout } = sessionStore.handleAuth()
-const toggleDark = useToggle(isDark)
 
 function handleLogout() {
   logout()
@@ -35,13 +33,6 @@ function handleLogout() {
       </button>
     </div>
     <div class="space-y-4">
-      <div class="flex items-center justify-between rounded-lg p-3 text-foreground transition-colors hover:bg-popover/50">
-        <div class="flex items-center gap-2">
-          <div class="i-lucide-moon h-5 w-5" />
-          <span>深色模式</span>
-        </div>
-        <Switch :model-value="isDark" @update:model-value="toggleDark" />
-      </div>
       <div class="flex items-center justify-between rounded-lg p-3 text-foreground transition-colors hover:bg-popover/50">
         <div class="flex items-center gap-2">
           <div class="i-lucide-palette h-5 w-5" />
