@@ -16,9 +16,6 @@ export function registerMessageEventHandlers(ctx: CoreContext) {
       messageService.processMessages(messages)
     })
 
-    // emitter.on('message:record', ({ message }) => {
-    // })
-
     emitter.on('message:fetch', async ({ chatId }) => {
       logger.withFields({ chatId }).debug('Fetching messages')
       const pagination = usePagination()
@@ -37,6 +34,12 @@ export function registerMessageEventHandlers(ctx: CoreContext) {
       if (messages.length > 0) {
         emitter.emit('message:process', { messages })
       }
+    })
+
+    emitter.on('message:send', async ({ chatId, content }) => {
+      logger.withFields({ chatId, content }).debug('Sending message')
+      const message = await messageService.sendMessage(chatId, content)
+      logger.withFields({ message }).debug('Message sent')
     })
   }
 }
