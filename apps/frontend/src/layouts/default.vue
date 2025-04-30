@@ -41,8 +41,8 @@ onMounted(() => {
   //   router.push('/login')
   // }
 
-  wsContext.sendEvent('entity:me:fetch', undefined)
-  wsContext.sendEvent('dialog:fetch', undefined)
+  // wsContext.sendEvent('entity:me:fetch', undefined)
+  // wsContext.sendEvent('dialog:fetch', undefined)
 })
 
 function toggleSettingsDialog() {
