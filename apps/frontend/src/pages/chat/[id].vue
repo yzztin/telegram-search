@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useScroll } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -21,8 +22,26 @@ const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
 
 const messageInput = ref('')
+const messagesContainer = ref<HTMLElement | null>(null)
+const { y } = useScroll(messagesContainer)
 
-// Handle sending new message
+watch(chatMessages, () => {
+  nextTick(() => {
+    y.value = messagesContainer.value?.scrollHeight ?? 0
+  })
+})
+
+onMounted(() => {
+  // getWsContext()?.sendEvent('storage:fetch:messages', {
+  //   chatId: id.toString(),
+  //   pagination: { offset: 0, limit: 50 },
+  // })
+
+  messageStore.fetchMessagesWithDatabase(id.toString(), { offset: 0, limit: 50 })
+
+  // toast.loading('Loading messages from database...')
+})
+
 function sendMessage() {
   if (!messageInput.value.trim())
     return
@@ -35,17 +54,6 @@ function sendMessage() {
 
   toast.success('Message sent')
 }
-
-onMounted(() => {
-  // getWsContext()?.sendEvent('storage:fetch:messages', {
-  //   chatId: id.toString(),
-  //   pagination: { offset: 0, limit: 50 },
-  // })
-
-  messageStore.fetchMessagesWithDatabase(id.toString(), { offset: 0, limit: 50 })
-
-  // toast.loading('Loading messages from database...')
-})
 </script>
 
 <template>
@@ -59,6 +67,7 @@ onMounted(() => {
 
     <!-- Messages Area -->
     <div
+      ref="messagesContainer"
       class="flex-1 overflow-y-auto p-4 space-y-4"
     >
       <div v-for="message in chatMessages" :key="message.uuid">
