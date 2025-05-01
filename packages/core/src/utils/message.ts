@@ -53,6 +53,8 @@ export function convertToCoreMessage(message: Api.Message): CoreMessage | null {
     return null
   }
 
+  const messageId = message.id.toString()
+  const chatId = message.chat?.id.toString() ?? '0'
   const fromId = sender.id.toString()
   const fromName = `${sender.firstName ?? ''} ${sender.lastName ?? ''}`
   const content = message.message ?? ''
@@ -84,15 +86,15 @@ export function convertToCoreMessage(message: Api.Message): CoreMessage | null {
   return {
     uuid: crypto.randomUUID(),
     platform: 'telegram',
-    platformMessageId: message.id.toString(),
-    chatId: message.chatId?.toString() ?? '0',
+    platformMessageId: messageId,
+    chatId,
     fromId,
     fromName,
     content,
     reply,
     forward,
     vectors,
-    createdAt: message.date * 1000,
+    createdAt: message.date,
     updatedAt: Date.now(),
   }
 }

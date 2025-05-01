@@ -5,8 +5,6 @@ import type { createMessageService } from '../services'
 import { useLogger } from '@tg-search/common'
 import { useConfig } from '@tg-search/common/composable'
 
-import { usePagination } from '../utils/pagination'
-
 export function registerMessageEventHandlers(ctx: CoreContext) {
   const { emitter } = ctx
   const logger = useLogger('core:message:event')
@@ -16,9 +14,8 @@ export function registerMessageEventHandlers(ctx: CoreContext) {
       messageService.processMessages(messages)
     })
 
-    emitter.on('message:fetch', async ({ chatId }) => {
+    emitter.on('message:fetch', async ({ chatId, pagination }) => {
       logger.withFields({ chatId }).debug('Fetching messages')
-      const pagination = usePagination()
       const batchSize = useConfig().message.batch.size
 
       let messages: Api.Message[] = []
