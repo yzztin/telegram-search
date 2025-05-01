@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useScroll } from '@vueuse/core'
+import { useScroll, watchOnce } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -14,9 +14,13 @@ const id = route.params.id
 const messageStore = useMessageStore()
 const { messagesByChat } = storeToRefs(messageStore)
 const chatMessages = computed(() =>
-  messagesByChat.value.get(id.toString())?.sort((a, b) =>
-    a.createdAt <= b.createdAt ? 1 : -1,
-  ) ?? [])
+  Array.from(messagesByChat.value.get(id.toString()) ?? [])
+    .sort((a, b) =>
+      a.createdAt <= b.createdAt ? -1 : 1,
+    ),
+)
+const messageLimit = ref(50)
+const messageOffset = ref(0)
 
 const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
@@ -24,23 +28,22 @@ const { getWsContext } = sessionStore
 const messageInput = ref('')
 const messagesContainer = ref<HTMLElement | null>(null)
 const { y } = useScroll(messagesContainer)
+const lastMessagePosition = ref(0)
 
 watch(chatMessages, () => {
+  lastMessagePosition.value = messagesContainer.value?.scrollHeight ?? 0
+
   nextTick(() => {
-    y.value = messagesContainer.value?.scrollHeight ?? 0
+    y.value = lastMessagePosition.value
   })
 })
 
-onMounted(() => {
-  // getWsContext()?.sendEvent('storage:fetch:messages', {
-  //   chatId: id.toString(),
-  //   pagination: { offset: 0, limit: 50 },
-  // })
-
-  messageStore.fetchMessagesWithDatabase(id.toString(), { offset: 0, limit: 50 })
-
-  // toast.loading('Loading messages from database...')
-})
+watch(y, () => {
+  if (y.value === 0) {
+    messageStore.fetchMessagesWithDatabase(id.toString(), { offset: messageOffset.value, limit: messageLimit.value })
+    messageOffset.value += messageLimit.value
+  }
+}, { immediate: true })
 
 function sendMessage() {
   if (!messageInput.value.trim())

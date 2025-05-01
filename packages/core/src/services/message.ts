@@ -92,7 +92,7 @@ export function createMessageService(ctx: CoreContext) {
       return
     }
 
-    let offsetId = options.pagination.offset
+    let offsetId = 0
     let hasMore = true
     let processedCount = 0
 
@@ -102,7 +102,15 @@ export function createMessageService(ctx: CoreContext) {
     const startTime = options?.startTime
     const endTime = options?.endTime
 
-    useLogger().withFields({ chatId, limit, minId, maxId, startTime, endTime }).debug('Fetch messages options')
+    useLogger().withFields({
+      chatId,
+      limit,
+      offsetId,
+      minId,
+      maxId,
+      startTime,
+      endTime,
+    }).debug('Fetch messages options')
 
     // const entity = await getClient().getInputEntity(Number(chatId))
 
@@ -134,6 +142,7 @@ export function createMessageService(ctx: CoreContext) {
             offsetId,
             minId,
             maxId,
+            addOffset: options.pagination.offset, // TODO: rename this
           }),
         )
 

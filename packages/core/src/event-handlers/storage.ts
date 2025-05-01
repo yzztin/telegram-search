@@ -18,7 +18,8 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
   })
 
   emitter.on('storage:record:messages', async ({ messages }) => {
-    logger.withFields({ messages }).debug('Recording messages')
+    logger.withFields({ messages: messages.length }).debug('Recording messages')
+    logger.withFields({ messages }).verbose('Recording messages')
     await recordMessagesWithoutEmbedding(messages)
   })
 
