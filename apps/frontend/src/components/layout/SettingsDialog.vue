@@ -22,7 +22,7 @@ function handleLogout() {
 </script>
 
 <template>
-  <Dialog v-model="showDialog" class="p-6">
+  <Dialog v-model="showDialog">
     <div class="mb-6 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <div class="i-lucide-settings h-5 w-5 text-foreground" />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -14,21 +14,13 @@ const messageStore = useMessageStore()
 const { messagesByChat } = storeToRefs(messageStore)
 const chatMessages = computed(() =>
   messagesByChat.value.get(id.toString())?.sort((a, b) =>
-    a.createdAt >= b.createdAt ? 1 : -1,
+    a.createdAt <= b.createdAt ? 1 : -1,
   ) ?? [])
 
 const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
 
 const messageInput = ref('')
-const messagesContainer = ref<HTMLElement | null>(null)
-
-// Scroll to bottom when new messages arrive
-function scrollToBottom() {
-  if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
-  }
-}
 
 // Handle sending new message
 function sendMessage() {
@@ -67,7 +59,6 @@ onMounted(() => {
 
     <!-- Messages Area -->
     <div
-      ref="messagesContainer"
       class="flex-1 overflow-y-auto p-4 space-y-4"
     >
       <div v-for="message in chatMessages" :key="message.uuid">
