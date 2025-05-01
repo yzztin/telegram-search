@@ -1,5 +1,5 @@
-import type { WsEventToServer, WsEventToServerData, WsMessageToClient, WsMessageToServer } from '@tg-search/server'
-import type { ClientEventHandlerMap } from '../event-handlers'
+import type { WsEventToClient, WsEventToClientData, WsEventToServer, WsEventToServerData, WsMessageToClient, WsMessageToServer } from '@tg-search/server'
+import type { ClientEventHandlerMap, ClientEventHandlerQueueMap } from '../event-handlers'
 
 import { useWebSocket } from '@vueuse/core'
 import { watch } from 'vue'
@@ -33,8 +33,25 @@ export function createWebsocketContext(sessionId: string) {
   }
 
   const eventHandlers: ClientEventHandlerMap = new Map()
+  const eventHandlersQueue: ClientEventHandlerQueueMap = new Map()
   const registerEventHandler = getRegisterEventHandler(eventHandlers, sendEvent)
   registerAllEventHandlers(registerEventHandler)
+
+  function waitForEvent<T extends keyof WsEventToClient>(event: T) {
+    // eslint-disable-next-line no-console
+    console.log('[WebSocket] Waiting for event', event)
+
+    return new Promise((resolve) => {
+      const handlers = eventHandlersQueue.get(event) ?? []
+      handlers.push((data) => {
+        // eslint-disable-next-line no-console
+        console.log('[WebSocket] Resolving event', event, data)
+
+        resolve(data)
+      })
+      eventHandlersQueue.set(event, handlers)
+    }) satisfies Promise<WsEventToClientData<T>>
+  }
 
   // https://github.com/moeru-ai/airi/blob/b55a76407d6eb725d74c5cd4bcb17ef7d995f305/apps/realtime-audio/src/pages/index.vue#L95-L123
   watch(socket.data, (rawMessage) => {
@@ -60,9 +77,23 @@ export function createWebsocketContext(sessionId: string) {
           console.error('[WebSocket] Error handling event', message, error)
         }
       }
-      else {
-        console.error('[WebSocket] Unknown event', message)
+
+      if (eventHandlersQueue.has(message.type)) {
+        const fnQueue = eventHandlersQueue.get(message.type) ?? []
+
+        try {
+          fnQueue.forEach((inQueueFn) => {
+            inQueueFn(message.data)
+            fnQueue.pop()
+          })
+        }
+        catch (error) {
+          console.error('[WebSocket] Error handling queued event', message, error)
+        }
       }
+      // else {
+      //   console.error('[WebSocket] Unknown event', message)
+      // }
     }
     catch (error) {
       console.error('[WebSocket] Invalid message', rawMessage, error)
@@ -71,6 +102,7 @@ export function createWebsocketContext(sessionId: string) {
 
   return {
     sendEvent,
+    waitForEvent,
   }
 }
 

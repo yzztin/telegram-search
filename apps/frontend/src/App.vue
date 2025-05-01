@@ -16,9 +16,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-white transition-all duration-300 ease-in-out dark:bg-gray-900">
-    <Toaster position="top-right" :expand="true" :rich-colors="true" />
+  <KeepAlive>
+    <div class="min-h-screen bg-white transition-all duration-300 ease-in-out dark:bg-gray-900">
+      <Toaster position="top-right" :expand="true" :rich-colors="true" />
 
-    <RouterView />
-  </div>
+      <Transition>
+        <RouterView :key="$route.fullPath" />
+      </Transition>
+    </div>
+  </KeepAlive>
 </template>

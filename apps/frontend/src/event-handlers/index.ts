@@ -13,6 +13,7 @@ import { registerTakeoutEventHandlers } from './takeout'
 export type ClientEventHandler<T extends keyof WsEventToClient> = (data: WsEventToClientData<T>) => void
 export type ClientRegisterEventHandler = <T extends keyof WsEventToClient>(event: T, handler: ClientEventHandler<T>) => void
 export type ClientEventHandlerMap = Map<keyof WsEventToClient, ClientEventHandler<keyof WsEventToClient>>
+export type ClientEventHandlerQueueMap = Map<keyof WsEventToClient, ClientEventHandler<keyof WsEventToClient>[]>
 
 export function getRegisterEventHandler(
   eventHandlersMap: ClientEventHandlerMap,

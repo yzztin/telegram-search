@@ -13,8 +13,8 @@ const id = route.params.id
 const messageStore = useMessageStore()
 const { messagesByChat } = storeToRefs(messageStore)
 const chatMessages = computed(() =>
-  messagesByChat.value.get(id.toString())?.sort((a, b) => 
-    a.createdAt >= b.createdAt ? 1 : -1
+  messagesByChat.value.get(id.toString())?.sort((a, b) =>
+    a.createdAt >= b.createdAt ? 1 : -1,
   ) ?? [])
 
 const sessionStore = useSessionStore()
@@ -45,12 +45,14 @@ function sendMessage() {
 }
 
 onMounted(() => {
-  getWsContext()?.sendEvent('storage:fetch:messages', {
-    chatId: id.toString(),
-    pagination: { offset: 0, limit: 50 },
-  })
+  // getWsContext()?.sendEvent('storage:fetch:messages', {
+  //   chatId: id.toString(),
+  //   pagination: { offset: 0, limit: 50 },
+  // })
 
-  toast.loading('Loading messages from database...')
+  messageStore.fetchMessagesWithDatabase(id.toString(), { offset: 0, limit: 50 })
+
+  // toast.loading('Loading messages from database...')
 })
 </script>
 
