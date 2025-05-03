@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { CoreMessage } from '@tg-search/core'
 
-import { useScroll } from '@vueuse/core'
+import { useScroll, useVirtualList } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -25,31 +25,47 @@ const chatMessages = computed<CoreMessage[]>(() =>
       a.createdAt <= b.createdAt ? -1 : 1,
     ),
 )
+const isLoadingMessages = ref(false)
 const messageLimit = ref(50)
 const messageOffset = ref(0)
+
+const { list, containerProps, wrapperProps } = useVirtualList(
+  chatMessages,
+  {
+    itemHeight: () => 80, // Estimated height for message bubble
+    // overscan: 10,
+  },
+)
 
 const sessionStore = useSessionStore()
 const { getWsContext } = sessionStore
 
 const messageInput = ref('')
-const messagesContainer = ref<HTMLElement | null>(null)
-const { y } = useScroll(messagesContainer)
-
+const { y } = useScroll(containerProps.ref)
 const lastMessagePosition = ref(0)
 
 watch(chatMessages, () => {
-  lastMessagePosition.value = messagesContainer.value?.scrollHeight ?? 0
+  lastMessagePosition.value = containerProps.ref.value?.scrollHeight ?? 0
 
   nextTick(() => {
-    y.value = (messagesContainer.value?.scrollHeight ?? 0) - lastMessagePosition.value
+    y.value = (containerProps.ref.value?.scrollHeight ?? 0) - lastMessagePosition.value
   })
+})
+
+onMounted(() => {
+  messageStore.fetchMessagesWithDatabase(id.toString(), { offset: messageOffset.value, limit: messageLimit.value })
+  messageOffset.value += messageLimit.value
 })
 
 // TODO: useInfiniteScroll?
 watch(y, () => {
-  if (y.value === 0) {
+  if (y.value === 0 && !isLoadingMessages.value) {
+    isLoadingMessages.value = true
+
     messageStore.fetchMessagesWithDatabase(id.toString(), { offset: messageOffset.value, limit: messageLimit.value })
     messageOffset.value += messageLimit.value
+
+    isLoadingMessages.value = false
   }
 }, { immediate: true })
 
@@ -78,11 +94,13 @@ function sendMessage() {
 
     <!-- Messages Area -->
     <div
-      ref="messagesContainer"
+      v-bind="containerProps"
       class="flex-1 overflow-y-auto p-4 space-y-4"
     >
-      <div v-for="message in chatMessages" :key="message.uuid">
-        <MessageBubble :message="message" />
+      <div v-bind="wrapperProps">
+        <div v-for="{ data, index } in list" :key="index">
+          <MessageBubble :message="data" />
+        </div>
       </div>
     </div>
 
