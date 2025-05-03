@@ -35,7 +35,7 @@ watch(chatMessages, () => {
   lastMessagePosition.value = messagesContainer.value?.scrollHeight ?? 0
 
   nextTick(() => {
-    y.value = lastMessagePosition.value
+    y.value = (messagesContainer.value?.scrollHeight ?? 0) - lastMessagePosition.value
   })
 })
 
