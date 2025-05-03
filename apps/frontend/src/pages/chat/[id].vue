@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CoreMessage } from '@tg-search/core'
+import type { CoreDialog, CoreMessage } from '@tg-search/core'
 
 import { useScroll, useVirtualList } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
@@ -8,12 +8,14 @@ import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import MessageBubble from '../../components/messages/MessageBubble.vue'
+import { useChatStore } from '../../store/useChat'
 import { useMessageStore } from '../../store/useMessage'
 import { useSessionStore } from '../../store/useSession'
 
 const route = useRoute('/chat/:id')
 const id = route.params.id
 
+const chatStore = useChatStore()
 const messageStore = useMessageStore()
 const { messagesByChat } = storeToRefs(messageStore)
 const chatMessagesMap = computed<Map<string, CoreMessage>>(() =>
@@ -24,6 +26,9 @@ const chatMessages = computed<CoreMessage[]>(() =>
     .sort((a, b) =>
       a.createdAt <= b.createdAt ? -1 : 1,
     ),
+)
+const currentChat = computed<CoreDialog | undefined>(() =>
+  chatStore.getChat(id.toString()),
 )
 const isLoadingMessages = ref(false)
 const messageLimit = ref(50)
@@ -88,7 +93,7 @@ function sendMessage() {
     <!-- Chat Header -->
     <div class="p-4 border-b dark:border-gray-700">
       <h2 class="text-xl font-semibold dark:text-gray-100">
-        Chat #{{ id }}
+        {{ currentChat?.name }} | {{ currentChat?.id }}
       </h2>
     </div>
 
