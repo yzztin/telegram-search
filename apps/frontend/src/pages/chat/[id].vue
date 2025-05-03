@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import type { CoreMessage } from '@tg-search/core'
+
 import { useScroll } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
+import MessageBubble from '../../components/messages/MessageBubble.vue'
 import { useMessageStore } from '../../store/useMessage'
 import { useSessionStore } from '../../store/useSession'
 
@@ -13,8 +16,11 @@ const id = route.params.id
 
 const messageStore = useMessageStore()
 const { messagesByChat } = storeToRefs(messageStore)
-const chatMessages = computed(() =>
-  Array.from(messagesByChat.value.get(id.toString()) ?? [])
+const chatMessagesMap = computed<Map<string, CoreMessage>>(() =>
+  messagesByChat.value.get(id.toString()) ?? new Map(),
+)
+const chatMessages = computed<CoreMessage[]>(() =>
+  Array.from(chatMessagesMap.value.values())
     .sort((a, b) =>
       a.createdAt <= b.createdAt ? -1 : 1,
     ),
@@ -39,6 +45,7 @@ watch(chatMessages, () => {
   })
 })
 
+// TODO: useInfiniteScroll?
 watch(y, () => {
   if (y.value === 0) {
     messageStore.fetchMessagesWithDatabase(id.toString(), { offset: messageOffset.value, limit: messageLimit.value })

@@ -7,7 +7,7 @@ import { toast } from 'vue-sonner'
 import { useSessionStore } from './useSession'
 
 export const useMessageStore = defineStore('message', () => {
-  const messagesByChat = ref<Map<string, Set<CoreMessage>>>(new Map())
+  const messagesByChat = ref<Map<string, Map<string, CoreMessage>>>(new Map())
 
   const sessionStore = useSessionStore()
   const { getWsContext } = sessionStore
@@ -17,10 +17,10 @@ export const useMessageStore = defineStore('message', () => {
       const { chatId } = message
 
       if (messagesByChat.value.has(chatId)) {
-        messagesByChat.value.get(chatId)!.add(message)
+        messagesByChat.value.get(chatId)!.set(message.platformMessageId, message)
       }
       else {
-        messagesByChat.value.set(chatId, new Set([message]))
+        messagesByChat.value.set(chatId, new Map())
       }
     })
   }
