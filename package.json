@@ -15,8 +15,6 @@
     "lint": "pnpm -r lint",
     "lint:fix": "pnpm -r lint:fix",
     "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test run",
-    "test:coverage": "pnpm -r test:coverage",
     "postinstall": "husky",
     "bump": "bumpp",
     "bump:deps": "taze -I -f -w -r",

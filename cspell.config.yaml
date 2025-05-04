@@ -27,6 +27,7 @@ words:
   - unocss
   - unplugin
   - valibot
+  - vitest
   - vueuse
   - xsai
 ignoreWords: []
