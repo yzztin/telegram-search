@@ -1,5 +1,5 @@
+import type { MessageResolver, MessageResolverOpts } from '.'
 import type { CoreMessage } from '../utils/message'
-import type { MessageResolver, MessageResolverOpts } from './'
 
 import { EmbeddingDimension, useLogger } from '@tg-search/common'
 import { useConfig } from '@tg-search/common/composable'

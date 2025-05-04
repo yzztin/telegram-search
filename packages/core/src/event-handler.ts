@@ -12,10 +12,10 @@ import { registerMessageEventHandlers } from './event-handlers/message'
 import { registerSessionEventHandlers } from './event-handlers/session'
 import { registerStorageEventHandlers } from './event-handlers/storage'
 import { registerTakeoutEventHandlers } from './event-handlers/takeout'
-import { useResolverRegistry } from './resolvers'
-import { createEmbeddingResolver } from './resolvers/embedding-resolver'
-import { createLinkResolver } from './resolvers/link-resolver'
-import { createUserResolver } from './resolvers/user-resolver'
+import { useMessageResolverRegistry } from './message-resolvers'
+import { createEmbeddingResolver } from './message-resolvers/embedding-resolver'
+import { createLinkResolver } from './message-resolvers/link-resolver'
+import { createUserResolver } from './message-resolvers/user-resolver'
 import { createConfigService } from './services/config'
 import { createConnectionService } from './services/connection'
 import { createDialogService } from './services/dialog'
@@ -51,7 +51,7 @@ export function afterConnectedEventHandler(
   _config: Config,
 ): EventHandler {
   const { emitter } = ctx
-  const registry = useResolverRegistry()
+  const registry = useMessageResolverRegistry()
 
   emitter.on('auth:connected', () => {
     const messageService = useService(ctx, createMessageService)

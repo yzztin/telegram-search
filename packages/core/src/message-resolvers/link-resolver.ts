@@ -1,4 +1,4 @@
-import type { MessageResolver, MessageResolverOpts } from './'
+import type { MessageResolver, MessageResolverOpts } from '.'
 
 import { useLogger } from '@tg-search/common'
 

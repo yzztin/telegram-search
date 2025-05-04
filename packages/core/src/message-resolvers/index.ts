@@ -11,10 +11,9 @@ export interface MessageResolver {
   run: (opts: MessageResolverOpts) => PromiseResult<CoreMessage[] | null>
 }
 
-export function useResolverRegistry() {
+export function useMessageResolverRegistry() {
   const logger = useLogger()
 
-  // TODO: fix type
   const registry = new Map<string, MessageResolver>()
 
   return {
@@ -26,14 +25,5 @@ export function useResolverRegistry() {
     get: (name: string) => {
       return registry.get(name) as MessageResolver
     },
-
-    // TODO: better impl
-    // registry,
-
-    // forMessage: (fn: (...args: any[]) => void) => {
-    //   registry.forEach((resolver, name) => {
-    //     fn(name, resolver)
-    //   })
-    // }
   }
 }
