@@ -28,6 +28,9 @@ export async function recordMessages(messages: CoreMessage[]) {
       is_reply: message.reply.isReply,
       reply_to_name: replyToName,
       reply_to_id: message.reply.replyToId || '',
+      content_vector_1536: message.vectors.vector1536?.length !== 0 ? message.vectors.vector1536 : null,
+      content_vector_1024: message.vectors.vector1024?.length !== 0 ? message.vectors.vector1024 : null,
+      content_vector_768: message.vectors.vector768?.length !== 0 ? message.vectors.vector768 : null,
     }
 
     return values
@@ -82,9 +85,9 @@ export async function fetchMessages(chatId: string, pagination: CorePagination) 
       },
 
       vectors: {
-        vector1024: [],
-        vector768: [],
-        vector1536: [],
+        vector1536: message.content_vector_1536 || [],
+        vector1024: message.content_vector_1024 || [],
+        vector768: message.content_vector_768 || [],
       },
 
       createdAt: message.created_at,
