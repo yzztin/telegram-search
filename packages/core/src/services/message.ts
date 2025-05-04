@@ -57,7 +57,7 @@ export function createMessageService(ctx: CoreContext) {
 
     // TODO: worker_threads?
     async function processMessages(messages: Api.Message[]) {
-      logger.withFields({ count: messages.length }).log('Process messages')
+      logger.withFields({ count: messages.length }).verbose('Process messages')
 
       const coreMessages = messages
         .map(message => convertToCoreMessage(message))
@@ -69,7 +69,7 @@ export function createMessageService(ctx: CoreContext) {
       // embedding or resolve messages
       let emitMessages: CoreMessage[] = coreMessages
       for (const [name, resolver] of resolvers.registry.entries()) {
-        logger.withFields({ name }).log('Process messages with resolver')
+        logger.withFields({ name }).verbose('Process messages with resolver')
 
         const { data } = await resolver.run({ messages: emitMessages })
         emitMessages = data || emitMessages
@@ -127,21 +127,21 @@ export function createMessageService(ctx: CoreContext) {
         maxId,
         startTime,
         endTime,
-      }).log('Fetch messages options')
+      }).verbose('Fetch messages options')
 
       // const entity = await getClient().getInputEntity(Number(chatId))
 
       // const dialog = await getClient().invoke(new Api.messages.GetPeerDialogs({
       //   peers: [new Api.PeerChat({ chatId: BigInt(Number(chatId)) })],
       // }))
-      // logger.withFields({ chatId, name: dialog.peer.className, json: dialog.toJSON() }).log('Got dialog')
+      // logger.withFields({ chatId, name: dialog.peer.className, json: dialog.toJSON() }).verbose('Got dialog')
 
       const { data: history, error } = await getHistory(chatId)
       if (error || !history) {
         return
       }
 
-      logger.withFields({ chatId, count: history?.count }).log('Got history')
+      logger.withFields({ chatId, count: history?.count }).verbose('Got history')
 
       // await getClient().getDialogs()
 

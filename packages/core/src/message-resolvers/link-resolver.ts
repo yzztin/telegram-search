@@ -9,7 +9,7 @@ export function createLinkResolver(): MessageResolver {
 
   return {
     run: async (opts: MessageResolverOpts) => {
-      logger.withFields({ opts }).log('Link resolver')
+      logger.withFields({ opts }).verbose('Link resolver')
 
       return withResult(null, null)
     },

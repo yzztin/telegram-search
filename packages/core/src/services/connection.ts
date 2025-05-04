@@ -70,7 +70,7 @@ export function createConnectionService(ctx: CoreContext) {
 
       const proxy = getProxyInterface(options.proxy)
       if (proxy) {
-        logger.withFields({ proxy }).log('Using proxy')
+        logger.withFields({ proxy }).verbose('Using proxy')
       }
 
       const client = new TelegramClient(
@@ -99,7 +99,7 @@ export function createConnectionService(ctx: CoreContext) {
           return withResult(null, withError(error, 'Failed to initialize Telegram client'))
         }
 
-        logger.log('Connecting to Telegram')
+        logger.verbose('Connecting to Telegram')
 
         // Try to connect to Telegram by using the session
         const isConnected = await client.connect()
@@ -109,7 +109,7 @@ export function createConnectionService(ctx: CoreContext) {
 
         const isAuthorized = await client.isUserAuthorized()
         if (!isAuthorized) {
-          logger.log('User is not authorized, signing in')
+          logger.verbose('User is not authorized, signing in')
 
           await client.signInUser({
             apiId: options.apiId,
@@ -117,13 +117,13 @@ export function createConnectionService(ctx: CoreContext) {
           }, {
             phoneNumber,
             phoneCode: async () => {
-              logger.log('Waiting for code')
+              logger.verbose('Waiting for code')
               emitter.emit('auth:code:needed')
               const { code } = await waitForEvent(emitter, 'auth:code')
               return code
             },
             password: async () => {
-              logger.log('Waiting for password')
+              logger.verbose('Waiting for password')
               emitter.emit('auth:password:needed')
               const { password } = await waitForEvent(emitter, 'auth:password')
               return password
@@ -136,7 +136,7 @@ export function createConnectionService(ctx: CoreContext) {
 
         // NOTE: The client will return string session, so convert it directly
         const sessionString = await client.session.save() as unknown as string
-        logger.withFields({ sessionString }).log('Saving session')
+        logger.withFields({ sessionString }).verbose('Saving session')
 
         emitter.emit('session:update', { phoneNumber, session: sessionString })
 
@@ -162,7 +162,7 @@ export function createConnectionService(ctx: CoreContext) {
 
       client.session.delete()
       emitter.emit('auth:logout')
-      logger.log('Logged out from Telegram')
+      logger.verbose('Logged out from Telegram')
       return withResult(null, null)
     }
 

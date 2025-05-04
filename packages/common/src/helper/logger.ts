@@ -4,6 +4,20 @@ import { Format, LogLevel, setGlobalFormat, setGlobalLogLevel, useLogg } from '@
 export type Logger = ReturnType<typeof useLogg>
 export { Format as LoggerFormat, LogLevel as LoggerLevel }
 
+let isDebugMode = false
+
+export function getDebugMode() {
+  return !!isDebugMode
+}
+
+export function parseEnvLogLevel(envLogLevel?: string) {
+  const level = envLogLevel ? LogLevel[envLogLevel.toUpperCase() as keyof typeof LogLevel] : undefined
+  if (level)
+    return level
+
+  return LogLevel.Verbose
+}
+
 export function initLogger(
   level = LogLevel.Verbose,
   format = Format.Pretty,
@@ -11,8 +25,11 @@ export function initLogger(
   setGlobalLogLevel(level)
   setGlobalFormat(format)
 
+  if (level === LogLevel.Debug)
+    isDebugMode = true
+
   const logger = useLogg('logger').useGlobalConfig()
-  logger.withFields({ level, format }).log('Logger initialized')
+  logger.withFields({ level: LogLevel[level], format }).log('Logger initialized')
 }
 
 export function useLogger(name?: string): Logger {

@@ -20,7 +20,7 @@ export function useMessageResolverRegistry() {
 
   return {
     register: (name: string, resolver: MessageResolver) => {
-      logger.withFields({ name }).log('Register resolver')
+      logger.withFields({ name }).verbose('Register resolver')
       registry.set(name, resolver)
     },
 

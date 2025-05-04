@@ -1,4 +1,4 @@
-import { useLogger } from '@tg-search/common'
+import { getDebugMode, useLogger } from '@tg-search/common'
 import { getDatabaseDSN, useConfig } from '@tg-search/common/composable'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -19,11 +19,11 @@ export async function initDrizzle() {
   const client = postgres(connectionString, {
     max: 1,
     onnotice: (notice) => {
-      logger.withFields({ notice }).log('Database connection notice')
+      logger.withFields({ notice }).verbose('Database connection notice')
     },
   })
 
-  dbInstance = drizzle(client, { logger: true })
+  dbInstance = drizzle(client, { logger: getDebugMode() })
 
   // Check the db connection
   try {

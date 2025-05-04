@@ -144,7 +144,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
   const contextWindowSize = 10 // Number of messages to include before and after
   const logger = useLogger('findRelevantMessages').useGlobalConfig().withField('chatId', chatId)
 
-  logger.withField('context_window_size', contextWindowSize).log('Querying relevant chat messages...')
+  logger.withField('context_window_size', contextWindowSize).verbose('Querying relevant chat messages...')
 
   return await Promise.all(unreadHistoryMessagesEmbedding.map(async (embedding) => {
     let similarity: SQL<number>
@@ -196,7 +196,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
       .limit(3),
     )).expect('Failed to fetch relevant messages')
 
-    logger.withField('number_of_relevant_messages', relevantMessages.length).log('Successfully found relevant chat messages')
+    logger.withField('number_of_relevant_messages', relevantMessages.length).verbose('Successfully found relevant chat messages')
 
     // Now fetch the context for each message
     const relevantMessagesContext = await Promise.all(
@@ -296,7 +296,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
 
     // Map into one liners
     const relevantMessageOneliner = relevantMessagesContext.map(msgs => msgs.map(m => chatMessageToOneLine(botId, m, repliedMessagesSet.get(m.reply_to_id))).join('\n'))
-    logger.withField('number_of_relevant_messages', relevantMessages.length).log('processed relevant chat messages with contextual messages')
+    logger.withField('number_of_relevant_messages', relevantMessages.length).verbose('processed relevant chat messages with contextual messages')
 
     return relevantMessageOneliner
   }))

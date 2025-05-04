@@ -12,24 +12,24 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
   const logger = useLogger('core:storage:event')
 
   emitter.on('storage:fetch:messages', async ({ chatId, pagination }) => {
-    logger.withFields({ chatId, pagination }).log('Fetching messages')
+    logger.withFields({ chatId, pagination }).verbose('Fetching messages')
     const messages = await fetchMessages(chatId, pagination)
     emitter.emit('storage:messages', { messages })
   })
 
   emitter.on('storage:record:messages', async ({ messages }) => {
-    logger.withFields({ messages: messages.length }).log('Recording messages')
+    logger.withFields({ messages: messages.length }).verbose('Recording messages')
     logger.withFields({ messages }).debug('Recording messages')
     await recordMessagesWithoutEmbedding(messages)
   })
 
   emitter.on('storage:fetch:dialogs', async () => {
-    logger.log('Fetching dialogs')
+    logger.verbose('Fetching dialogs')
 
     const dbChats = await listJoinedChats()
     const chatsMessageStats = await getChatMessagesStats()
 
-    logger.withFields({ dbChatsSize: dbChats.length, chatsMessageStatsSize: chatsMessageStats.length }).log('Chat message stats')
+    logger.withFields({ dbChatsSize: dbChats.length, chatsMessageStatsSize: chatsMessageStats.length }).verbose('Chat message stats')
 
     const dialogs = dbChats.map((chat) => {
       const chatMessageStats = chatsMessageStats.find(stats => stats.chat_id === chat.chat_id)
@@ -50,7 +50,7 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
       users: dialogs.filter(d => d.type === 'user').length,
       groups: dialogs.filter(d => d.type === 'group').length,
       channels: dialogs.filter(d => d.type === 'channel').length,
-    }).log('Recording dialogs')
+    }).verbose('Recording dialogs')
 
     await recordJoinedChats(dialogs)
   })

@@ -9,7 +9,7 @@ export function registerDialogEventHandlers(ctx: CoreContext) {
 
   return (dialogService: DialogService) => {
     emitter.on('dialog:fetch', async () => {
-      logger.log('Fetching dialogs')
+      logger.verbose('Fetching dialogs')
 
       const { data: dialogs, error } = await dialogService.fetchDialogs()
       if (!dialogs || error) {

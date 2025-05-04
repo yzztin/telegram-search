@@ -9,7 +9,7 @@ export function createUserResolver(): MessageResolver {
 
   return {
     run: async (opts: MessageResolverOpts) => {
-      logger.withFields({ opts }).log('User resolver')
+      logger.withFields({ opts }).verbose('User resolver')
 
       return withResult(null, null)
     },

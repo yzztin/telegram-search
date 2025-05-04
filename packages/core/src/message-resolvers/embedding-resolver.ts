@@ -15,14 +15,14 @@ export function createEmbeddingResolver(): MessageResolver {
 
   return {
     run: async (opts: MessageResolverOpts) => {
-      logger.withFields({ opts }).log('Embedding resolver')
+      logger.withFields({ opts }).verbose('Embedding resolver')
 
       if (opts.messages.length === 0)
         return withResult(null, 'No messages')
 
       const messages: CoreMessage[] = opts.messages.filter(message => message.content)
 
-      logger.withFields({ messages: messages.length }).log('Embedding messages')
+      logger.withFields({ messages: messages.length }).verbose('Embedding messages')
 
       const { embeddings, usage } = await embedMany({
         apiKey: embedding.apiKey,
@@ -31,7 +31,7 @@ export function createEmbeddingResolver(): MessageResolver {
         model: embedding.model,
       })
 
-      logger.withFields({ embeddings: embeddings.length, usage }).log('Embedding messages done')
+      logger.withFields({ embeddings: embeddings.length, usage }).verbose('Embedding messages done')
 
       for (const [index, message] of messages.entries()) {
         switch (embedding.dimension) {
