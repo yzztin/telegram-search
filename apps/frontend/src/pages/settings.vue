@@ -248,6 +248,14 @@ onMounted(() => {
                 >
               </div>
               <div>
+                <label class="block text-sm text-secondary-foreground font-medium">Dimension</label>
+                <input
+                  v-model="config.api.embedding.dimension"
+                  :disabled="!isEditing"
+                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
+                >
+              </div>
+              <div>
                 <label class="block text-sm text-secondary-foreground font-medium">API Key</label>
                 <input
                   v-model="config.api.embedding.apiKey"
