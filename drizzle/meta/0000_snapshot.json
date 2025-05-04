@@ -1,5 +1,5 @@
 {
-  "id": "c5e540b3-593b-4828-90b0-68cb5439f5b5",
+  "id": "db4661b9-e128-4ba1-a47f-e221901568c9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -112,6 +112,27 @@
         }
       },
       "indexes": {
+        "chat_messages_platform_platform_message_id_unique_index": {
+          "name": "chat_messages_platform_platform_message_id_unique_index",
+          "columns": [
+            {
+              "expression": "platform",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "platform_message_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "chat_messages_content_vector_1536_index": {
           "name": "chat_messages_content_vector_1536_index",
           "columns": [
@@ -163,7 +184,15 @@
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "chat_messages_platform_message_id_unique": {
+          "name": "chat_messages_platform_message_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "platform_message_id"
+          ]
+        }
+      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

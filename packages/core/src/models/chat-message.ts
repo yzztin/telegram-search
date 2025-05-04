@@ -12,30 +12,11 @@ import { withDb } from '../db'
 import { chatMessagesTable } from '../db/schema'
 import { chatMessageToOneLine } from './common'
 
-export async function recordMessagesWithoutEmbedding(messages: CoreMessage[]) {
+export async function recordMessages(messages: CoreMessage[]) {
   const dbMessages = messages.map((message) => {
     const replyToName = message.reply.replyToName || ''
 
-    // let embedding: EmbedResult
-
-    // if (message.sticker != null) {
-    //   text = `A sticker sent by user ${await findStickerDescription(message.sticker.file_id)}, sticker set named ${message.sticker.set_name}`
-    // }
-    // else if (message.photo != null) {
-    //   text = `A set of photo, descriptions are: ${(await Promise.all(message.photo.map(photo => findPhotoDescription(photo.file_id)))).join('\n')}`
-    // }
-    // else if (message.text) {
-    //   text = message.text || message.caption || ''
-    // }
-
     const text = message.content
-
-    // embedding = await embed({
-    //   baseURL: env.EMBEDDING_API_BASE_URL!,
-    //   apiKey: env.EMBEDDING_API_KEY!,
-    //   model: env.EMBEDDING_MODEL!,
-    //   input: text,
-    // })
 
     const values: Partial<Omit<typeof chatMessagesTable.$inferSelect, 'id' | 'created_at' | 'updated_at'>> = {
       platform: message.platform,
@@ -49,20 +30,6 @@ export async function recordMessagesWithoutEmbedding(messages: CoreMessage[]) {
       reply_to_id: message.reply.replyToId || '',
     }
 
-    // switch (env.EMBEDDING_DIMENSION) {
-    //   case '1536':
-    //     values.content_vector_1536 = embedding.embedding
-    //     break
-    //   case '1024':
-    //     values.content_vector_1024 = embedding.embedding
-    //     break
-    //   case '768':
-    //     values.content_vector_768 = embedding.embedding
-    //     break
-    //   default:
-    //     throw new Error(`Unsupported embedding dimension: ${env.EMBEDDING_DIMENSION}`)
-    // }
-
     return values
   })
 
@@ -70,13 +37,13 @@ export async function recordMessagesWithoutEmbedding(messages: CoreMessage[]) {
     return
   }
 
-  await withDb(db => db
+  (await withDb(db => db
     .insert(chatMessagesTable)
     .values(dbMessages)
     .onConflictDoNothing({
       target: [chatMessagesTable.platform_message_id],
     }),
-  )
+  )).expect('Failed to record messages')
 }
 
 export async function fetchMessages(chatId: string, pagination: CorePagination) {

@@ -13,7 +13,8 @@ CREATE TABLE "chat_messages" (
 	"updated_at" bigint DEFAULT 0 NOT NULL,
 	"content_vector_1536" vector(1536),
 	"content_vector_1024" vector(1024),
-	"content_vector_768" vector(768)
+	"content_vector_768" vector(768),
+	CONSTRAINT "chat_messages_platform_message_id_unique" UNIQUE("platform_message_id")
 );
 --> statement-breakpoint
 CREATE TABLE "joined_chats" (
@@ -77,6 +78,7 @@ CREATE TABLE "stickers" (
 );
 --> statement-breakpoint
 ALTER TABLE "recent_sent_stickers" ADD CONSTRAINT "recent_sent_stickers_sticker_id_stickers_id_fk" FOREIGN KEY ("sticker_id") REFERENCES "public"."stickers"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "chat_messages_platform_platform_message_id_unique_index" ON "chat_messages" USING btree ("platform","platform_message_id");--> statement-breakpoint
 CREATE INDEX "chat_messages_content_vector_1536_index" ON "chat_messages" USING hnsw ("content_vector_1536" vector_cosine_ops);--> statement-breakpoint
 CREATE INDEX "chat_messages_content_vector_1024_index" ON "chat_messages" USING hnsw ("content_vector_1024" vector_cosine_ops);--> statement-breakpoint
 CREATE INDEX "chat_messages_content_vector_768_index" ON "chat_messages" USING hnsw ("content_vector_768" vector_cosine_ops);--> statement-breakpoint

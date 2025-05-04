@@ -6,10 +6,10 @@ import { bigint, boolean, index, integer, pgTable, pgView, text, uniqueIndex, uu
 export const chatMessagesTable = pgTable('chat_messages', {
   id: uuid().primaryKey().defaultRandom(),
   platform: text().notNull().default(''),
-  platform_message_id: text().notNull().default(''),
+  platform_message_id: text().notNull().default('').unique(),
   from_id: text().notNull().default(''),
   from_name: text().notNull().default(''),
-  in_chat_id: text().notNull().default('').unique(),
+  in_chat_id: text().notNull().default(''),
   content: text().notNull().default(''),
   is_reply: boolean().notNull().default(false),
   reply_to_name: text().notNull().default(''),

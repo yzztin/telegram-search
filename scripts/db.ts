@@ -22,7 +22,7 @@ import { initLogger, useLogger } from '../packages/common/src/helper/logger'
     })
 
     child.stdout.on('data', (data) => {
-      console.verbose(data.toString())
+      console.log(data.toString())
     })
 
     child.stderr.on('data', (data) => {

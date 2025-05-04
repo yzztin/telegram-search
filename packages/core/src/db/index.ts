@@ -43,17 +43,6 @@ function useDrizzle() {
   return dbInstance
 }
 
-// export async function withDb<T>(
-//   fn: (db: CoreDB) => Promise<T>,
-// ) {
-//   try {
-//     return await withResult(fn(useDrizzle()), null)
-//   }
-//   catch (error) {
-//     useLogger().withError(error).error('Failed to execute database operation')
-//   }
-// }
-
 export async function withDb<T>(
   fn: (db: CoreDB) => Promise<T>,
 ) {
@@ -61,7 +50,6 @@ export async function withDb<T>(
     return Ok(await fn(useDrizzle()))
   }
   catch (error) {
-    // useLogger().withError(error).error('Failed to execute database operation')
     return Err<T>(error)
   }
 }
