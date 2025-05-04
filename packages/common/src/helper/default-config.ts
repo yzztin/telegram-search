@@ -72,7 +72,7 @@ export function generateDefaultConfig(storagePath?: string): Config {
         // Optional API base URL
         apiBase: '',
         // Embedding dimension
-        dimension: '1536',
+        dimension: 1536,
       },
     },
   })
