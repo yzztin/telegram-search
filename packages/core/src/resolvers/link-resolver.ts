@@ -1,17 +1,17 @@
-import type { Resolver } from '../registry'
+import type { MessageResolver, MessageResolverOpts } from './'
 
 import { useLogger } from '@tg-search/common'
 
-interface LinkResolverOpts {
-  text: string
-}
+import { withResult } from '../utils/result'
 
-export function createLinkResolver(): Resolver<LinkResolverOpts> {
+export function createLinkResolver(): MessageResolver {
   const logger = useLogger()
 
   return {
-    run: async (opts: LinkResolverOpts) => {
+    run: async (opts: MessageResolverOpts) => {
       logger.debug('Link resolver', opts)
+
+      return withResult(null, 'Not implemented')
     },
   }
 }
