@@ -1,17 +1,18 @@
 import type { MessageResolver, MessageResolverOpts } from '.'
+import type { CoreMessage } from '../utils/message'
 
 import { useLogger } from '@tg-search/common'
 
-import { withResult } from '../utils/result'
+import { Ok } from '../utils/monad'
 
 export function createUserResolver(): MessageResolver {
-  const logger = useLogger('core:message-resolver:user')
+  const logger = useLogger('core:resolver:user')
 
   return {
-    run: async (opts: MessageResolverOpts) => {
-      logger.withFields({ opts }).verbose('User resolver')
+    run: async (_opts: MessageResolverOpts) => {
+      logger.verbose('Executing user resolver')
 
-      return withResult(null, null)
+      return Ok([] as CoreMessage[])
     },
   }
 }

@@ -1,5 +1,5 @@
 import type { CoreMessage } from '../utils/message'
-import type { PromiseResult } from '../utils/result'
+import type { Result } from '../utils/monad'
 
 import { useLogger } from '@tg-search/common'
 
@@ -8,13 +8,13 @@ export interface MessageResolverOpts {
 }
 
 export interface MessageResolver {
-  run: (opts: MessageResolverOpts) => PromiseResult<CoreMessage[] | null>
+  run: (opts: MessageResolverOpts) => Promise<Result<CoreMessage[]>>
 }
 
 export type MessageResolverRegistryFn = ReturnType<typeof useMessageResolverRegistry>
 
 export function useMessageResolverRegistry() {
-  const logger = useLogger('core:message-resolver:registry')
+  const logger = useLogger('core:resolver:registry')
 
   const registry = new Map<string, MessageResolver>()
 

@@ -1,17 +1,18 @@
 import type { MessageResolver, MessageResolverOpts } from '.'
+import type { CoreMessage } from '../utils/message'
 
 import { useLogger } from '@tg-search/common'
 
-import { withResult } from '../utils/result'
+import { Ok } from '../utils/monad'
 
 export function createLinkResolver(): MessageResolver {
-  const logger = useLogger('core:message-resolver:link')
+  const logger = useLogger('core:resolver:link')
 
   return {
-    run: async (opts: MessageResolverOpts) => {
-      logger.withFields({ opts }).verbose('Link resolver')
+    run: async (_opts: MessageResolverOpts) => {
+      logger.verbose('Executing link resolver')
 
-      return withResult(null, null)
+      return Ok([] as CoreMessage[])
     },
   }
 }

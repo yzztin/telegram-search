@@ -1,3 +1,5 @@
+import { useLogger } from '@tg-search/common'
+
 export interface Result<T> {
   orDefault: (defaultValue: T) => T
   orUndefined: () => T | undefined
@@ -34,6 +36,8 @@ export function Ok<T>(value: T): Result<T> {
 }
 
 export function Err<T>(error: unknown): Result<T> {
+  useLogger('core:monnad').withError(error).warn('An error occurred')
+
   return {
     orDefault: (defaultValue: T) => defaultValue,
     orUndefined: () => undefined,
@@ -65,9 +69,9 @@ export function Err<T>(error: unknown): Result<T> {
   }
 }
 
-export interface Future<T> {
-  await: () => Result<Awaited<T>>
-}
+// export interface Future<T> {
+//   await: () => Result<Awaited<T>>
+// }
 
 // export function Async<T>(fn: () => Promise<T>): Future<T> {
 //   return {
