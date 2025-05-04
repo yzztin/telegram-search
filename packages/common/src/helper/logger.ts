@@ -12,7 +12,7 @@ export function initLogger(
   setGlobalFormat(format)
 
   const logger = useLogg('logger').useGlobalConfig()
-  logger.log('Logger initialized')
+  logger.withFields({ level, format }).log('Logger initialized')
 }
 
 export function useLogger(name?: string): Logger {

@@ -52,24 +52,33 @@ export function createCoreContext() {
   const toCoreEvents = new Set<keyof ToCoreEvent>()
   const fromCoreEvents = new Set<keyof FromCoreEvent>()
 
-  const wrapEmitterOn = (emitter: CoreEmitter, fn: (event: keyof ToCoreEvent) => void) => {
+  const wrapEmitterOn = (emitter: CoreEmitter, fn?: (event: keyof ToCoreEvent) => void) => {
     const _on = emitter.on.bind(emitter)
 
     emitter.on = (event, listener) => {
+      const onFn = _on(event, async (...args) => {
+        try {
+          fn?.(event as keyof ToCoreEvent)
+
+          useLogger().withFields({ event }).debug('Handle core event')
+          return await listener(...args)
+        }
+        catch (error) {
+          useLogger().withError(error).error('Failed to handle core event')
+        }
+      })
+
       if (toCoreEvents.has(event as keyof ToCoreEvent)) {
-        return _on(event, listener)
+        return onFn
       }
 
-      useLogger().withFields({ event }).log('Register to core event')
-
+      useLogger().withFields({ event }).debug('Register to core event')
       toCoreEvents.add(event as keyof ToCoreEvent)
-      fn(event as keyof ToCoreEvent)
-
-      return _on(event, listener)
+      return onFn
     }
   }
 
-  const wrapEmitterEmit = (emitter: CoreEmitter, fn: (event: keyof FromCoreEvent) => void) => {
+  const wrapEmitterEmit = (emitter: CoreEmitter, fn?: (event: keyof FromCoreEvent) => void) => {
     const _emit = emitter.emit.bind(emitter)
 
     emitter.emit = (event, ...args) => {
@@ -77,17 +86,17 @@ export function createCoreContext() {
         return _emit(event, ...args)
       }
 
-      useLogger().withFields({ event }).log('Register from core event')
+      useLogger().withFields({ event }).debug('Register from core event')
 
       fromCoreEvents.add(event as keyof FromCoreEvent)
-      fn(event as keyof FromCoreEvent)
+      fn?.(event as keyof FromCoreEvent)
 
       return _emit(event, ...args)
     }
   }
 
   function setClient(client: TelegramClient) {
-    useLogger().log('Setted Telegram client')
+    useLogger().debug('Setted Telegram client')
     telegramClient = client
   }
 
@@ -98,6 +107,14 @@ export function createCoreContext() {
 
     return telegramClient
   }
+
+  wrapEmitterOn(emitter, (event) => {
+    useLogger('core:event').withFields({ event }).log('Core event received')
+  })
+
+  wrapEmitterEmit(emitter, (event) => {
+    useLogger('core:event').withFields({ event }).log('Core event emitted')
+  })
 
   return {
     emitter,

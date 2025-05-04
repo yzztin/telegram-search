@@ -81,13 +81,6 @@ export function setupWsRoutes(app: App) {
       const { state, sessionId } = updatePeerSessionState(peer)
 
       logger.withFields({ peerId: peer.id }).log('Websocket connection opened')
-      state.ctx?.wrapEmitterEmit(state.ctx?.emitter, (event) => {
-        useLogger('core:event').withFields({ event }).log('Core event emitted')
-      })
-
-      state.ctx?.wrapEmitterOn(state.ctx?.emitter, (event) => {
-        useLogger('core:event').withFields({ event }).log('Core event received')
-      })
 
       sendWsEvent(peer, 'server:connected', { sessionId, connected: state.isConnected })
 
@@ -100,8 +93,6 @@ export function setupWsRoutes(app: App) {
       const { state } = usePeerSessionState(peer)
 
       const event = message.json<WsMessageToServer>()
-
-      logger.withFields({ type: event.type }).log('Message received')
 
       try {
         if (event.type === 'server:event:register') {
@@ -118,6 +109,8 @@ export function setupWsRoutes(app: App) {
           }
         }
         else {
+          logger.withFields({ type: event.type }).log('Message received')
+
           state.ctx?.emitter.emit(event.type, event.data as CoreEventData<keyof ToCoreEvent>)
         }
 
