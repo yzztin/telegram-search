@@ -2,10 +2,14 @@ import path from 'node:path'
 import { Format, LogLevel, setGlobalFormat, setGlobalLogLevel, useLogg } from '@guiiai/logg'
 
 export type Logger = ReturnType<typeof useLogg>
+export { Format as LoggerFormat, LogLevel as LoggerLevel }
 
-export function initLogger() {
-  setGlobalLogLevel(LogLevel.Verbose)
-  setGlobalFormat(Format.Pretty)
+export function initLogger(
+  level = LogLevel.Verbose,
+  format = Format.Pretty,
+) {
+  setGlobalLogLevel(level)
+  setGlobalFormat(format)
 
   const logger = useLogg('logger').useGlobalConfig()
   logger.log('Logger initialized')
