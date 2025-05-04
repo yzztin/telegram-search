@@ -14,8 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "unbuild",
-    "stub": "unbuild --stub",
+    "build": "pkgroll",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
   },
@@ -29,6 +28,7 @@
     "eventemitter3": "^5.0.1",
     "grammy": "^1.36.1",
     "pg": "^8.15.6",
+    "pkgroll": "^2.12.2",
     "postgres": "^3.4.5",
     "telegram": "^2.26.22",
     "valibot": "^1.0.0"
@@ -37,7 +37,6 @@
     "@types/node": "^22.15.2",
     "@types/pg": "^8.11.14",
     "drizzle-kit": "^0.31.0",
-    "unbuild": "^3.5.0",
     "vitest": "^3.1.2"
   }
 }
