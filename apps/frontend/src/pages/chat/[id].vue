@@ -3,7 +3,7 @@ import type { CoreDialog, CoreMessage } from '@tg-search/core'
 
 import { useScroll, useVirtualList } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
