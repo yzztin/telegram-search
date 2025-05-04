@@ -63,6 +63,10 @@ export function createMessageService(ctx: CoreContext) {
         .map(message => convertToCoreMessage(message))
         .filter(message => message !== null)
 
+      // return the messages first
+      emitter.emit('message:data', { messages: coreMessages })
+
+      // embedding or resolve messages
       let emitMessages: CoreMessage[] = coreMessages
       for (const [name, resolver] of resolvers.registry.entries()) {
         logger.withFields({ name }).log('Process messages with resolver')
@@ -71,7 +75,6 @@ export function createMessageService(ctx: CoreContext) {
         emitMessages = data || emitMessages
       }
 
-      emitter.emit('message:data', { messages: emitMessages })
       emitter.emit('storage:record:messages', { messages: emitMessages })
     }
 
