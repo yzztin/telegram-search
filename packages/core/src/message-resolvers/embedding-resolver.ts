@@ -22,12 +22,16 @@ export function createEmbeddingResolver(): MessageResolver {
 
       const messages: CoreMessage[] = opts.messages.filter(message => message.content)
 
-      const { embeddings } = await embedMany({
+      logger.withFields({ messages: messages.length }).log('Embedding messages')
+
+      const { embeddings, usage } = await embedMany({
         apiKey: embedding.apiKey,
         baseURL: embedding.apiBase || '',
         input: messages.map(message => message.content),
         model: embedding.model,
       })
+
+      logger.withFields({ embeddings: embeddings.length, usage }).log('Embedding messages done')
 
       for (const [index, message] of messages.entries()) {
         switch (embedding.dimension) {

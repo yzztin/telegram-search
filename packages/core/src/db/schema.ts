@@ -9,7 +9,7 @@ export const chatMessagesTable = pgTable('chat_messages', {
   platform_message_id: text().notNull().default(''),
   from_id: text().notNull().default(''),
   from_name: text().notNull().default(''),
-  in_chat_id: text().notNull().default(''),
+  in_chat_id: text().notNull().default('').unique(),
   content: text().notNull().default(''),
   is_reply: boolean().notNull().default(false),
   reply_to_name: text().notNull().default(''),
@@ -20,6 +20,7 @@ export const chatMessagesTable = pgTable('chat_messages', {
   content_vector_1024: vector({ dimensions: 1024 }),
   content_vector_768: vector({ dimensions: 768 }),
 }, table => [
+  uniqueIndex('chat_messages_platform_platform_message_id_unique_index').on(table.platform, table.platform_message_id),
   index('chat_messages_content_vector_1536_index').using('hnsw', table.content_vector_1536.op('vector_cosine_ops')),
   index('chat_messages_content_vector_1024_index').using('hnsw', table.content_vector_1024.op('vector_cosine_ops')),
   index('chat_messages_content_vector_768_index').using('hnsw', table.content_vector_768.op('vector_cosine_ops')),

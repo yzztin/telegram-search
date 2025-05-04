@@ -1,0 +1,1 @@
+ALTER TABLE "chat_messages" ADD CONSTRAINT "chat_messages_in_chat_id_unique" UNIQUE("in_chat_id");
