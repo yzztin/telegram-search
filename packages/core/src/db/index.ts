@@ -4,11 +4,12 @@ import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
-let dbInstance: ReturnType<typeof drizzle>
+export type CoreDB = ReturnType<typeof drizzle>
+let dbInstance: CoreDB
 
 export async function initDrizzle() {
   const logger = useLogger()
-  logger.debug('Initializing database...')
+  logger.log('Initializing database...')
 
   // Database connection
   const config = useConfig()
@@ -16,7 +17,7 @@ export async function initDrizzle() {
   const client = postgres(connectionString, {
     max: 1,
     onnotice: (notice) => {
-      logger.withFields({ notice }).debug('Database connection notice')
+      logger.withFields({ notice }).log('Database connection notice')
     },
   })
 
@@ -32,10 +33,22 @@ export async function initDrizzle() {
   }
 }
 
-export function useDrizzle() {
+function useDrizzle() {
   if (!dbInstance) {
     throw new Error('Database not initialized')
   }
 
   return dbInstance
+}
+
+export async function withDb<T>(
+  fn: (db: ReturnType<typeof drizzle>) => Promise<T>,
+) {
+  try {
+    return fn(useDrizzle())
+  }
+  catch (error) {
+    useLogger().withError(error).error('Failed to execute database operation')
+    throw error
+  }
 }

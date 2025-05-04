@@ -2,15 +2,16 @@
 
 import { eq, inArray } from 'drizzle-orm'
 
-import { useDrizzle } from '../db'
+import { withDb } from '../db'
 import { photosTable } from '../db/schema'
 
 export async function findPhotoDescription(fileId: string) {
-  const photo = await useDrizzle()
+  const photo = await withDb(db => db
     .select()
     .from(photosTable)
     .where(eq(photosTable.file_id, fileId))
-    .limit(1)
+    .limit(1),
+  )
 
   if (photo.length === 0) {
     return ''
@@ -20,7 +21,7 @@ export async function findPhotoDescription(fileId: string) {
 }
 
 export async function recordPhoto(photoBase64: string, fileId: string, filePath: string, description: string) {
-  await useDrizzle()
+  await withDb(db => db
     .insert(photosTable)
     .values({
       platform: 'telegram',
@@ -28,12 +29,14 @@ export async function recordPhoto(photoBase64: string, fileId: string, filePath:
       image_base64: photoBase64,
       image_path: filePath,
       description,
-    })
+    }),
+  )
 }
 
 export async function findPhotosDescriptions(fileIds: string[]) {
-  return await useDrizzle()
+  return await withDb(db => db
     .select()
     .from(photosTable)
-    .where(inArray(photosTable.file_id, fileIds))
+    .where(inArray(photosTable.file_id, fileIds)),
+  )
 }

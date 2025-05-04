@@ -2,7 +2,7 @@
 
 import { desc, eq } from 'drizzle-orm'
 
-import { useDrizzle } from '../db'
+import { withDb } from '../db'
 import { recentSentStickersTable, stickersTable } from '../db/schema'
 
 export async function findStickerDescription(fileId: string) {
@@ -15,11 +15,12 @@ export async function findStickerDescription(fileId: string) {
 }
 
 export async function findStickerByFileId(fileId: string) {
-  const sticker = await useDrizzle()
+  const sticker = await withDb(db => db
     .select()
     .from(stickersTable)
     .where(eq(stickersTable.file_id, fileId))
-    .limit(1)
+    .limit(1),
+  )
 
   if (sticker.length === 0) {
     return undefined
@@ -29,7 +30,7 @@ export async function findStickerByFileId(fileId: string) {
 }
 
 export async function recordSticker(stickerBase64: string, fileId: string, filePath: string, description: string, name: string, emoji: string, label: string) {
-  await useDrizzle()
+  await withDb(db => db
     .insert(stickersTable)
     .values({
       platform: 'telegram',
@@ -40,12 +41,14 @@ export async function recordSticker(stickerBase64: string, fileId: string, fileP
       name,
       emoji,
       label,
-    })
+    }),
+  )
 }
 
 export async function listRecentSentStickers() {
-  return await useDrizzle()
+  return await withDb(db => db
     .select()
     .from(recentSentStickersTable)
-    .orderBy(desc(recentSentStickersTable.created_at))
+    .orderBy(desc(recentSentStickersTable.created_at)),
+  )
 }

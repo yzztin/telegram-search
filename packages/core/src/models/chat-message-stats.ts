@@ -1,17 +1,18 @@
 import { and, eq } from 'drizzle-orm'
 
-import { useDrizzle } from '../db'
+import { withDb } from '../db'
 import { chatMessageStatsView } from '../db/schema'
 
 export async function getChatMessagesStats() {
-  return await useDrizzle()
+  return withDb(db => db
     .select()
     .from(chatMessageStatsView)
-    .where(eq(chatMessageStatsView.platform, 'telegram'))
+    .where(eq(chatMessageStatsView.platform, 'telegram')),
+  )
 }
 
 export async function getChatMessageStatsByChatId(chatId: string) {
-  return await useDrizzle()
+  return withDb(db => db
     .select()
     .from(chatMessageStatsView)
     .where(
@@ -20,5 +21,6 @@ export async function getChatMessageStatsByChatId(chatId: string) {
         eq(chatMessageStatsView.chat_id, chatId),
       ),
     )
-    .limit(1)
+    .limit(1),
+  )
 }

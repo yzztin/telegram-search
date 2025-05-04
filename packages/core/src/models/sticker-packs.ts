@@ -2,23 +2,25 @@
 
 import { desc } from 'drizzle-orm'
 
-import { useDrizzle } from '../db'
+import { withDb } from '../db'
 import { stickerPacksTable } from '../db/schema'
 
 export async function recordStickerPack(platformId: string, name: string, platform = 'telegram') {
-  await useDrizzle()
+  await withDb(db => db
     .insert(stickerPacksTable)
     .values({
       platform,
       platform_id: platformId,
       name,
       description: '',
-    })
+    }),
+  )
 }
 
 export async function listStickerPacks() {
-  return await useDrizzle()
+  return await withDb(db => db
     .select()
     .from(stickerPacksTable)
-    .orderBy(desc(stickerPacksTable.created_at))
+    .orderBy(desc(stickerPacksTable.created_at)),
+  )
 }
