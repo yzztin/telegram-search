@@ -16,6 +16,8 @@ export interface ConfigEventFromCore {
 
 export type ConfigEvent = ConfigEventFromCore & ConfigEventToCore
 
+export type ConfigService = ReturnType<typeof createConfigService>
+
 export function createConfigService(ctx: CoreContext) {
   const { emitter } = ctx
 

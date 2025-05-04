@@ -25,6 +25,8 @@ export interface ConnectionEventFromCore {
 
 export type ConnectionEvent = ConnectionEventFromCore & ConnectionEventToCore
 
+export type ConnectionService = ReturnType<ReturnType<typeof createConnectionService>>
+
 export function createConnectionService(ctx: CoreContext) {
   const { emitter, withError } = ctx
 

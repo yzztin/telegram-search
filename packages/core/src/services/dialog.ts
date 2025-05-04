@@ -26,6 +26,8 @@ export interface DialogEventFromCore {
 
 export type DialogEvent = DialogEventFromCore & DialogEventToCore
 
+export type DialogService = ReturnType<typeof createDialogService>
+
 export function createDialogService(ctx: CoreContext) {
   const { getClient, emitter } = ctx
 

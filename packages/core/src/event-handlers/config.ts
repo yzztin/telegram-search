@@ -1,5 +1,5 @@
 import type { CoreContext } from '../context'
-import type { createConfigService } from '../services/config'
+import type { ConfigService } from '../services/config'
 
 import { useLogger } from '@tg-search/common'
 
@@ -7,7 +7,7 @@ export function registerConfigEventHandlers(ctx: CoreContext) {
   const { emitter } = ctx
   const logger = useLogger('core:config:event')
 
-  return (configService: ReturnType<typeof createConfigService>) => {
+  return (configService: ConfigService) => {
     emitter.on('config:fetch', async () => {
       logger.debug('Getting config')
 

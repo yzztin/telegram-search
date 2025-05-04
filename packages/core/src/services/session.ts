@@ -18,6 +18,8 @@ export interface SessionEventFromCore {}
 
 export type SessionEvent = SessionEventFromCore & SessionEventToCore
 
+export type SessionService = ReturnType<typeof createSessionService>
+
 // TODO: use Api.SessionManager
 export function createSessionService(ctx: CoreContext) {
   const { withError } = ctx

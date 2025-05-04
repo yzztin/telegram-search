@@ -21,6 +21,8 @@ export interface EntityEventFromCore {
 
 export type EntityEvent = EntityEventFromCore & EntityEventToCore
 
+export type EntityService = ReturnType<typeof createEntityService>
+
 export function createEntityService(ctx: CoreContext) {
   const { getClient, emitter } = ctx
 

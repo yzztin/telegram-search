@@ -44,6 +44,8 @@ export interface TakeoutOpts {
   maxId?: number
 }
 
+export type TakeoutService = ReturnType<typeof createTakeoutService>
+
 // https://core.telegram.org/api/takeout
 export function createTakeoutService(ctx: CoreContext) {
   const { emitter, withError, getClient } = ctx

@@ -1,6 +1,6 @@
 import type { Api } from 'telegram'
 import type { CoreContext } from '../context'
-import type { createTakeoutService } from '../services'
+import type { TakeoutService } from '../services'
 
 import { useLogger } from '@tg-search/common'
 import { useConfig } from '@tg-search/common/composable'
@@ -11,7 +11,7 @@ export function registerTakeoutEventHandlers(ctx: CoreContext) {
   const { emitter } = ctx
   const logger = useLogger('core:takeout:event')
 
-  return (takeoutService: ReturnType<typeof createTakeoutService>) => {
+  return (takeoutService: TakeoutService) => {
     emitter.on('takeout:run', async ({ chatIds }) => {
       logger.withFields({ chatIds }).debug('Running takeout')
       const pagination = usePagination()

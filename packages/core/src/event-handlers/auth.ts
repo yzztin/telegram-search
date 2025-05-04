@@ -1,5 +1,5 @@
 import type { CoreContext } from '../context'
-import type { createConnectionService, createSessionService } from '../services'
+import type { ConnectionService, SessionService } from '../services'
 
 import { useLogger } from '@tg-search/common'
 
@@ -8,8 +8,8 @@ export function registerAuthEventHandlers(ctx: CoreContext) {
   const logger = useLogger('core:auth:event')
 
   return (
-    configuredConnectionService: ReturnType<ReturnType<typeof createConnectionService>>,
-    sessionService: ReturnType<typeof createSessionService>,
+    configuredConnectionService: ConnectionService,
+    sessionService: SessionService,
   ) => {
     emitter.on('auth:login', async ({ phoneNumber }) => {
       const { data: session, error: sessionError } = await sessionService.loadSession(phoneNumber)
