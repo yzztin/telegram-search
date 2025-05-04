@@ -11,11 +11,16 @@ export function getDebugMode() {
 }
 
 export function parseEnvLogLevel(envLogLevel?: string) {
-  const level = envLogLevel ? LogLevel[envLogLevel.toUpperCase() as keyof typeof LogLevel] : undefined
-  if (level)
-    return level
+  envLogLevel = envLogLevel?.toLowerCase()
 
-  return LogLevel.Verbose
+  switch (envLogLevel) {
+    case 'debug':
+      return LogLevel.Debug
+    case 'verbose':
+      return LogLevel.Verbose
+    default:
+      return LogLevel.Log
+  }
 }
 
 export function initLogger(
