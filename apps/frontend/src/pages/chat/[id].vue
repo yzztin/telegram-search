@@ -54,12 +54,8 @@ watch(chatMessages, () => {
 
   nextTick(() => {
     y.value = (containerProps.ref.value?.scrollHeight ?? 0) - lastMessagePosition.value
+    messageOffset.value += messageLimit.value
   })
-})
-
-onMounted(() => {
-  messageStore.fetchMessagesWithDatabase(id.toString(), { offset: messageOffset.value, limit: messageLimit.value })
-  messageOffset.value += messageLimit.value
 })
 
 // TODO: useInfiniteScroll?
@@ -68,7 +64,6 @@ watch(y, () => {
     isLoadingMessages.value = true
 
     messageStore.fetchMessagesWithDatabase(id.toString(), { offset: messageOffset.value, limit: messageLimit.value })
-    messageOffset.value += messageLimit.value
 
     isLoadingMessages.value = false
   }
