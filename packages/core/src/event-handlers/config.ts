@@ -9,13 +9,13 @@ export function registerConfigEventHandlers(ctx: CoreContext) {
 
   return (configService: ConfigService) => {
     emitter.on('config:fetch', async () => {
-      logger.debug('Getting config')
+      logger.log('Getting config')
 
       configService.fetchConfig()
     })
 
     emitter.on('config:update', async ({ config }) => {
-      logger.debug('Saving config')
+      logger.log('Saving config')
 
       configService.updateConfig(config)
     })

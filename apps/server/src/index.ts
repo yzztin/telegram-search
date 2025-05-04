@@ -21,7 +21,7 @@ async function initCore(): Promise<ReturnType<typeof useLogger>> {
 
   try {
     await initDrizzle()
-    logger.debug('Database initialized successfully')
+    logger.log('Database initialized successfully')
   }
   catch (error) {
     logger.withError(error).error('Failed to initialize services')
@@ -51,7 +51,7 @@ function configureServer(logger: ReturnType<typeof useLogger>) {
       logger.withFields({
         method,
         path,
-      }).debug('Request started')
+      }).log('Request started')
     },
     onError(error, event) {
       const path = event.path
@@ -119,7 +119,7 @@ async function bootstrap() {
   // const server = createServer(listener).listen(port)
   // server.on('upgrade', handleUpgrade)
 
-  logger.debug('Server started')
+  logger.log('Server started')
 
   const shutdown = () => process.exit(0)
   process.on('SIGINT', shutdown)

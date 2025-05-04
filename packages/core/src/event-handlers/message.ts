@@ -15,7 +15,7 @@ export function registerMessageEventHandlers(ctx: CoreContext) {
     })
 
     emitter.on('message:fetch', async ({ chatId, pagination }) => {
-      logger.withFields({ chatId }).debug('Fetching messages')
+      logger.withFields({ chatId }).log('Fetching messages')
       const batchSize = useConfig().message.batch.size
 
       let messages: Api.Message[] = []
@@ -34,9 +34,9 @@ export function registerMessageEventHandlers(ctx: CoreContext) {
     })
 
     emitter.on('message:send', async ({ chatId, content }) => {
-      logger.withFields({ chatId, content }).debug('Sending message')
+      logger.withFields({ chatId, content }).log('Sending message')
       const message = await messageService.sendMessage(chatId, content)
-      logger.withFields({ message }).debug('Message sent')
+      logger.withFields({ message }).log('Message sent')
     })
   }
 }

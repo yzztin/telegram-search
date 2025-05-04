@@ -38,7 +38,7 @@ export function createSessionService(ctx: CoreContext) {
 
     try {
       await unlink(sessionFilePath)
-      logger.withFields({ sessionFile: sessionFilePath, phoneNumber }).debug('Deleted session file')
+      logger.withFields({ sessionFile: sessionFilePath, phoneNumber }).log('Deleted session file')
       return withResult(null, null)
     }
     catch (error) {
@@ -50,7 +50,7 @@ export function createSessionService(ctx: CoreContext) {
     loadSession: async (phoneNumber: string): PromiseResult<StringSession> => {
       const sessionFilePath = getSessionFilePath(phoneNumber)
 
-      logger.withFields({ sessionFilePath, phoneNumber }).debug('Loading session from file')
+      logger.withFields({ sessionFilePath, phoneNumber }).log('Loading session from file')
 
       try {
         // Ensure session directory exists
@@ -85,7 +85,7 @@ export function createSessionService(ctx: CoreContext) {
         }
 
         await writeFile(sessionFilePath, session, 'utf-8')
-        logger.withFields({ sessionFilePath, phoneNumber }).debug('Saving session to file')
+        logger.withFields({ sessionFilePath, phoneNumber }).log('Saving session to file')
         return withResult(null, null)
       }
       catch (error) {

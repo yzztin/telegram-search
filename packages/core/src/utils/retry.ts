@@ -23,7 +23,7 @@ export function withRetry<T>(fn: () => Promise<T>, options: {
       const totalDelay = delay + jitter
 
       retries++
-      logger.withFields({ retries, maxRetries, delay, jitter, totalDelay, fn: fn.name }).debug('Retry attempt')
+      logger.withFields({ retries, maxRetries, delay, jitter, totalDelay, fn: fn.name }).log('Retry attempt')
 
       return new Promise(resolve =>
         setTimeout(() => resolve(attempt()), totalDelay),

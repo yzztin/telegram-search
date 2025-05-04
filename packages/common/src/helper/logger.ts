@@ -4,7 +4,7 @@ import { Format, LogLevel, setGlobalFormat, setGlobalLogLevel, useLogg } from '@
 export type Logger = ReturnType<typeof useLogg>
 
 export function initLogger() {
-  setGlobalLogLevel(LogLevel.Debug)
+  setGlobalLogLevel(LogLevel.Verbose)
   setGlobalFormat(Format.Pretty)
 
   const logger = useLogg('logger').useGlobalConfig()

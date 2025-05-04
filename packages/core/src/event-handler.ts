@@ -82,7 +82,7 @@ export function useEventHandler(
   const logger = useLogger()
 
   function register(fn: EventHandler) {
-    logger.withFields({ fn: fn.name }).debug('Register event handler')
+    logger.withFields({ fn: fn.name }).log('Register event handler')
     fn(ctx, config)
   }
 

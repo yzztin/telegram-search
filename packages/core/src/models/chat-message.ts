@@ -8,7 +8,7 @@ import { env } from 'node:process'
 import { useLogger } from '@tg-search/common'
 import { and, cosineDistance, desc, eq, gt, inArray, lt, ne, notInArray, sql } from 'drizzle-orm'
 
-import { useDrizzle } from '../db'
+import { withDb } from '../db'
 import { chatMessagesTable } from '../db/schema'
 import { chatMessageToOneLine } from './common'
 
@@ -70,22 +70,24 @@ export async function recordMessagesWithoutEmbedding(messages: CoreMessage[]) {
     return
   }
 
-  await useDrizzle()
+  await withDb(db => db
     .insert(chatMessagesTable)
     .values(dbMessages)
     .onConflictDoNothing({
       target: [chatMessagesTable.platform_message_id],
-    })
+    }),
+  )
 }
 
 export async function fetchMessages(chatId: string, pagination: CorePagination) {
-  const dbMessagesResults = await useDrizzle()
+  const dbMessagesResults = await withDb(db => db
     .select()
     .from(chatMessagesTable)
     .where(eq(chatMessagesTable.in_chat_id, chatId))
     .orderBy(desc(chatMessagesTable.created_at))
     .limit(pagination.limit)
-    .offset(pagination.offset)
+    .offset(pagination.offset),
+  )
 
   const coreMessages = dbMessagesResults.map((message) => {
     return {
@@ -127,18 +129,18 @@ export async function fetchMessages(chatId: string, pagination: CorePagination) 
 }
 
 export async function findLastNMessages(chatId: string, n: number) {
-  const res = await useDrizzle()
+  const res = await withDb(db => db
     .select()
     .from(chatMessagesTable)
     .where(eq(chatMessagesTable.in_chat_id, chatId))
     .orderBy(desc(chatMessagesTable.created_at))
-    .limit(n)
+    .limit(n),
+  )
 
   return res.reverse()
 }
 
 export async function findRelevantMessages(botId: string, chatId: string, unreadHistoryMessagesEmbedding: { embedding: number[] }[], excludeMessageIds: string[] = []) {
-  const db = useDrizzle()
   const contextWindowSize = 10 // Number of messages to include before and after
   const logger = useLogger('findRelevantMessages').useGlobalConfig().withField('chatId', chatId)
 
@@ -165,7 +167,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
     const combinedScore = sql<number>`((1.2 * ${similarity}) + (0.2 * ${timeRelevance}))`
 
     // Get top messages with similarity above threshold
-    const relevantMessages = await db
+    const relevantMessages = await withDb(db => db
       .select({
         id: chatMessagesTable.id,
         platform: chatMessagesTable.platform,
@@ -191,7 +193,8 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
         notInArray(chatMessagesTable.platform_message_id, excludeMessageIds),
       ))
       .orderBy(desc(sql`combined_score`))
-      .limit(3)
+      .limit(3),
+    )
 
     logger.withField('number_of_relevant_messages', relevantMessages.length).log('Successfully found relevant chat messages')
 
@@ -199,7 +202,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
     const relevantMessagesContext = await Promise.all(
       relevantMessages.map(async (message) => {
         // Get N messages before the target message
-        const messagesBefore = await db
+        const messagesBefore = await withDb(db => db
           .select({
             id: chatMessagesTable.id,
             platform: chatMessagesTable.platform,
@@ -222,10 +225,11 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
             notInArray(chatMessagesTable.platform_message_id, excludeMessageIds),
           ))
           .orderBy(desc(chatMessagesTable.created_at))
-          .limit(contextWindowSize)
+          .limit(contextWindowSize),
+        )
 
         // Get N messages after the target message
-        const messagesAfter = await db
+        const messagesAfter = await withDb(db => db
           .select({
             id: chatMessagesTable.id,
             platform: chatMessagesTable.platform,
@@ -248,7 +252,8 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
             notInArray(chatMessagesTable.platform_message_id, excludeMessageIds),
           ))
           .orderBy(chatMessagesTable.created_at)
-          .limit(contextWindowSize)
+          .limit(contextWindowSize),
+        )
 
         // Combine all messages in chronological order
         return [
@@ -298,9 +303,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
 }
 
 export async function findMessagesByIDs(messageIds: string[]) {
-  const db = useDrizzle()
-
-  return await db
+  return await withDb(db => db
     .select()
     .from(chatMessagesTable)
     .where(
@@ -309,5 +312,6 @@ export async function findMessagesByIDs(messageIds: string[]) {
         eq(chatMessagesTable.platform, 'telegram'),
         ne(chatMessagesTable.platform_message_id, ''),
       ),
-    )
+    ),
+  )
 }

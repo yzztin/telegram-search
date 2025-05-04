@@ -13,7 +13,7 @@ export function registerTakeoutEventHandlers(ctx: CoreContext) {
 
   return (takeoutService: TakeoutService) => {
     emitter.on('takeout:run', async ({ chatIds }) => {
-      logger.withFields({ chatIds }).debug('Running takeout')
+      logger.withFields({ chatIds }).log('Running takeout')
       const pagination = usePagination()
       const batchSize = useConfig().message.batch.size
       let messages: Api.Message[] = []

@@ -17,7 +17,7 @@ export function registerAuthEventHandlers(ctx: CoreContext) {
         return withError(sessionError, 'Failed to load session')
       }
 
-      logger.withFields({ session }).debug('Loaded session')
+      logger.withFields({ session }).log('Loaded session')
 
       const { error: loginError } = await configuredConnectionService.login({ phoneNumber, session })
       if (loginError) {
@@ -26,7 +26,7 @@ export function registerAuthEventHandlers(ctx: CoreContext) {
     })
 
     emitter.on('auth:logout', async () => {
-      logger.debug('Logged out from Telegram')
+      logger.log('Logged out from Telegram')
       const client = ctx.getClient()
       if (client) {
         await configuredConnectionService.logout(client)

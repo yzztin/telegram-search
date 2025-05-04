@@ -147,7 +147,7 @@ export function createTakeoutService(ctx: CoreContext) {
           hash = hash ^ (hash >> 4n)
           hash = hash + id
 
-          // logger.debug(`get takeout message ${options?.minId}-${options?.maxId}`)
+          // logger.log(`get takeout message ${options?.minId}-${options?.maxId}`)
 
           const historyQuery = new Api.messages.GetHistory({
             peer: await getClient().getInputEntity(chatId),
@@ -159,7 +159,7 @@ export function createTakeoutService(ctx: CoreContext) {
             hash: bigInt(hash.toString()),
           })
 
-          logger.withFields({ historyQuery }).debug('message query')
+          logger.withFields({ historyQuery }).log('message query')
 
           // emitter.emit('takeout:progress', {
           //   taskId: 'takeout',
@@ -223,7 +223,7 @@ export function createTakeoutService(ctx: CoreContext) {
 
         await finishTakeout(takeoutSession, true)
         emitProgress(taskId, 100)
-        logger.withFields({ taskId }).debug('Takeout messages finished')
+        logger.withFields({ taskId }).log('Takeout messages finished')
       }
       catch (error) {
         logger.withError(error).error('Takeout messages failed')

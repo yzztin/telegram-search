@@ -74,7 +74,7 @@ export function createDialogService(ctx: CoreContext) {
       })
     }
 
-    useLogger().withFields({ count: dialogs.length }).debug('Fetched dialogs')
+    useLogger().withFields({ count: dialogs.length }).log('Fetched dialogs')
 
     emitter.emit('dialog:data', { dialogs })
 

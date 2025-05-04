@@ -24,7 +24,7 @@ export async function useConfigPath(): Promise<string> {
 
   const configPath = resolve(workspaceDir, 'config', 'config.yaml')
 
-  logger.withFields({ configPath }).debug('Config path')
+  logger.withFields({ configPath }).log('Config path')
 
   const defaultConfig = generateDefaultConfig()
   if (!existsSync(configPath)) {
@@ -41,7 +41,7 @@ export function getSessionPath(storagePath: string) {
     mkdirSync(sessionPath, { recursive: true })
   }
 
-  logger.withFields({ sessionPath }).debug('Session path')
+  logger.withFields({ sessionPath }).log('Session path')
 
   return sessionPath
 }
@@ -52,7 +52,7 @@ export function getMediaPath(storagePath: string) {
     mkdirSync(mediaPath, { recursive: true })
   }
 
-  logger.withFields({ mediaPath }).debug('Media path')
+  logger.withFields({ mediaPath }).log('Media path')
   return mediaPath
 }
 
@@ -73,7 +73,7 @@ export function resolveStoragePath(path: string): string {
 export async function initConfig(): Promise<Config> {
   const configPath = await useConfigPath()
   const storagePath = resolveStoragePath(join(homedir(), '.telegram-search'))
-  logger.withFields({ storagePath }).debug('Storage path')
+  logger.withFields({ storagePath }).log('Storage path')
 
   const configData = readFileSync(configPath, 'utf-8')
   const configParsedData = parse(configData)
@@ -91,7 +91,7 @@ export async function initConfig(): Promise<Config> {
 
   config = validatedConfig.output
 
-  logger.withFields(config).debug('Config loaded')
+  logger.withFields(config).log('Config loaded')
   return config
 }
 
@@ -109,7 +109,7 @@ export async function updateConfig(newConfig: Partial<Config>): Promise<Config> 
   validatedConfig.output.database.url = getDatabaseDSN(validatedConfig.output)
   validatedConfig.output.path.storage = resolveStoragePath(validatedConfig.output.path.storage)
 
-  logger.withFields({ config: validatedConfig.output }).debug('Updating config')
+  logger.withFields({ config: validatedConfig.output }).log('Updating config')
   writeFileSync(configPath, stringify(validatedConfig.output))
 
   config = validatedConfig.output

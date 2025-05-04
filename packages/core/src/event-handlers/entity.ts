@@ -9,7 +9,7 @@ export function registerEntityEventHandlers(ctx: CoreContext) {
 
   return (entityService: EntityService) => {
     emitter.on('entity:me:fetch', async () => {
-      logger.debug('Getting me info')
+      logger.log('Getting me info')
       await entityService.getMeInfo()
     })
   }

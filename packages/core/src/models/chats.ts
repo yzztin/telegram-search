@@ -4,19 +4,20 @@ import type { CoreDialog } from '../services/dialog'
 
 import { eq, sql } from 'drizzle-orm'
 
-import { useDrizzle } from '../db'
+import { withDb } from '../db'
 import { joinedChatsTable } from '../db/schema'
 
 export async function listJoinedChats() {
-  return await useDrizzle()
+  return withDb(db => db
     .select()
     .from(joinedChatsTable)
-    .where(eq(joinedChatsTable.platform, 'telegram'))
+    .where(eq(joinedChatsTable.platform, 'telegram')),
+  )
 }
 
 export async function recordJoinedChats(chats: CoreDialog[]) {
   // TODO: better way to do this?
-  return useDrizzle()
+  return withDb(db => db
     .insert(joinedChatsTable)
     .values(chats.map(chat => ({
       platform: 'telegram',
@@ -30,5 +31,6 @@ export async function recordJoinedChats(chats: CoreDialog[]) {
         chat_name: sql`excluded.chat_name`,
         updated_at: Date.now(),
       },
-    })
+    }),
+  )
 }

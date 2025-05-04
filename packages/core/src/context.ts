@@ -60,7 +60,7 @@ export function createCoreContext() {
         return _on(event, listener)
       }
 
-      useLogger().withFields({ event }).debug('Register to core event')
+      useLogger().withFields({ event }).log('Register to core event')
 
       toCoreEvents.add(event as keyof ToCoreEvent)
       fn(event as keyof ToCoreEvent)
@@ -77,7 +77,7 @@ export function createCoreContext() {
         return _emit(event, ...args)
       }
 
-      useLogger().withFields({ event }).debug('Register from core event')
+      useLogger().withFields({ event }).log('Register from core event')
 
       fromCoreEvents.add(event as keyof FromCoreEvent)
       fn(event as keyof FromCoreEvent)
@@ -87,7 +87,7 @@ export function createCoreContext() {
   }
 
   function setClient(client: TelegramClient) {
-    useLogger().debug('Setted Telegram client')
+    useLogger().log('Setted Telegram client')
     telegramClient = client
   }
 
@@ -112,6 +112,6 @@ export function createCoreContext() {
 }
 
 export function useService<T>(ctx: CoreContext, fn: Service<T>) {
-  useLogger().withFields({ fn: fn.name }).debug('Register service')
+  useLogger().withFields({ fn: fn.name }).log('Register service')
   return fn(ctx)
 }

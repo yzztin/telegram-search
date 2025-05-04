@@ -35,7 +35,7 @@ export function setupWsRoutes(app: App) {
     let state: ClientState
 
     if (!clientStatesBySession.has(sessionId)) {
-      logger.withFields({ sessionId }).debug('Session created')
+      logger.withFields({ sessionId }).log('Session created')
 
       const ctx = createCoreInstance()
       state = {
@@ -46,7 +46,7 @@ export function setupWsRoutes(app: App) {
       clientStatesBySession.set(sessionId, state)
     }
     else {
-      logger.withFields({ sessionId }).debug('Session restored')
+      logger.withFields({ sessionId }).log('Session restored')
 
       state = clientStatesBySession.get(sessionId)!
     }
@@ -80,9 +80,9 @@ export function setupWsRoutes(app: App) {
     async open(peer) {
       const { state, sessionId } = updatePeerSessionState(peer)
 
-      logger.withFields({ peerId: peer.id }).debug('Websocket connection opened')
+      logger.withFields({ peerId: peer.id }).log('Websocket connection opened')
       state.ctx?.wrapEmitterEmit(state.ctx?.emitter, (event) => {
-        useLogger('core:event').withFields({ event }).debug('Core event emitted')
+        useLogger('core:event').withFields({ event }).log('Core event emitted')
       })
 
       sendWsEvent(peer, 'server:connected', { sessionId, connected: state.isConnected })
@@ -97,7 +97,7 @@ export function setupWsRoutes(app: App) {
 
       const event = message.json<WsMessageToServer>()
 
-      logger.withFields({ type: event.type }).debug('Message received')
+      logger.withFields({ type: event.type }).log('Message received')
 
       try {
         if (event.type === 'server:event:register') {
@@ -105,7 +105,7 @@ export function setupWsRoutes(app: App) {
             const eventName = event.data.event as keyof FromCoreEvent
 
             const fn = (data: WsEventToClientData<keyof FromCoreEvent>) => {
-              logger.withFields({ eventName }).debug('Sending event to client')
+              logger.withFields({ eventName }).log('Sending event to client')
               sendWsEvent(peer, eventName, data)
             }
 
@@ -135,7 +135,7 @@ export function setupWsRoutes(app: App) {
     },
 
     close(peer) {
-      logger.withFields({ peerId: peer.id }).debug('Websocket connection closed')
+      logger.withFields({ peerId: peer.id }).log('Websocket connection closed')
 
       const { state } = usePeerSessionState(peer)
       eventListenersByPeer.get(peer.id)?.forEach((fn, eventName) => {

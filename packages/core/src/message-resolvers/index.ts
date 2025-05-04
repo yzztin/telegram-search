@@ -14,13 +14,13 @@ export interface MessageResolver {
 export type MessageResolverRegistryFn = ReturnType<typeof useMessageResolverRegistry>
 
 export function useMessageResolverRegistry() {
-  const logger = useLogger()
+  const logger = useLogger('core:message-resolver:registry')
 
   const registry = new Map<string, MessageResolver>()
 
   return {
     register: (name: string, resolver: MessageResolver) => {
-      logger.withFields({ name }).debug('Register resolver')
+      logger.withFields({ name }).log('Register resolver')
       registry.set(name, resolver)
     },
 

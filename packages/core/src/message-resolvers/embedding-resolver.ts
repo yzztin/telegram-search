@@ -8,14 +8,14 @@ import { embedMany } from '@xsai/embed'
 import { withResult } from '../utils/result'
 
 export function createEmbeddingResolver(): MessageResolver {
-  const logger = useLogger()
+  const logger = useLogger('core:message-resolver:embedding')
 
   const config = useConfig()
   const embedding = config.api.embedding
 
   return {
     run: async (opts: MessageResolverOpts) => {
-      logger.debug('Embedding resolver', opts)
+      logger.withFields({ opts }).log('Embedding resolver')
 
       if (opts.messages.length === 0)
         return withResult(null, 'No messages')

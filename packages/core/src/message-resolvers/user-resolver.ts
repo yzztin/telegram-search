@@ -5,11 +5,11 @@ import { useLogger } from '@tg-search/common'
 import { withResult } from '../utils/result'
 
 export function createUserResolver(): MessageResolver {
-  const logger = useLogger()
+  const logger = useLogger('core:message-resolver:user')
 
   return {
     run: async (opts: MessageResolverOpts) => {
-      logger.debug('User resolver', opts)
+      logger.withFields({ opts }).log('User resolver')
 
       return withResult(null, null)
     },
