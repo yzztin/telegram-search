@@ -4,6 +4,8 @@ import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 
+import { Err, Ok } from '../utils/monad'
+
 export type CoreDB = ReturnType<typeof drizzle>
 let dbInstance: CoreDB
 
@@ -21,7 +23,7 @@ export async function initDrizzle() {
     },
   })
 
-  dbInstance = drizzle(client)
+  dbInstance = drizzle(client, { logger: true })
 
   // Check the db connection
   try {
@@ -41,14 +43,32 @@ function useDrizzle() {
   return dbInstance
 }
 
+// export async function withDb<T>(
+//   fn: (db: CoreDB) => Promise<T>,
+// ) {
+//   try {
+//     return await withResult(fn(useDrizzle()), null)
+//   }
+//   catch (error) {
+//     useLogger().withError(error).error('Failed to execute database operation')
+//   }
+// }
+
 export async function withDb<T>(
-  fn: (db: ReturnType<typeof drizzle>) => Promise<T>,
+  fn: (db: CoreDB) => Promise<T>,
 ) {
   try {
-    return fn(useDrizzle())
+    throw new Error('async error test')
+    return Ok(await fn(useDrizzle()))
   }
   catch (error) {
-    useLogger().withError(error).error('Failed to execute database operation')
-    throw error
+    // useLogger().withError(error).error('Failed to execute database operation')
+    return Err<T>(error)
   }
 }
+
+// export function withDb2<T>(
+//   fn: (db: CoreDB) => Promise<T>,
+// ): Future<T> {
+//   return Async(async () => fn(useDrizzle()))
+// }

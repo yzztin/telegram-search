@@ -6,12 +6,12 @@ import { withDb } from '../db'
 import { photosTable } from '../db/schema'
 
 export async function findPhotoDescription(fileId: string) {
-  const photo = await withDb(db => db
+  const photo = (await withDb(db => db
     .select()
     .from(photosTable)
     .where(eq(photosTable.file_id, fileId))
     .limit(1),
-  )
+  )).expect('Failed to find photo description')
 
   if (photo.length === 0) {
     return ''
@@ -21,7 +21,7 @@ export async function findPhotoDescription(fileId: string) {
 }
 
 export async function recordPhoto(photoBase64: string, fileId: string, filePath: string, description: string) {
-  await withDb(db => db
+  (await withDb(db => db
     .insert(photosTable)
     .values({
       platform: 'telegram',
@@ -30,13 +30,13 @@ export async function recordPhoto(photoBase64: string, fileId: string, filePath:
       image_path: filePath,
       description,
     }),
-  )
+  )).expect('Failed to record photo')
 }
 
 export async function findPhotosDescriptions(fileIds: string[]) {
-  return await withDb(db => db
+  return (await withDb(db => db
     .select()
     .from(photosTable)
     .where(inArray(photosTable.file_id, fileIds)),
-  )
+  )).expect('Failed to find photos descriptions')
 }

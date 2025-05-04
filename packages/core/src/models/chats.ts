@@ -8,16 +8,16 @@ import { withDb } from '../db'
 import { joinedChatsTable } from '../db/schema'
 
 export async function listJoinedChats() {
-  return withDb(db => db
+  return (await withDb(db => db
     .select()
     .from(joinedChatsTable)
     .where(eq(joinedChatsTable.platform, 'telegram')),
-  )
+  )).expect('Failed to list joined chats')
 }
 
 export async function recordJoinedChats(chats: CoreDialog[]) {
   // TODO: better way to do this?
-  return withDb(db => db
+  return (await withDb(db => db
     .insert(joinedChatsTable)
     .values(chats.map(chat => ({
       platform: 'telegram',
@@ -32,5 +32,5 @@ export async function recordJoinedChats(chats: CoreDialog[]) {
         updated_at: Date.now(),
       },
     }),
-  )
+  )).expect('Failed to record joined chats')
 }

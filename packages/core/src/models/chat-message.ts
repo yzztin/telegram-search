@@ -80,14 +80,14 @@ export async function recordMessagesWithoutEmbedding(messages: CoreMessage[]) {
 }
 
 export async function fetchMessages(chatId: string, pagination: CorePagination) {
-  const dbMessagesResults = await withDb(db => db
+  const dbMessagesResults = (await withDb(db => db
     .select()
     .from(chatMessagesTable)
     .where(eq(chatMessagesTable.in_chat_id, chatId))
     .orderBy(desc(chatMessagesTable.created_at))
     .limit(pagination.limit)
     .offset(pagination.offset),
-  )
+  )).expect('Failed to fetch messages')
 
   const coreMessages = dbMessagesResults.map((message) => {
     return {
@@ -129,13 +129,13 @@ export async function fetchMessages(chatId: string, pagination: CorePagination) 
 }
 
 export async function findLastNMessages(chatId: string, n: number) {
-  const res = await withDb(db => db
+  const res = (await withDb(db => db
     .select()
     .from(chatMessagesTable)
     .where(eq(chatMessagesTable.in_chat_id, chatId))
     .orderBy(desc(chatMessagesTable.created_at))
     .limit(n),
-  )
+  )).expect('Failed to fetch last N messages')
 
   return res.reverse()
 }
@@ -167,7 +167,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
     const combinedScore = sql<number>`((1.2 * ${similarity}) + (0.2 * ${timeRelevance}))`
 
     // Get top messages with similarity above threshold
-    const relevantMessages = await withDb(db => db
+    const relevantMessages = (await withDb(db => db
       .select({
         id: chatMessagesTable.id,
         platform: chatMessagesTable.platform,
@@ -194,7 +194,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
       ))
       .orderBy(desc(sql`combined_score`))
       .limit(3),
-    )
+    )).expect('Failed to fetch relevant messages')
 
     logger.withField('number_of_relevant_messages', relevantMessages.length).log('Successfully found relevant chat messages')
 
@@ -202,7 +202,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
     const relevantMessagesContext = await Promise.all(
       relevantMessages.map(async (message) => {
         // Get N messages before the target message
-        const messagesBefore = await withDb(db => db
+        const messagesBefore = (await withDb(db => db
           .select({
             id: chatMessagesTable.id,
             platform: chatMessagesTable.platform,
@@ -226,10 +226,10 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
           ))
           .orderBy(desc(chatMessagesTable.created_at))
           .limit(contextWindowSize),
-        )
+        )).expect('Failed to fetch messages before')
 
         // Get N messages after the target message
-        const messagesAfter = await withDb(db => db
+        const messagesAfter = (await withDb(db => db
           .select({
             id: chatMessagesTable.id,
             platform: chatMessagesTable.platform,
@@ -253,7 +253,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
           ))
           .orderBy(chatMessagesTable.created_at)
           .limit(contextWindowSize),
-        )
+        )).expect('Failed to fetch messages after')
 
         // Combine all messages in chronological order
         return [
@@ -303,7 +303,7 @@ export async function findRelevantMessages(botId: string, chatId: string, unread
 }
 
 export async function findMessagesByIDs(messageIds: string[]) {
-  return await withDb(db => db
+  return (await withDb(db => db
     .select()
     .from(chatMessagesTable)
     .where(
@@ -313,5 +313,5 @@ export async function findMessagesByIDs(messageIds: string[]) {
         ne(chatMessagesTable.platform_message_id, ''),
       ),
     ),
-  )
+  )).expect('Failed to fetch messages by IDs')
 }

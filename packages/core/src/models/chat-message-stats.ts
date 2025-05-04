@@ -4,15 +4,15 @@ import { withDb } from '../db'
 import { chatMessageStatsView } from '../db/schema'
 
 export async function getChatMessagesStats() {
-  return withDb(db => db
+  return (await withDb(db => db
     .select()
     .from(chatMessageStatsView)
     .where(eq(chatMessageStatsView.platform, 'telegram')),
-  )
+  )).expect('Failed to fetch chat message stats')
 }
 
 export async function getChatMessageStatsByChatId(chatId: string) {
-  return withDb(db => db
+  return (await withDb(db => db
     .select()
     .from(chatMessageStatsView)
     .where(
@@ -22,5 +22,5 @@ export async function getChatMessageStatsByChatId(chatId: string) {
       ),
     )
     .limit(1),
-  )
+  )).expect('Failed to fetch chat message stats by chat ID')
 }
