@@ -1,5 +1,6 @@
 import type { EntityLike } from 'telegram/define'
 import type { CoreContext } from '../context'
+import type { MessageResolverRegistryFn } from '../message-resolvers'
 import type { CoreMessage } from '../utils/message'
 import type { CorePagination } from '../utils/pagination'
 import type { PromiseResult } from '../utils/result'
@@ -46,160 +47,174 @@ export interface FetchMessageOpts {
   maxId?: number
 }
 
+export type MessageService = ReturnType<ReturnType<typeof createMessageService>>
+
 export function createMessageService(ctx: CoreContext) {
-  const { emitter, getClient, withError } = ctx
+  const logger = useLogger('core:message:service')
 
-  // TODO: worker_threads?
-  function processMessages(messages: Api.Message[]) {
-    useLogger().withFields({ count: messages.length }).debug('Process messages')
+  return (resolvers: MessageResolverRegistryFn) => {
+    const { emitter, getClient, withError } = ctx
 
-    const coreMessages = messages
-      .map(message => convertToCoreMessage(message))
-      .filter(message => message !== null)
+    // TODO: worker_threads?
+    async function processMessages(messages: Api.Message[]) {
+      logger.withFields({ count: messages.length }).debug('Process messages')
 
-    emitter.emit('message:data', { messages: coreMessages })
-    emitter.emit('storage:record:messages', { messages: coreMessages })
-  }
+      const coreMessages = messages
+        .map(message => convertToCoreMessage(message))
+        .filter(message => message !== null)
 
-  async function getHistory(chatId: EntityLike): PromiseResult<(Api.messages.TypeMessages & { count: number }) | null> {
-    try {
-      const history = await withRetry(
-        () => getClient().invoke(new Api.messages.GetHistory({
-          peer: chatId,
-          limit: 1,
-          offsetId: 0,
-          offsetDate: 0,
-          addOffset: 0,
-          maxId: 0,
-          minId: 0,
-          hash: bigInt(0),
-        })),
-      ) as Api.messages.TypeMessages & { count: number }
+      let emitMessages: CoreMessage[] = coreMessages
+      for (const [name, resolver] of resolvers.registry.entries()) {
+        logger.withFields({ name }).debug('Process messages with resolver')
 
-      return withResult(history, null)
-    }
-    catch (error) {
-      return withResult(null, withError(error, 'Failed to get history'))
-    }
-  }
+        const { data } = await resolver.run({ messages: emitMessages })
+        emitMessages = data || emitMessages
+      }
 
-  async function* fetchMessages(
-    chatId: string,
-    options: Omit<FetchMessageOpts, 'chatId'>,
-  ): AsyncGenerator<Api.Message> {
-    if (!await getClient().isUserAuthorized()) {
-      useLogger().error('User not authorized')
-      return
+      emitter.emit('message:data', { messages: emitMessages })
+      emitter.emit('storage:record:messages', { messages: emitMessages })
     }
 
-    let offsetId = 0
-    let hasMore = true
-    let processedCount = 0
-
-    const limit = options.pagination.limit
-    const minId = options?.minId
-    const maxId = options?.maxId
-    const startTime = options?.startTime
-    const endTime = options?.endTime
-
-    useLogger().withFields({
-      chatId,
-      limit,
-      offsetId,
-      minId,
-      maxId,
-      startTime,
-      endTime,
-    }).debug('Fetch messages options')
-
-    // const entity = await getClient().getInputEntity(Number(chatId))
-
-    // const dialog = await getClient().invoke(new Api.messages.GetPeerDialogs({
-    //   peers: [new Api.PeerChat({ chatId: BigInt(Number(chatId)) })],
-    // }))
-    // useLogger().withFields({ chatId, name: dialog.peer.className, json: dialog.toJSON() }).debug('Got dialog')
-
-    const { data: history, error } = await getHistory(chatId)
-    if (error || !history) {
-      return
-    }
-
-    useLogger().withFields({ chatId, count: history?.count }).debug('Got history')
-
-    // await getClient().getDialogs()
-
-    // const chat = dialogs.find(d => d.id?.toString() === chatId)
-    // if (!chat) {
-    //   throw new Error(`Chat not found: ${chatId}`)
-    // }
-
-    // TODO: Abort signal
-    while (hasMore) {
+    async function getHistory(chatId: EntityLike): PromiseResult<(Api.messages.TypeMessages & { count: number }) | null> {
       try {
-        const messages = await withRetry(
-          () => getClient().getMessages(chatId, {
-            limit,
-            offsetId,
-            minId,
-            maxId,
-            addOffset: options.pagination.offset, // TODO: rename this
-          }),
-        )
+        const history = await withRetry(
+          () => getClient().invoke(new Api.messages.GetHistory({
+            peer: chatId,
+            limit: 1,
+            offsetId: 0,
+            offsetDate: 0,
+            addOffset: 0,
+            maxId: 0,
+            minId: 0,
+            hash: bigInt(0),
+          })),
+        ) as Api.messages.TypeMessages & { count: number }
 
-        if (messages.length === 0) {
-          useLogger().error('Get messages failed or returned empty data')
-          return withResult(null, new Error('Get messages failed or returned empty data'))
-        }
-
-        // If we got fewer messages than requested, there are no more
-        hasMore = messages.length === limit
-
-        for (const message of messages) {
-          // Skip empty messages
-          if (message instanceof Api.MessageEmpty) {
-            continue
-          }
-
-          // Check time range
-          const messageTime = new Date(message.date * 1000)
-          if (startTime && messageTime < startTime) {
-            continue
-          }
-          if (endTime && messageTime > endTime) {
-            continue
-          }
-
-          yield message
-          processedCount++
-
-          // Update offsetId to current message ID
-          offsetId = message.id
-
-          // Check if we've reached the limit
-          if (limit && processedCount >= limit) {
-            return
-          }
-        }
+        return withResult(history, null)
       }
       catch (error) {
-        return withResult(null, withError(error, 'Fetch messages failed'))
+        return withResult(null, withError(error, 'Failed to get history'))
       }
     }
-  }
 
-  async function sendMessage(chatId: string, content: string) {
-    const message = await withRetry(() => getClient().invoke(new Api.messages.SendMessage({
-      peer: chatId,
-      message: content,
-    })))
+    async function* fetchMessages(
+      chatId: string,
+      options: Omit<FetchMessageOpts, 'chatId'>,
+    ): AsyncGenerator<Api.Message> {
+      if (!await getClient().isUserAuthorized()) {
+        logger.error('User not authorized')
+        return
+      }
 
-    return withResult(message, null)
-  }
+      let offsetId = 0
+      let hasMore = true
+      let processedCount = 0
 
-  return {
-    processMessages,
-    getHistory,
-    fetchMessages,
-    sendMessage,
+      const limit = options.pagination.limit
+      const minId = options?.minId
+      const maxId = options?.maxId
+      const startTime = options?.startTime
+      const endTime = options?.endTime
+
+      logger.withFields({
+        chatId,
+        limit,
+        offsetId,
+        minId,
+        maxId,
+        startTime,
+        endTime,
+      }).debug('Fetch messages options')
+
+      // const entity = await getClient().getInputEntity(Number(chatId))
+
+      // const dialog = await getClient().invoke(new Api.messages.GetPeerDialogs({
+      //   peers: [new Api.PeerChat({ chatId: BigInt(Number(chatId)) })],
+      // }))
+      // logger.withFields({ chatId, name: dialog.peer.className, json: dialog.toJSON() }).debug('Got dialog')
+
+      const { data: history, error } = await getHistory(chatId)
+      if (error || !history) {
+        return
+      }
+
+      logger.withFields({ chatId, count: history?.count }).debug('Got history')
+
+      // await getClient().getDialogs()
+
+      // const chat = dialogs.find(d => d.id?.toString() === chatId)
+      // if (!chat) {
+      //   throw new Error(`Chat not found: ${chatId}`)
+      // }
+
+      // TODO: Abort signal
+      while (hasMore) {
+        try {
+          const messages = await withRetry(
+            () => getClient().getMessages(chatId, {
+              limit,
+              offsetId,
+              minId,
+              maxId,
+              addOffset: options.pagination.offset, // TODO: rename this
+            }),
+          )
+
+          if (messages.length === 0) {
+            logger.error('Get messages failed or returned empty data')
+            return withResult(null, new Error('Get messages failed or returned empty data'))
+          }
+
+          // If we got fewer messages than requested, there are no more
+          hasMore = messages.length === limit
+
+          for (const message of messages) {
+          // Skip empty messages
+            if (message instanceof Api.MessageEmpty) {
+              continue
+            }
+
+            // Check time range
+            const messageTime = new Date(message.date * 1000)
+            if (startTime && messageTime < startTime) {
+              continue
+            }
+            if (endTime && messageTime > endTime) {
+              continue
+            }
+
+            yield message
+            processedCount++
+
+            // Update offsetId to current message ID
+            offsetId = message.id
+
+            // Check if we've reached the limit
+            if (limit && processedCount >= limit) {
+              return
+            }
+          }
+        }
+        catch (error) {
+          return withResult(null, withError(error, 'Fetch messages failed'))
+        }
+      }
+    }
+
+    async function sendMessage(chatId: string, content: string) {
+      const message = await withRetry(() => getClient().invoke(new Api.messages.SendMessage({
+        peer: chatId,
+        message: content,
+      })))
+
+      return withResult(message, null)
+    }
+
+    return {
+      processMessages,
+      getHistory,
+      fetchMessages,
+      sendMessage,
+    }
   }
 }

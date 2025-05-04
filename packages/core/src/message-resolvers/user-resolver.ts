@@ -11,7 +11,7 @@ export function createUserResolver(): MessageResolver {
     run: async (opts: MessageResolverOpts) => {
       logger.debug('User resolver', opts)
 
-      return withResult(null, 'Not implemented')
+      return withResult(null, null)
     },
   }
 }

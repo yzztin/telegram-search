@@ -54,7 +54,7 @@ export function afterConnectedEventHandler(
   const registry = useMessageResolverRegistry()
 
   emitter.on('auth:connected', () => {
-    const messageService = useService(ctx, createMessageService)
+    const messageService = useService(ctx, createMessageService)(registry)
     const dialogService = useService(ctx, createDialogService)
     const takeoutService = useService(ctx, createTakeoutService)
     const entityService = useService(ctx, createEntityService)

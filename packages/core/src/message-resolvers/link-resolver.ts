@@ -11,7 +11,7 @@ export function createLinkResolver(): MessageResolver {
     run: async (opts: MessageResolverOpts) => {
       logger.debug('Link resolver', opts)
 
-      return withResult(null, 'Not implemented')
+      return withResult(null, null)
     },
   }
 }

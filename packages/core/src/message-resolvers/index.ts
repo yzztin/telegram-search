@@ -11,6 +11,8 @@ export interface MessageResolver {
   run: (opts: MessageResolverOpts) => PromiseResult<CoreMessage[] | null>
 }
 
+export type MessageResolverRegistryFn = ReturnType<typeof useMessageResolverRegistry>
+
 export function useMessageResolverRegistry() {
   const logger = useLogger()
 
@@ -22,8 +24,6 @@ export function useMessageResolverRegistry() {
       registry.set(name, resolver)
     },
 
-    get: (name: string) => {
-      return registry.get(name) as MessageResolver
-    },
+    registry,
   }
 }
