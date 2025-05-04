@@ -58,7 +58,6 @@ export async function withDb<T>(
   fn: (db: CoreDB) => Promise<T>,
 ) {
   try {
-    throw new Error('async error test')
     return Ok(await fn(useDrizzle()))
   }
   catch (error) {
