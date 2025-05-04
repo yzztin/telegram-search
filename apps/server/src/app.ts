@@ -85,6 +85,10 @@ export function setupWsRoutes(app: App) {
         useLogger('core:event').withFields({ event }).log('Core event emitted')
       })
 
+      state.ctx?.wrapEmitterOn(state.ctx?.emitter, (event) => {
+        useLogger('core:event').withFields({ event }).log('Core event received')
+      })
+
       sendWsEvent(peer, 'server:connected', { sessionId, connected: state.isConnected })
 
       if (!eventListenersByPeer.has(peer.id)) {

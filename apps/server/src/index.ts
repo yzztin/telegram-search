@@ -6,8 +6,6 @@ import { initConfig } from '@tg-search/common/composable'
 import { initDrizzle } from '@tg-search/core'
 import { createApp, toNodeListener } from 'h3'
 import { listen } from 'listhen'
-import yargs from 'yargs'
-import { hideBin } from 'yargs/helpers'
 
 import { setupWsRoutes } from './app'
 
@@ -97,23 +95,13 @@ function configureServer(logger: ReturnType<typeof useLogger>) {
 }
 
 async function bootstrap() {
-  const argv = await yargs(hideBin(process.argv))
-    .option('port', {
-      alias: 'p',
-      type: 'number',
-      description: 'Server listen port',
-      default: 3000,
-    })
-    .help()
-    .parse()
-
   const logger = await initCore()
   setupErrorHandlers(logger)
 
   const app = configureServer(logger)
   const listener = toNodeListener(app)
 
-  const port = argv.port
+  const port = process.env.PORT ? Number(process.env.PORT) : 3000
   // const { handleUpgrade } = wsAdapter(app.websocket as NodeOptions)
   await listen(listener, { port, ws: app.websocket as NodeOptions })
   // const server = createServer(listener).listen(port)

@@ -20,7 +20,9 @@
     "postinstall": "husky",
     "bump": "bumpp",
     "bump:deps": "taze -I -f -w -r",
-    "db": "tsx scripts/db.ts"
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/db.ts migrate",
+    "db:kit": "tsx scripts/db.ts"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.12.0",
