@@ -161,7 +161,6 @@ export function createConnectionService(ctx: CoreContext) {
       }
 
       client.session.delete()
-      emitter.emit('auth:logout')
       logger.verbose('Logged out from Telegram')
       return withResult(null, null)
     }
