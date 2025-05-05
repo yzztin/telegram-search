@@ -68,7 +68,7 @@ export function afterConnectedEventHandler(
     registerTakeoutEventHandlers(ctx)(takeoutService)
     registerEntityEventHandlers(ctx)(entityService)
 
-    // TODO: get dialogs from cache
+    //  Init all entities
     emitter.emit('dialog:fetch')
   })
 

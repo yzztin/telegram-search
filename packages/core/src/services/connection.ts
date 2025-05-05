@@ -20,7 +20,7 @@ export interface ConnectionEventToCore {
 export interface ConnectionEventFromCore {
   'auth:code:needed': () => void
   'auth:password:needed': () => void
-  'auth:connected': (data: { client?: TelegramClient }) => void
+  'auth:connected': () => void
 }
 
 export type ConnectionEvent = ConnectionEventFromCore & ConnectionEventToCore
@@ -142,7 +142,7 @@ export function createConnectionService(ctx: CoreContext) {
 
         ctx.setClient(client)
 
-        emitter.emit('auth:connected', { client })
+        emitter.emit('auth:connected')
 
         // Emit me info
         emitter.emit('entity:me:fetch')
