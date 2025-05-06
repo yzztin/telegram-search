@@ -150,7 +150,7 @@ export function createTakeoutService(ctx: CoreContext) {
           hash: bigInt(hash.toString()),
         })
 
-        logger.withFields({ historyQuery }).verbose('Historical messages query')
+        logger.withFields(historyQuery).verbose('Historical messages query')
 
         // emitter.emit('takeout:progress', {
         //   taskId: 'takeout',
@@ -164,7 +164,7 @@ export function createTakeoutService(ctx: CoreContext) {
           }),
         )) as Record<string, unknown>
 
-        logger.withFields({ result }).debug('Get messages result')
+        logger.withFields(result).debug('Get messages result')
 
         // Type safe check
         if (result.length === 0 || !('messages' in result)) {
@@ -203,7 +203,7 @@ export function createTakeoutService(ctx: CoreContext) {
 
           // Check if we've reached the limit
           if (limit && processedCount >= limit) {
-            return
+            break
           }
         }
       }

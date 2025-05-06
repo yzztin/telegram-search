@@ -195,7 +195,7 @@ export function createMessageService(ctx: CoreContext) {
 
             // Check if we've reached the limit
             if (limit && processedCount >= limit) {
-              return
+              break
             }
           }
         }
