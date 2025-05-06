@@ -15,17 +15,13 @@ import { withRetry } from '../utils/retry'
 
 export interface MessageEventToCore {
   'message:fetch': (data: { chatId: string, pagination: CorePagination }) => void
-
   'message:fetch:abort': (data: { taskId: string }) => void
-
   'message:process': (data: { messages: Api.Message[] }) => void
-
   'message:send': (data: { chatId: string, content: string }) => void
 }
 
 export interface MessageEventFromCore {
   'message:fetch:progress': (data: { taskId: string, progress: number }) => void
-
   'message:data': (data: { messages: CoreMessage[] }) => void
 }
 
@@ -83,7 +79,7 @@ export function createMessageService(ctx: CoreContext) {
       emitter.emit('storage:record:messages', { messages: emitMessages })
     }
 
-    async function getHistory(chatId: EntityLike): PromiseResult<(Api.messages.TypeMessages & { count: number }) | null> {
+    async function getHistoryWithMessagesCount(chatId: EntityLike): PromiseResult<(Api.messages.TypeMessages & { count: number }) | null> {
       try {
         const history = await withRetry(
           () => getClient().invoke(new Api.messages.GetHistory({
@@ -141,7 +137,7 @@ export function createMessageService(ctx: CoreContext) {
       // }))
       // logger.withFields({ chatId, name: dialog.peer.className, json: dialog.toJSON() }).verbose('Got dialog')
 
-      const { data: history, error } = await getHistory(chatId)
+      const { data: history, error } = await getHistoryWithMessagesCount(chatId)
       if (error || !history) {
         return
       }
@@ -220,7 +216,7 @@ export function createMessageService(ctx: CoreContext) {
 
     return {
       processMessages,
-      getHistory,
+      getHistoryWithMessagesCount,
       fetchMessages,
       sendMessage,
     }

@@ -19,7 +19,7 @@ const websocketStore = useWebsocketStore()
 const chatsStore = useChatStore()
 const { chats } = storeToRefs(chatsStore)
 
-// const currentTask = ref<Task<'takeout'> | null>(null)
+const { currentTask, currentTaskProgress } = storeToRefs(useSyncTaskStore())
 const loadingToast = ref<string | number>()
 
 function handleSync() {
@@ -30,7 +30,17 @@ function handleSync() {
   loadingToast.value = toast.loading('开始同步...')
 }
 
-const { currentTask, currentTaskProgress } = storeToRefs(useSyncTaskStore())
+function handleAbort() {
+  if (currentTask.value) {
+    websocketStore.sendEvent('takeout:task:abort', {
+      taskId: currentTask.value.taskId,
+    })
+  }
+  else {
+    toast.error('没有正在进行的同步任务')
+  }
+}
+
 watch(currentTaskProgress, (progress) => {
   toast.dismiss(loadingToast?.value)
 
@@ -43,7 +53,12 @@ watch(currentTaskProgress, (progress) => {
     toast.error(currentTask.value.lastError)
   }
   else {
-    loadingToast.value = toast.loading(`同步中... ${progress}%`)
+    loadingToast.value = toast.loading(`同步中... ${progress}%`, {
+      action: {
+        label: '取消',
+        onClick: handleAbort,
+      },
+    })
   }
 })
 </script>
@@ -57,10 +72,10 @@ watch(currentTaskProgress, (progress) => {
     <div class="ml-auto flex items-center gap-2">
       <Button
         icon="i-lucide-refresh-cw"
-        :disabled="selectedChats.length === 0 || !isLoggedIn"
+        :disabled="selectedChats.length === 0 || !isLoggedIn || !!currentTask"
         @click="handleSync"
       >
-        Sync
+        同步
       </Button>
     </div>
   </header>
