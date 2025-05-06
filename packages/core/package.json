@@ -27,6 +27,7 @@
     "drizzle-orm": "^0.43.1",
     "eventemitter3": "^5.0.1",
     "grammy": "^1.36.1",
+    "nodejieba": "^3.4.4",
     "pg": "^8.15.6",
     "pkgroll": "^2.12.2",
     "postgres": "^3.4.5",

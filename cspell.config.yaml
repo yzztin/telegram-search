@@ -1,4 +1,4 @@
-version: "0.2"
+version: '0.2'
 ignorePaths: []
 dictionaryDefinitions: []
 dictionaries: []
@@ -11,8 +11,10 @@ words:
   - guiiai
   - hahaqwq
   - iconify
+  - jieba
   - Logg
   - lucide
+  - nodejieba
   - ofetch
   - ollama
   - onnotice
