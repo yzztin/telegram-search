@@ -1,5 +1,7 @@
-import path from 'node:path'
 import { Format, LogLevel, setGlobalFormat, setGlobalLogLevel, useLogg } from '@guiiai/logg'
+import ErrorStackParser from 'error-stack-parser'
+import path from 'path-browserify-esm'
+import terminalLink from 'terminal-link'
 
 export type Logger = ReturnType<typeof useLogg>
 export { Format as LoggerFormat, LogLevel as LoggerLevel }
@@ -38,17 +40,12 @@ export function initLogger(
 }
 
 export function useLogger(name?: string): Logger {
-  if (name)
-    return useLogg(`${name}`).useGlobalConfig()
+  // eslint-disable-next-line unicorn/error-message
+  const stack = ErrorStackParser.parse(new Error())
+  const currentStack = stack[1]
+  const basePath = currentStack.fileName?.replace('async', '').trim() || ''
+  const fileName = path.join(...basePath.split(path.sep).slice(-2))
 
-  const stack = new Error('logger').stack
-  const caller = stack?.split('\n')[2]
-
-  // Extract directory, filename and line number from stack trace
-  const match = caller?.match(/(?:([^/]+)\/)?([^/\s]+?)(?:\.[jt]s)?:(\d+)(?::\d+)?\)?$/)
-  const dirName = match?.[1] || path.basename(path.dirname(__filename))
-  const fileName = match?.[2] || path.basename(__filename, '.ts')
-  const lineNumber = match?.[3] || '?'
-
-  return useLogg(`${dirName}/${fileName}:${lineNumber}`).useGlobalConfig()
+  const hyperlink = terminalLink(name || `${fileName}:${currentStack.lineNumber}`, `file://${basePath}`)
+  return useLogg(hyperlink).useGlobalConfig()
 }
