@@ -14,7 +14,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "pkgroll",
+    "build": "pkgroll --sourcemap=inline",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
   },

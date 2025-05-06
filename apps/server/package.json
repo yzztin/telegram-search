@@ -18,7 +18,7 @@
   "scripts": {
     "serve": "vite-node src/index.ts",
     "dev": "vite-node src/index.ts",
-    "build": "pkgroll",
+    "build": "pkgroll --sourcemap=inline",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "typecheck": "tsc --noEmit"
