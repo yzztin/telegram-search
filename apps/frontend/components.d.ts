@@ -9,14 +9,13 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AlertCard: typeof import('./src/components/ui/AlertCard.vue')['default']
+    Button: typeof import('./src/components/ui/Button/Button.vue')['default']
     ChatsCollapse: typeof import('./src/components/layout/ChatsCollapse.vue')['default']
     ChatSelector: typeof import('./src/components/ChatSelector.vue')['default']
     CheckboxGroup: typeof import('./src/components/ui/CheckboxGroup.vue')['default']
     Dialog: typeof import('./src/components/ui/Dialog.vue')['default']
     DropdownMenu: typeof import('./src/components/ui/DropdownMenu.vue')['default']
     HighlightText: typeof import('./src/components/ui/HighlightText.vue')['default']
-    IconButton: typeof import('./src/components/ui/Button/IconButton.vue')['default']
-    LoadingButton: typeof import('./src/components/ui/Button/LoadingButton.vue')['default']
     MessageBubble: typeof import('./src/components/messages/MessageBubble.vue')['default']
     Pagination: typeof import('./src/components/ui/Pagination.vue')['default']
     ProgressBar: typeof import('./src/components/ui/ProgressBar.vue')['default']
@@ -27,7 +26,6 @@ declare module 'vue' {
     SelectDropdown: typeof import('./src/components/ui/SelectDropdown.vue')['default']
     SettingsDialog: typeof import('./src/components/layout/SettingsDialog.vue')['default']
     SidebarSelector: typeof import('./src/components/layout/SidebarSelector.vue')['default']
-    SlotButton: typeof import('./src/components/ui/Button/SlotButton.vue')['default']
     StatusBadge: typeof import('./src/components/ui/StatusBadge.vue')['default']
     StepIndicator: typeof import('./src/components/ui/StepIndicator.vue')['default']
     Switch: typeof import('./src/components/ui/Switch.vue')['default']

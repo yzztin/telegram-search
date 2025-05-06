@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import { Button } from './Button'
+
 interface Props {
   icon: string
   label: string
@@ -18,7 +20,7 @@ const isOpen = ref(false)
     @mouseleave="isOpen = false"
   >
     <!-- Trigger button -->
-    <IconButton
+    <Button
       :icon="icon"
       :aria-label="label"
       :class="{ 'text-primary': isOpen }"

@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
-import IconButton from '../components/ui/Button/IconButton.vue'
+import { Button } from '../components/ui/Button'
 import SelectDropdown from '../components/ui/SelectDropdown.vue'
 import { useSessionStore } from '../store/useSession'
 import { useSettingsStore } from '../store/useSettings'
@@ -41,21 +41,21 @@ onMounted(() => {
     </div>
 
     <div class="ml-auto flex items-center gap-2">
-      <IconButton
+      <Button
         icon="i-lucide-pencil"
         :disabled="isEditing"
         @click="isEditing = !isEditing"
       >
         Edit
-      </IconButton>
+      </Button>
 
-      <IconButton
+      <Button
         icon="i-lucide-save"
         :disabled="!isEditing"
         @click="updateConfig"
       >
         Save
-      </IconButton>
+      </Button>
     </div>
   </header>
 

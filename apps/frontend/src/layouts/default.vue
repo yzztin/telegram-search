@@ -7,7 +7,7 @@ import { RouterView } from 'vue-router'
 import ChatsCollapse from '../components/layout/ChatsCollapse.vue'
 import SettingsDialog from '../components/layout/SettingsDialog.vue'
 import SidebarSelector from '../components/layout/SidebarSelector.vue'
-import IconButton from '../components/ui/Button/IconButton.vue'
+import { Button } from '../components/ui/Button'
 import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 import { useSettingsStore } from '../store/useSettings'
@@ -147,13 +147,13 @@ function toggleActiveChatGroup(group: ChatGroup) {
           </div>
         </div>
         <div class="flex items-center">
-          <IconButton
+          <Button
             :icon="isDark ? 'i-lucide-sun' : 'i-lucide-moon'"
             class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-foreground hover:bg-muted"
             @click="() => { isDark = !isDark }"
           />
 
-          <IconButton
+          <Button
             icon="i-lucide-settings"
             class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-foreground hover:bg-muted"
             @click="toggleSettingsDialog"

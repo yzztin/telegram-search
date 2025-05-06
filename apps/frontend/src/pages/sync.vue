@@ -4,7 +4,7 @@ import { ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import ChatSelector from '../components/ChatSelector.vue'
-import IconButton from '../components/ui/Button/IconButton.vue'
+import { Button } from '../components/ui/Button'
 import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 import { useSyncTaskStore } from '../store/useSyncTask'
@@ -55,13 +55,13 @@ watch(currentTaskProgress, (progress) => {
     </div>
 
     <div class="ml-auto flex items-center gap-2">
-      <IconButton
+      <Button
         icon="i-lucide-refresh-cw"
         :disabled="selectedChats.length === 0 || !isLoggedIn"
         @click="handleSync"
       >
         Sync
-      </IconButton>
+      </Button>
     </div>
   </header>
 
