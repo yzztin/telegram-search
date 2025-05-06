@@ -4,13 +4,12 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 
-import { useSessionStore } from './useSession'
+import { useWebsocketStore } from './useWebsocket'
 
 export const useMessageStore = defineStore('message', () => {
   const messagesByChat = ref<Map<string, Map<string, CoreMessage>>>(new Map())
 
-  const sessionStore = useSessionStore()
-  const { getWsContext } = sessionStore
+  const websocketStore = useWebsocketStore()
 
   async function pushMessages(messages: CoreMessage[]) {
     messages.forEach((message) => {
@@ -27,8 +26,8 @@ export const useMessageStore = defineStore('message', () => {
 
   async function fetchMessagesWithDatabase(chatId: string, pagination: CorePagination) {
     toast.promise(async () => {
-      getWsContext().sendEvent('storage:fetch:messages', { chatId, pagination })
-      const { messages: dbMessages } = await getWsContext().waitForEvent('storage:messages')
+      websocketStore.sendEvent('storage:fetch:messages', { chatId, pagination })
+      const { messages: dbMessages } = await websocketStore.waitForEvent('storage:messages')
 
       const restMessageLength = pagination.limit - dbMessages.length
       // eslint-disable-next-line no-console
@@ -37,7 +36,7 @@ export const useMessageStore = defineStore('message', () => {
       if (restMessageLength > 0) {
         pagination.offset += dbMessages.length
         toast.promise(async () => {
-          getWsContext().sendEvent('message:fetch', { chatId, pagination })
+          websocketStore.sendEvent('message:fetch', { chatId, pagination })
         }, {
           loading: 'Fetching messages from server...',
         })

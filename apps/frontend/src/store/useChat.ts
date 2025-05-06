@@ -3,12 +3,11 @@ import type { CoreDialog } from '@tg-search/core'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import { useSessionStore } from './useSession'
+import { useWebsocketStore } from './useWebsocket'
 
 export const useChatStore = defineStore('chat', () => {
   const chats = ref<CoreDialog[]>([])
-  const sessionStore = useSessionStore()
-  const { getWsContext } = sessionStore
+  const websocketStore = useWebsocketStore()
 
   const getChat = (id: string) => {
     return chats.value.find(chat => chat.id === Number(id))
@@ -16,7 +15,7 @@ export const useChatStore = defineStore('chat', () => {
 
   const init = () => {
     if (chats.value.length === 0) {
-      getWsContext()?.sendEvent('storage:fetch:dialogs')
+      websocketStore.sendEvent('storage:fetch:dialogs')
     }
   }
 

@@ -2,22 +2,22 @@ import type { WsEventToClient, WsEventToClientData, WsEventToServer, WsEventToSe
 import type { ClientEventHandlerMap, ClientEventHandlerQueueMap } from '../event-handlers'
 
 import { useWebSocket } from '@vueuse/core'
-import { watch } from 'vue'
+import { defineStore, storeToRefs } from 'pinia'
+import { computed, ref, watch } from 'vue'
 
 import { WS_API_BASE } from '../constants'
 import { getRegisterEventHandler, registerAllEventHandlers } from '../event-handlers'
-
-let wsContext: ReturnType<typeof createWebsocketContext>
+import { useSessionStore } from './useSession'
 
 export type ClientSendEventFn = <T extends keyof WsEventToServer>(event: T, data?: WsEventToServerData<T>) => void
 export type ClientCreateWsMessageFn = <T extends keyof WsEventToServer>(event: T, data?: WsEventToServerData<T>) => WsMessageToServer
 
-export function createWebsocketContext(sessionId: string) {
-  if (!sessionId)
-    throw new Error('Session ID is required')
+export const useWebsocketStore = defineStore('websocket', () => {
+  const sessionStore = useSessionStore()
+  const { activeSessionId } = storeToRefs(sessionStore)
 
-  const url = `${WS_API_BASE}?sessionId=${sessionId}`
-  const socket = useWebSocket<keyof WsMessageToClient>(url.toString())
+  const wsUrlComputed = computed(() => `${WS_API_BASE}?sessionId=${activeSessionId.value}`)
+  const wsSocket = ref(useWebSocket<keyof WsMessageToClient>(wsUrlComputed.value))
 
   const createWsMessage: ClientCreateWsMessageFn = (type, data) => {
     return { type, data } as WsMessageToServer
@@ -29,7 +29,7 @@ export function createWebsocketContext(sessionId: string) {
       // eslint-disable-next-line no-console
       console.log('[WebSocket] Sending event', event, data)
 
-    socket.send(JSON.stringify(createWsMessage(event, data)))
+    wsSocket.value!.send(JSON.stringify(createWsMessage(event, data)))
   }
 
   const eventHandlers: ClientEventHandlerMap = new Map()
@@ -54,7 +54,7 @@ export function createWebsocketContext(sessionId: string) {
   }
 
   // https://github.com/moeru-ai/airi/blob/b55a76407d6eb725d74c5cd4bcb17ef7d995f305/apps/realtime-audio/src/pages/index.vue#L95-L123
-  watch(socket.data, (rawMessage) => {
+  watch(() => wsSocket.value.data, (rawMessage) => {
     if (!rawMessage)
       return
 
@@ -91,9 +91,6 @@ export function createWebsocketContext(sessionId: string) {
           console.error('[WebSocket] Error handling queued event', message, error)
         }
       }
-      // else {
-      //   console.error('[WebSocket] Unknown event', message)
-      // }
     }
     catch (error) {
       console.error('[WebSocket] Invalid message', rawMessage, error)
@@ -104,11 +101,4 @@ export function createWebsocketContext(sessionId: string) {
     sendEvent,
     waitForEvent,
   }
-}
-
-export function useWebsocket(sessionId: string) {
-  if (!wsContext)
-    wsContext = createWebsocketContext(sessionId)
-
-  return wsContext
-}
+})

@@ -2,10 +2,10 @@ import type { CoreUserInfo } from '@tg-search/core'
 
 import { useLocalStorage } from '@vueuse/core'
 import { defu } from 'defu'
-import { acceptHMRUpdate, defineStore } from 'pinia'
+import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
-import { useWebsocket } from '../composables/useWebsocket'
+import { useWebsocketStore } from './useWebsocket'
 
 export interface SessionContext {
   phoneNumber?: string
@@ -24,10 +24,6 @@ export const useSessionStore = defineStore('session', () => {
 
   const activeSessionComputed = computed(() => storageSessions.value.get(storageActiveSessionId.value))
 
-  const getWsContext = () => {
-    return useWebsocket(storageActiveSessionId.value)
-  }
-
   const getActiveSession = () => {
     return storageSessions.value.get(storageActiveSessionId.value)
   }
@@ -44,10 +40,6 @@ export const useSessionStore = defineStore('session', () => {
     if (!activeSession?.isConnected && activeSession?.phoneNumber) {
       handleAuth().login(activeSession.phoneNumber)
     }
-
-    if (activeSession?.isConnected) {
-      getWsContext().sendEvent('entity:me:fetch', undefined)
-    }
   }
 
   const init = async () => {
@@ -62,32 +54,38 @@ export const useSessionStore = defineStore('session', () => {
     if (!isConnected) {
       attemptLogin()
     }
+    else {
+      const websocketStore = useWebsocketStore()
+      websocketStore.sendEvent('entity:me:fetch', undefined)
+    }
   })
 
   function handleAuth() {
+    const websocketStore = useWebsocketStore()
+
     function login(phoneNumber: string) {
       storageSessions.value.get(storageActiveSessionId.value)!.phoneNumber = phoneNumber
 
-      getWsContext().sendEvent('auth:login', {
+      websocketStore.sendEvent('auth:login', {
         phoneNumber,
       })
     }
 
     function submitCode(code: string) {
-      getWsContext().sendEvent('auth:code', {
+      websocketStore.sendEvent('auth:code', {
         code,
       })
     }
 
     function submitPassword(password: string) {
-      getWsContext().sendEvent('auth:password', {
+      websocketStore.sendEvent('auth:password', {
         password,
       })
     }
 
     function logout() {
       getActiveSession()!.isConnected = false
-      getWsContext().sendEvent('auth:logout', undefined)
+      websocketStore.sendEvent('auth:logout', undefined)
     }
 
     return { login, submitCode, submitPassword, logout }
@@ -99,7 +97,6 @@ export const useSessionStore = defineStore('session', () => {
     activeSessionId: storageActiveSessionId,
     activeSessionComputed,
     auth: authStatus,
-    getWsContext,
     handleAuth,
     getActiveSession,
     updateActiveSession,
@@ -107,7 +104,3 @@ export const useSessionStore = defineStore('session', () => {
     isLoggedIn: computed(() => activeSessionComputed.value?.isConnected),
   }
 })
-
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useSessionStore, import.meta.hot))
-}

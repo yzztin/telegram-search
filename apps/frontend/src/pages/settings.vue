@@ -5,14 +5,12 @@ import { toast } from 'vue-sonner'
 
 import { Button } from '../components/ui/Button'
 import SelectDropdown from '../components/ui/SelectDropdown.vue'
-import { useSessionStore } from '../store/useSession'
 import { useSettingsStore } from '../store/useSettings'
+import { useWebsocketStore } from '../store/useWebsocket'
 
-const sessionStore = useSessionStore()
-const { getWsContext } = sessionStore
 const isEditing = ref(false)
 const { config } = storeToRefs(useSettingsStore())
-const wsContext = getWsContext()
+const websocketStore = useWebsocketStore()
 
 const embeddingProviderOptions = [
   { label: 'OpenAI', value: 'openai' },
@@ -23,14 +21,14 @@ async function updateConfig() {
   if (!config.value)
     return
 
-  wsContext.sendEvent('config:update', { config: config.value })
+  websocketStore.sendEvent('config:update', { config: config.value })
 
   isEditing.value = false
   toast.success('Settings saved successfully')
 }
 
 onMounted(() => {
-  wsContext.sendEvent('config:fetch')
+  websocketStore.sendEvent('config:fetch')
 })
 </script>
 

@@ -10,7 +10,7 @@ import { toast } from 'vue-sonner'
 import MessageBubble from '../../components/messages/MessageBubble.vue'
 import { useChatStore } from '../../store/useChat'
 import { useMessageStore } from '../../store/useMessage'
-import { useSessionStore } from '../../store/useSession'
+import { useWebsocketStore } from '../../store/useWebsocket'
 
 const route = useRoute('/chat/:id')
 const id = route.params.id
@@ -42,8 +42,7 @@ const { list, containerProps, wrapperProps } = useVirtualList(
   },
 )
 
-const sessionStore = useSessionStore()
-const { getWsContext } = sessionStore
+const websocketStore = useWebsocketStore()
 
 const messageInput = ref('')
 const { y } = useScroll(containerProps.ref)
@@ -73,7 +72,7 @@ function sendMessage() {
   if (!messageInput.value.trim())
     return
 
-  getWsContext()?.sendEvent('message:send', {
+  websocketStore.sendEvent('message:send', {
     chatId: id.toString(),
     content: messageInput.value,
   })

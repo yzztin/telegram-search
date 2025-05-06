@@ -34,15 +34,6 @@ watch(theme, (newTheme) => {
   document.documentElement.setAttribute('data-theme', newTheme)
 }, { immediate: true })
 
-onMounted(() => {
-  // if (!sessionStore.getActiveSession()?.isConnected && router.currentRoute.value.path !== '/login') {
-  //   router.push('/login')
-  // }
-
-  // wsContext.sendEvent('entity:me:fetch', undefined)
-  // wsContext.sendEvent('dialog:fetch', undefined)
-})
-
 function toggleSettingsDialog() {
   settingsDialog.value = !settingsDialog.value
 }

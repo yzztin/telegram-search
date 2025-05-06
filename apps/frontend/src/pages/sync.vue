@@ -8,12 +8,13 @@ import { Button } from '../components/ui/Button'
 import { useChatStore } from '../store/useChat'
 import { useSessionStore } from '../store/useSession'
 import { useSyncTaskStore } from '../store/useSyncTask'
+import { useWebsocketStore } from '../store/useWebsocket'
 
 const selectedChats = ref<number[]>([])
 
 const sessionStore = useSessionStore()
-const { getWsContext } = sessionStore
 const { isLoggedIn } = storeToRefs(sessionStore)
+const websocketStore = useWebsocketStore()
 
 const chatsStore = useChatStore()
 const { chats } = storeToRefs(chatsStore)
@@ -22,8 +23,7 @@ const { chats } = storeToRefs(chatsStore)
 const loadingToast = ref<string | number>()
 
 function handleSync() {
-  const wsContext = getWsContext()
-  wsContext.sendEvent('takeout:run', {
+  websocketStore.sendEvent('takeout:run', {
     chatIds: selectedChats.value.map(id => id.toString()),
   })
 
