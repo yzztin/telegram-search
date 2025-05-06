@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { useDark } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { RouterView } from 'vue-router'
 
 import ChatsCollapse from '../components/layout/ChatsCollapse.vue'

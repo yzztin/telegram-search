@@ -10,7 +10,7 @@ const router = useRouter()
 const showDialog = defineModel<boolean>('showDialog', { required: true })
 
 const settingsStore = useSettingsStore()
-const { theme, themesOptions } = storeToRefs(settingsStore)
+const { theme: selectedTheme, themesOptions } = storeToRefs(settingsStore)
 
 const sessionStore = useSessionStore()
 const { logout } = sessionStore.handleAuth()
@@ -39,7 +39,7 @@ function handleLogout() {
           <span>主题</span>
         </div>
         <select
-          v-model="theme"
+          v-model="selectedTheme"
           class="border-input focus-visible:ring-ring h-9 w-[180px] border rounded-md bg-background px-3 py-1 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
         >
           <option v-for="theme in themesOptions" :key="theme.value" :value="theme.value">
