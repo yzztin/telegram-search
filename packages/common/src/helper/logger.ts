@@ -46,6 +46,6 @@ export function useLogger(name?: string): Logger {
   const basePath = currentStack.fileName?.replace('async', '').trim() || ''
   const fileName = path.join(...basePath.split(path.sep).slice(-2))
 
-  const hyperlink = terminalLink(name || `${fileName}:${currentStack.lineNumber}`, `file://${basePath}`)
+  const hyperlink = typeof window === 'undefined' ? terminalLink(name || `${fileName}:${currentStack.lineNumber}`, `file://${basePath}`) : ''
   return useLogg(hyperlink).useGlobalConfig()
 }
