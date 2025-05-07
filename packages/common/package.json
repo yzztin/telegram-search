@@ -31,7 +31,6 @@
     "error-stack-parser": "^2.1.4",
     "path-browserify-esm": "^1.0.6",
     "pkgroll": "^2.12.2",
-    "terminal-link": "^4.0.0",
     "valibot": "^1.0.0",
     "yaml": "^2.7.1"
   },
