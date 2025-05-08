@@ -1,12 +1,10 @@
 import type { Dialog } from 'telegram/tl/custom/dialog'
 import type { CoreContext } from '../context'
 import type { Result } from '../utils/monad'
-import type { PromiseResult } from '../utils/result'
 
 import { circularObject, useLogger } from '@tg-search/common'
 
 import { Err, Ok } from '../utils/monad'
-import { withResult } from '../utils/result'
 
 export interface CoreDialog {
   id: number
@@ -68,7 +66,8 @@ export function createDialogService(ctx: CoreContext) {
       type,
     })
   }
-  async function fetchDialogs(): PromiseResult<CoreDialog[] | null> {
+
+  async function fetchDialogs(): Promise<Result<CoreDialog[]>> {
     // TODO: use invoke api
     // TODO: use pagination
     // Total list has a total property
@@ -115,7 +114,7 @@ export function createDialogService(ctx: CoreContext) {
 
     emitter.emit('dialog:data', { dialogs })
 
-    return withResult(dialogs, null)
+    return Ok(dialogs)
   }
 
   return {

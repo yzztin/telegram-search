@@ -1,5 +1,5 @@
 import type { CoreContext } from '../context'
-import type { PromiseResult } from '../utils/result'
+import type { Result } from '../utils/monad'
 
 import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
@@ -7,7 +7,7 @@ import { useLogger } from '@tg-search/common'
 import { getSessionPath, useConfig } from '@tg-search/common/composable'
 import { StringSession } from 'telegram/sessions'
 
-import { withResult } from '../utils/result'
+import { Err, Ok } from '../utils/monad'
 
 export interface SessionEventToCore {
   'session:update': (data: { phoneNumber: string, session: string }) => void
@@ -39,15 +39,15 @@ export function createSessionService(ctx: CoreContext) {
     try {
       await unlink(sessionFilePath)
       logger.withFields({ sessionFile: sessionFilePath, phoneNumber }).verbose('Deleted session file')
-      return withResult(null, null)
+      return Ok(null)
     }
     catch (error) {
-      return withResult(null, withError(error, 'Failed to delete session file'))
+      return Err(withError(error, 'Failed to delete session file'))
     }
   }
 
   return {
-    loadSession: async (phoneNumber: string): PromiseResult<StringSession> => {
+    loadSession: async (phoneNumber: string): Promise<Result<StringSession>> => {
       const sessionFilePath = getSessionFilePath(phoneNumber)
 
       logger.withFields({ sessionFilePath, phoneNumber }).verbose('Loading session from file')
@@ -58,18 +58,18 @@ export function createSessionService(ctx: CoreContext) {
 
         try {
           const session = await readFile(sessionFilePath, 'utf-8')
-          return withResult(new StringSession(session), null)
+          return Ok(new StringSession(session))
         }
         catch (error) {
           if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
             // Return empty session for first time use when no session exists
-            return withResult(new StringSession(), null)
+            return Ok(new StringSession())
           }
-          return withResult(new StringSession(), withError(error, 'Failed to load session from file'))
+          return Err(withError(error, 'Failed to load session from file'))
         }
       }
       catch (error) {
-        return withResult(new StringSession(), withError(error, 'Failed to create session directory'))
+        return Err(withError(error, 'Failed to create session directory'))
       }
     },
 
@@ -86,10 +86,10 @@ export function createSessionService(ctx: CoreContext) {
 
         await writeFile(sessionFilePath, session, 'utf-8')
         logger.withFields({ sessionFilePath, phoneNumber }).verbose('Saving session to file')
-        return withResult(null, null)
+        return Ok(null)
       }
       catch (error) {
-        return withResult(null, withError(error, 'Failed to save session to file'))
+        return Err(withError(error, 'Failed to save session to file'))
       }
     },
 

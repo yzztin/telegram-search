@@ -11,10 +11,7 @@ export function registerDialogEventHandlers(ctx: CoreContext) {
     emitter.on('dialog:fetch', async () => {
       logger.verbose('Fetching dialogs')
 
-      const { data: dialogs, error } = await dialogService.fetchDialogs()
-      if (!dialogs || error) {
-        return
-      }
+      const dialogs = (await dialogService.fetchDialogs()).expect('Failed to fetch dialogs')
 
       emitter.emit('storage:record:dialogs', { dialogs })
     })

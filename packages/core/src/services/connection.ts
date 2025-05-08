@@ -2,13 +2,13 @@ import type { ProxyConfig } from '@tg-search/common'
 import type { ProxyInterface } from 'telegram/network/connection/TCPMTProxy'
 import type { StringSession } from 'telegram/sessions'
 import type { CoreContext } from '../context'
-import type { PromiseResult } from '../utils/result'
+import type { Result } from '../utils/monad'
 
 import { useLogger } from '@tg-search/common'
 import { Api, TelegramClient } from 'telegram'
 
+import { Err, Ok } from '../utils/monad'
 import { waitForEvent } from '../utils/promise'
-import { withResult } from '../utils/result'
 
 export interface ConnectionEventToCore {
   'auth:login': (data: { phoneNumber: string }) => void
@@ -65,7 +65,7 @@ export function createConnectionService(ctx: CoreContext) {
 
     async function init(initOptions: {
       session: StringSession
-    }): PromiseResult<TelegramClient> {
+    }): Promise<Result<TelegramClient>> {
       const { session } = initOptions
 
       const proxy = getProxyInterface(options.proxy)
@@ -84,27 +84,24 @@ export function createConnectionService(ctx: CoreContext) {
         },
       )
 
-      return withResult(client, null)
+      return Ok(client)
     }
 
     async function login(loginOptions: {
       phoneNumber: string
       session: StringSession
-    }): PromiseResult<TelegramClient | null> {
+    }): Promise<Result<TelegramClient>> {
       const { phoneNumber, session } = loginOptions
 
       try {
-        const { data: client, error } = await init({ session })
-        if (!client || error) {
-          return withResult(null, withError(error, 'Failed to initialize Telegram client'))
-        }
+        const client = (await init({ session })).expect('Failed to initialize Telegram client')
 
         logger.verbose('Connecting to Telegram')
 
         // Try to connect to Telegram by using the session
         const isConnected = await client.connect()
         if (!isConnected) {
-          return withResult(null, withError(new Error('Failed to connect to Telegram')))
+          return Err(withError(new Error('Failed to connect to Telegram')))
         }
 
         const isAuthorized = await client.isUserAuthorized()
@@ -147,10 +144,10 @@ export function createConnectionService(ctx: CoreContext) {
         // Emit me info
         emitter.emit('entity:me:fetch')
 
-        return withResult(client, null)
+        return Ok(client)
       }
       catch (error) {
-        return withResult(null, withError(error, 'Failed to connect to Telegram'))
+        return Err(withError(error, 'Failed to connect to Telegram'))
       }
     }
 
@@ -162,7 +159,7 @@ export function createConnectionService(ctx: CoreContext) {
 
       client.session.delete()
       logger.verbose('Logged out from Telegram')
-      return withResult(null, null)
+      return Ok(null)
     }
 
     return {

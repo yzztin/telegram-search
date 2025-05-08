@@ -4,7 +4,7 @@ import type { ConnectionService, SessionService } from '../services'
 import { useLogger } from '@tg-search/common'
 
 export function registerAuthEventHandlers(ctx: CoreContext) {
-  const { emitter, withError } = ctx
+  const { emitter } = ctx
   const logger = useLogger('core:auth:event')
 
   return (
@@ -12,17 +12,12 @@ export function registerAuthEventHandlers(ctx: CoreContext) {
     sessionService: SessionService,
   ) => {
     emitter.on('auth:login', async ({ phoneNumber }) => {
-      const { data: session, error: sessionError } = await sessionService.loadSession(phoneNumber)
-      if (sessionError) {
-        return withError(sessionError, 'Failed to load session')
-      }
+      const session = (await sessionService.loadSession(phoneNumber)).expect('Failed to load session')
 
       logger.withFields({ session }).verbose('Loaded session')
 
-      const { error: loginError } = await configuredConnectionService.login({ phoneNumber, session })
-      if (loginError) {
-        return withError(loginError, 'Failed to login to Telegram')
-      }
+      const client = (await configuredConnectionService.login({ phoneNumber, session })).expect('Failed to login to Telegram')
+      logger.withFields({ client }).verbose('Logged in to Telegram')
     })
 
     emitter.on('auth:logout', async () => {

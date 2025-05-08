@@ -1,13 +1,13 @@
 import type { CoreContext } from '../context'
+import type { Result } from '../utils/monad'
 import type { CorePagination } from '../utils/pagination'
-import type { PromiseResult } from '../utils/result'
 import type { CoreTask } from '../utils/task'
 
 import { useLogger } from '@tg-search/common'
 import bigInt from 'big-integer'
 import { Api } from 'telegram'
 
-import { withResult } from '../utils/result'
+import { Err, Ok } from '../utils/monad'
 import { withRetry } from '../utils/retry'
 import { useTasks } from '../utils/task'
 
@@ -60,7 +60,7 @@ export function createTakeoutService(ctx: CoreContext) {
     emitter.emit('takeout:task:progress', updateTaskError(taskId, error))
   }
 
-  async function initTakeout(): PromiseResult<Api.account.Takeout | null> {
+  async function initTakeout(): Promise<Result<Api.account.Takeout>> {
     const fileMaxSize = bigInt(1024 * 1024 * 1024) // 1GB
 
     try {
@@ -75,10 +75,10 @@ export function createTakeoutService(ctx: CoreContext) {
         fileMaxSize,
       }))
 
-      return withResult(takeout, null)
+      return Ok(takeout)
     }
     catch (error) {
-      return withResult(null, withError(error, 'Init takeout session failed'))
+      return Err(withError(error, 'Init takeout session failed'))
     }
   }
 
@@ -91,10 +91,10 @@ export function createTakeoutService(ctx: CoreContext) {
         }),
       }))
 
-      return withResult(null, null)
+      return Ok(null)
     }
     catch (error) {
-      return withResult(null, withError(error, 'Finish takeout session failed'))
+      return Err(withError(error, 'Finish takeout session failed'))
     }
   }
 
@@ -120,12 +120,7 @@ export function createTakeoutService(ctx: CoreContext) {
     const startTime = options.startTime
     const endTime = options.endTime
 
-    const { data: takeoutSession, error } = await initTakeout()
-    if (takeoutSession === null || error) {
-      // TODO: error handler
-      logger.withError(error).error('Init takeout session failed')
-      return
-    }
+    const takeoutSession = (await initTakeout()).expect('Init takeout session failed')
 
     emitProgress(taskId, 2, 'Get messages')
 
@@ -169,7 +164,7 @@ export function createTakeoutService(ctx: CoreContext) {
         // Type safe check
         if (result.length === 0 || !('messages' in result)) {
           logger.error('Get messages failed or returned empty data')
-          return withResult(null, new Error('Get messages failed or returned empty data'))
+          return Err(new Error('Get messages failed or returned empty data'))
         }
 
         const messages = result.messages as Api.Message[]

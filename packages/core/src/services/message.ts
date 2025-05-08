@@ -2,15 +2,15 @@ import type { EntityLike } from 'telegram/define'
 import type { CoreContext } from '../context'
 import type { MessageResolverRegistryFn } from '../message-resolvers'
 import type { CoreMessage } from '../utils/message'
+import type { Result } from '../utils/monad'
 import type { CorePagination } from '../utils/pagination'
-import type { PromiseResult } from '../utils/result'
 
 import { useLogger } from '@tg-search/common'
 import bigInt from 'big-integer'
 import { Api } from 'telegram'
 
 import { convertToCoreMessage } from '../utils/message'
-import { withResult } from '../utils/result'
+import { Err, Ok } from '../utils/monad'
 import { withRetry } from '../utils/retry'
 
 export interface MessageEventToCore {
@@ -79,7 +79,7 @@ export function createMessageService(ctx: CoreContext) {
       emitter.emit('storage:record:messages', { messages: emitMessages })
     }
 
-    async function getHistoryWithMessagesCount(chatId: EntityLike): PromiseResult<(Api.messages.TypeMessages & { count: number }) | null> {
+    async function getHistoryWithMessagesCount(chatId: EntityLike): Promise<Result<Api.messages.TypeMessages & { count: number }>> {
       try {
         const history = await withRetry(
           () => getClient().invoke(new Api.messages.GetHistory({
@@ -94,10 +94,10 @@ export function createMessageService(ctx: CoreContext) {
           })),
         ) as Api.messages.TypeMessages & { count: number }
 
-        return withResult(history, null)
+        return Ok(history)
       }
       catch (error) {
-        return withResult(null, withError(error, 'Failed to get history'))
+        return Err(withError(error, 'Failed to get history'))
       }
     }
 
@@ -137,10 +137,7 @@ export function createMessageService(ctx: CoreContext) {
       // }))
       // logger.withFields({ chatId, name: dialog.peer.className, json: dialog.toJSON() }).verbose('Got dialog')
 
-      const { data: history, error } = await getHistoryWithMessagesCount(chatId)
-      if (error || !history) {
-        return
-      }
+      const history = (await getHistoryWithMessagesCount(chatId)).expect('Failed to get history')
 
       logger.withFields({ chatId, count: history?.count }).verbose('Got history')
 
@@ -166,7 +163,7 @@ export function createMessageService(ctx: CoreContext) {
 
           if (messages.length === 0) {
             logger.error('Get messages failed or returned empty data')
-            return withResult(null, new Error('Get messages failed or returned empty data'))
+            return Err(new Error('Get messages failed or returned empty data'))
           }
 
           // If we got fewer messages than requested, there are no more
@@ -200,7 +197,7 @@ export function createMessageService(ctx: CoreContext) {
           }
         }
         catch (error) {
-          return withResult(null, withError(error, 'Fetch messages failed'))
+          return Err(withError(error, 'Fetch messages failed'))
         }
       }
     }
@@ -211,7 +208,7 @@ export function createMessageService(ctx: CoreContext) {
         message: content,
       })))
 
-      return withResult(message, null)
+      return Ok(message)
     }
 
     return {

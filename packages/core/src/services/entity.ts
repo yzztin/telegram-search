@@ -1,7 +1,7 @@
 import type { CoreContext } from '../context'
-import type { PromiseResult } from '../utils/result'
+import type { Result } from '../utils/monad'
 
-import { withResult } from '../utils/result'
+import { Ok } from '../utils/monad'
 
 export interface CoreUserInfo {
   id: string
@@ -31,7 +31,7 @@ export function createEntityService(ctx: CoreContext) {
     return user
   }
 
-  async function getMeInfo(): PromiseResult<CoreUserInfo> {
+  async function getMeInfo(): Promise<Result<CoreUserInfo>> {
     const apiUser = await getClient().getMe()
 
     const user = {
@@ -44,7 +44,7 @@ export function createEntityService(ctx: CoreContext) {
 
     emitter.emit('entity:me:data', user)
 
-    return withResult(user, null)
+    return Ok(user)
   }
 
   return {
