@@ -1,7 +1,7 @@
 import type { NodeOptions } from 'crossws/adapters/node'
 
 import process from 'node:process'
-import { getDebugMode, initLogger, parseEnvLogLevel, useLogger } from '@tg-search/common'
+import { flags, initLogger, parseEnvFlags, useLogger } from '@tg-search/common'
 import { initConfig } from '@tg-search/common/composable'
 import { initDrizzle } from '@tg-search/core'
 import { createApp, toNodeListener } from 'h3'
@@ -13,7 +13,8 @@ export type * from './app'
 export type * from './ws-event'
 
 async function initCore(): Promise<ReturnType<typeof useLogger>> {
-  initLogger(parseEnvLogLevel(process.env.LOG_LEVEL))
+  parseEnvFlags(process.env as Record<string, string>)
+  initLogger()
   const logger = useLogger()
   await initConfig()
 
@@ -41,7 +42,7 @@ function setupErrorHandlers(logger: ReturnType<typeof useLogger>): void {
 
 function configureServer(logger: ReturnType<typeof useLogger>) {
   const app = createApp({
-    debug: getDebugMode(),
+    debug: flags.isDebugMode,
     onRequest(event) {
       const path = event.path
       const method = event.method

@@ -1,9 +1,12 @@
 import { useLogger } from '@tg-search/common'
 
-export function withRetry<T>(fn: () => Promise<T>, options: {
-  maxRetries?: number
-  initialDelay?: number
-} = {}): Promise<T> {
+export function withRetry<T>(
+  fn: () => Promise<T>,
+  options: {
+    maxRetries?: number
+    initialDelay?: number
+  } = {},
+): Promise<T> {
   const logger = useLogger()
 
   const maxRetries = options.maxRetries || 1

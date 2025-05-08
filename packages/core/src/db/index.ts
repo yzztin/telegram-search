@@ -1,4 +1,4 @@
-import { getDebugMode, useLogger } from '@tg-search/common'
+import { flags, useLogger } from '@tg-search/common'
 import { getDatabaseDSN, useConfig } from '@tg-search/common/composable'
 import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/postgres-js'
@@ -23,7 +23,7 @@ export async function initDrizzle() {
     },
   })
 
-  dbInstance = drizzle(client, { logger: getDebugMode() })
+  dbInstance = drizzle(client, { logger: flags.isDatabaseDebugMode })
 
   // Check the db connection
   try {
