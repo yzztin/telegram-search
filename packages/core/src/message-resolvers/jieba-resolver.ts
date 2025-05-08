@@ -26,7 +26,8 @@ export function createJiebaResolver(): MessageResolver {
         return Err('No messages to parse')
 
       const jiebaMessages = messages.map((message) => {
-        const tokens = cut(message.content)
+        // Token without empty strings
+        const tokens = cut(message.content).filter(token => !!token)
         logger.withFields({ message: message.content, tokens }).debug('Jieba tokens')
 
         return {

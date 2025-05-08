@@ -11,8 +11,8 @@ import type { TakeoutEventFromCore, TakeoutEventToCore } from './services/takeou
 
 import { useLogger } from '@tg-search/common'
 import { EventEmitter } from 'eventemitter3'
-
-import { createErrorHandler } from './utils/error-handler'
+import { Api } from 'telegram'
+import { FloodWaitError } from 'telegram/errors'
 
 export type FromCoreEvent = ClientInstanceEventFromCore
   & MessageEventFromCore
@@ -43,6 +43,30 @@ export type CoreEmitter = EventEmitter<CoreEvent>
 export type Service<T> = (ctx: CoreContext) => T
 
 export type CoreContext = ReturnType<typeof createCoreContext>
+
+function createErrorHandler(emitter: CoreEmitter) {
+  const logger = useLogger()
+
+  return (error: unknown, description?: string): Error => {
+    if (error instanceof FloodWaitError) {
+      logger.withFields({ seconds: error.seconds }).warn('Flood wait')
+
+      return error
+    }
+    else if (error instanceof Api.RpcError) {
+      emitter.emit('core:error', { error })
+      logger.withFields({ error: error.errorMessage }).error('RPC error')
+
+      return new Error(error.errorMessage)
+    }
+    else {
+      emitter.emit('core:error', { error })
+      logger.withError(error).error(description || 'Error occurred')
+
+      return new Error(description || 'Error occurred')
+    }
+  }
+}
 
 export function createCoreContext() {
   const emitter = new EventEmitter<CoreEvent>()
