@@ -24,12 +24,15 @@ export async function recordJoinedChats(chats: CoreDialog[]) {
       chat_id: chat.id.toString(),
       chat_name: chat.name,
       chat_type: chat.type,
+      // created_at: chat.lastMessageDate,
+      // updated_at: Date.now(),
     })))
     .onConflictDoUpdate({
       target: joinedChatsTable.chat_id,
       set: {
         chat_name: sql`excluded.chat_name`,
-        updated_at: Date.now(),
+        chat_type: sql`excluded.chat_type`,
+        updated_at: Date.now(), // TODO: is it correct?
       },
     }),
   )).expect('Failed to record joined chats')

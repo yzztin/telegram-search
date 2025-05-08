@@ -13,8 +13,8 @@ import { chatMessagesTable } from '../db/schema'
 import { Ok } from '../utils/monad'
 import { chatMessageToOneLine } from './common'
 
-type DBInsertMessage = Partial<Omit<typeof chatMessagesTable.$inferSelect, 'id' | 'created_at' | 'updated_at'>>
 type DBSelectMessage = Omit<typeof chatMessagesTable.$inferSelect, 'id' | 'created_at' | 'updated_at'>
+type DBInsertMessage = Partial<DBSelectMessage>
 
 export async function recordMessages(messages: CoreMessage[]) {
   const dbMessages = messages.map((message) => {

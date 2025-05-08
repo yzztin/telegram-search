@@ -1,9 +1,11 @@
+import type { Dialog } from 'telegram/tl/custom/dialog'
 import type { CoreContext } from '../context'
+import type { Result } from '../utils/monad'
 import type { PromiseResult } from '../utils/result'
 
-import { useLogger } from '@tg-search/common'
+import { circularObject, useLogger } from '@tg-search/common'
 
-import { getEntityInfo } from '../utils/entity'
+import { Err, Ok } from '../utils/monad'
 import { withResult } from '../utils/result'
 
 export interface CoreDialog {
@@ -31,6 +33,41 @@ export type DialogService = ReturnType<typeof createDialogService>
 export function createDialogService(ctx: CoreContext) {
   const { getClient, emitter } = ctx
 
+  const logger = useLogger('core:dialog')
+
+  function resolveDialog(dialog: Dialog): Result<{
+    id: number
+    name: string
+    type: 'user' | 'group' | 'channel'
+  }> {
+    const { isGroup, isChannel, isUser } = dialog
+    let type: 'user' | 'group' | 'channel'
+    if (isGroup) {
+      type = 'group'
+    }
+    else if (isChannel) {
+      type = 'channel'
+    }
+    else if (isUser) {
+      type = 'user'
+    }
+    else {
+      logger.withFields({ dialog: circularObject(dialog) }).warn('Unknown dialog')
+      return Err('Unknown dialog')
+    }
+
+    const { id, name } = dialog
+    if (!id || !name) {
+      logger.withFields({ dialog: circularObject(dialog) }).warn('Unknown dialog')
+      return Err('Unknown dialog')
+    }
+
+    return Ok({
+      id: id.toJSNumber(),
+      name,
+      type,
+    })
+  }
   async function fetchDialogs(): PromiseResult<CoreDialog[] | null> {
     // TODO: use invoke api
     // TODO: use pagination
@@ -44,8 +81,8 @@ export function createDialogService(ctx: CoreContext) {
         continue
       }
 
-      const { id, type, name } = getEntityInfo(dialog.entity)
-      if (type === 'unknown') {
+      const result = resolveDialog(dialog).orUndefined()
+      if (!result) {
         continue
       }
 
@@ -64,9 +101,9 @@ export function createDialogService(ctx: CoreContext) {
       }
 
       dialogs.push({
-        id,
-        name,
-        type,
+        id: result.id,
+        name: result.name,
+        type: result.type,
         unreadCount,
         messageCount,
         lastMessage,
