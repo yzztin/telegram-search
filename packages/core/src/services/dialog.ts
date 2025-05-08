@@ -54,10 +54,15 @@ export function createDialogService(ctx: CoreContext) {
       return Err('Unknown dialog')
     }
 
-    const { id, name } = dialog
-    if (!id || !name) {
-      logger.withFields({ dialog: circularObject(dialog) }).warn('Unknown dialog')
-      return Err('Unknown dialog')
+    const id = dialog.entity?.id
+    if (!id) {
+      logger.withFields({ dialog: circularObject(dialog) }).warn('Unknown dialog with no id')
+      return Err('Unknown dialog with no id')
+    }
+
+    let { name } = dialog
+    if (!name) {
+      name = id.toString()
     }
 
     return Ok({
