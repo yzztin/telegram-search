@@ -27,6 +27,6 @@ export function useLogger(name?: string): Logger {
   const fileName = path.join(...basePath.split(path.sep).slice(-2))
 
   const nameToDisplay = name || `${fileName}:${currentStack.lineNumber}`
-  const hyperlink = !isBrowser() ? `\x1B]8;;<URL>\x1B\\${nameToDisplay}\x1B]8;;\x1B\\` : nameToDisplay
+  const hyperlink = !isBrowser() ? `\x1B]8;;file://${basePath}\x1B\\${nameToDisplay}\x1B]8;;\x1B\\` : nameToDisplay
   return useLogg(hyperlink).useGlobalConfig()
 }
