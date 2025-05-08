@@ -2,12 +2,11 @@ import type { CoreContext } from '../context'
 import type { CoreDialog } from '../services'
 
 import { useLogger } from '@tg-search/common'
-import { useConfig } from '@tg-search/common/composable'
-import { embed } from '@xsai/embed'
 
 import { fetchMessages, recordMessages, retriveMessages } from '../models/chat-message'
 import { getChatMessagesStats } from '../models/chat-message-stats'
 import { fetchChats, recordChats } from '../models/chats'
+import { embedContents } from '../utils/embed'
 
 export function registerStorageEventHandlers(ctx: CoreContext) {
   const { emitter } = ctx
@@ -69,15 +68,9 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
     logger.withFields({ params }).verbose('Searching messages')
 
     if (params.useVector) {
-      const embeddingConfig = useConfig().api.embedding
-      const { embedding } = await embed({
-        apiKey: embeddingConfig.apiKey,
-        baseURL: embeddingConfig.apiBase || '',
-        input: params.content,
-        model: embeddingConfig.model,
-      })
+      const { embeddings } = (await embedContents([params.content])).expect('Failed to embed content')
 
-      await retriveMessages(params.chatId, { embedding, text: params.content }, params.pagination)
+      await retriveMessages(params.chatId, { embedding: embeddings[0], text: params.content }, params.pagination)
     }
     else {
       await retriveMessages(params.chatId, { text: params.content }, params.pagination)

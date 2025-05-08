@@ -2,9 +2,8 @@ import type { MessageResolver, MessageResolverOpts } from '.'
 import type { CoreMessage } from '../utils/message'
 
 import { EmbeddingDimension, useLogger } from '@tg-search/common'
-import { useConfig } from '@tg-search/common/composable'
-import { embedMany } from '@xsai/embed'
 
+import { embedContents } from '../utils/embed'
 import { Err, Ok } from '../utils/monad'
 
 export function createEmbeddingResolver(): MessageResolver {
@@ -29,13 +28,7 @@ export function createEmbeddingResolver(): MessageResolver {
 
       logger.withFields({ messages: messages.length }).verbose('Embedding messages')
 
-      const embeddingConfig = useConfig().api.embedding
-      const { embeddings, usage } = await embedMany({
-        apiKey: embeddingConfig.apiKey,
-        baseURL: embeddingConfig.apiBase || '',
-        input: messages.map(message => message.content),
-        model: embeddingConfig.model,
-      })
+      const { embeddings, usage, dimension } = (await embedContents(messages.map(message => message.content))).expect('Failed to embed messages')
 
       // if (message.sticker != null) {
       //   text = `A sticker sent by user ${await findStickerDescription(message.sticker.file_id)}, sticker set named ${message.sticker.set_name}`
@@ -50,7 +43,7 @@ export function createEmbeddingResolver(): MessageResolver {
       logger.withFields({ embeddings: embeddings.length, usage }).verbose('Embedding messages done')
 
       for (const [index, message] of messages.entries()) {
-        switch (embeddingConfig.dimension) {
+        switch (dimension) {
           case EmbeddingDimension.DIMENSION_1536:
             message.vectors.vector1536 = embeddings[index]
             break
@@ -61,7 +54,7 @@ export function createEmbeddingResolver(): MessageResolver {
             message.vectors.vector768 = embeddings[index]
             break
           default:
-            throw new Error(`Unsupported embedding dimension: ${embeddingConfig.dimension}`)
+            throw new Error(`Unsupported embedding dimension: ${dimension}`)
         }
       }
 
