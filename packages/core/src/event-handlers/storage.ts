@@ -19,22 +19,15 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
 
   emitter.on('storage:record:messages', async ({ messages }) => {
     logger.withFields({ messages: messages.length }).verbose('Recording messages')
-    logger.withFields({ messages: messages.map((m) => {
-      // const obj = defu({}, m)
-
-      // delete obj.vectors.vector1536
-      // delete obj.vectors.vector1024
-      // delete obj.vectors.vector768
-
-      return {
-        ...m,
-        vectors: {
-          vector1536: m.vectors.vector1536?.length,
-          vector1024: m.vectors.vector1024?.length,
-          vector768: m.vectors.vector768?.length,
-        },
-      }
-    }) }).debug('Recording messages')
+    logger.withFields(messages.map(m => ({
+      ...m,
+      vectors: {
+        vector1536: m.vectors.vector1536?.length,
+        vector1024: m.vectors.vector1024?.length,
+        vector768: m.vectors.vector768?.length,
+      },
+    })),
+    ).debug('Recording messages')
     await recordMessages(messages)
   })
 
@@ -68,5 +61,10 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
     }).verbose('Recording dialogs')
 
     await recordJoinedChats(dialogs)
+  })
+
+  emitter.on('storage:search:messages', async ({ params }) => {
+    logger.withFields({ params }).verbose('Searching messages')
+    // await findRelevantMessages()
   })
 }
