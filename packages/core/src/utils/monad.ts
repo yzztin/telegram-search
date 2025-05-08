@@ -1,15 +1,15 @@
 import { useLogger } from '@tg-search/common'
 
-export interface Result<T> {
-  orDefault: (defaultValue: T) => T
+export interface Result<out T> {
+  orDefault: <U extends T>(defaultValue: U) => T
   orUndefined: () => T | undefined
-  orElse: (fn: () => T) => T
+  orElse: <U extends T>(fn: () => U) => T
   unwrap: () => T
   unwrapOver: (fn: (error: unknown) => void) => T
   expect: (message?: string) => T
   expectOver: (message?: string, fn?: (error: unknown) => void) => T
-  map: <U>(fn: (value: T) => U) => Result<U>
-  mapErr: (fn: (error: unknown) => T) => Result<T>
+  map: <U extends T>(fn: (value: T) => U) => Result<U>
+  mapErr: <U extends T>(fn: (error: unknown) => U) => Result<U>
 }
 
 export function Ok<T>(value: T): Result<T> {
@@ -29,8 +29,8 @@ export function Ok<T>(value: T): Result<T> {
         return Err(err instanceof Error ? err : new Error(String(err)))
       }
     },
-    mapErr: (_fn) => {
-      return Ok(value)
+    mapErr: <U extends T>(_fn: (error: unknown) => U) => {
+      return Ok(value) as Result<U>
     },
   }
 }
