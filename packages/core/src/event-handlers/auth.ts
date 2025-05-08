@@ -16,8 +16,8 @@ export function registerAuthEventHandlers(ctx: CoreContext) {
 
       logger.withFields({ session }).verbose('Loaded session')
 
-      const client = (await configuredConnectionService.login({ phoneNumber, session })).expect('Failed to login to Telegram')
-      logger.withFields({ client }).verbose('Logged in to Telegram')
+      await configuredConnectionService.login({ phoneNumber, session })
+      logger.verbose('Logged in to Telegram')
     })
 
     emitter.on('auth:logout', async () => {

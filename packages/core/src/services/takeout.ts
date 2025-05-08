@@ -8,7 +8,6 @@ import bigInt from 'big-integer'
 import { Api } from 'telegram'
 
 import { Err, Ok } from '../utils/monad'
-import { withRetry } from '../utils/retry'
 import { useTasks } from '../utils/task'
 
 export interface TakeoutTaskMetadata {
@@ -152,12 +151,12 @@ export function createTakeoutService(ctx: CoreContext) {
         //   progress: 0,
         // })
 
-        const result = await withRetry(async () => await getClient().invoke(
+        const result = await getClient().invoke(
           new Api.InvokeWithTakeout({
             takeoutId: takeoutSession.id,
             query: historyQuery,
           }),
-        )) as Record<string, unknown>
+        ) as Record<string, unknown>
 
         logger.withFields(result).debug('Get messages result')
 

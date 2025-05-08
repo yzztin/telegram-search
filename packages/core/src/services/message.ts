@@ -11,7 +11,6 @@ import { Api } from 'telegram'
 
 import { convertToCoreMessage } from '../utils/message'
 import { Err, Ok } from '../utils/monad'
-import { withRetry } from '../utils/retry'
 
 export interface MessageEventToCore {
   'message:fetch': (data: { chatId: string, pagination: CorePagination }) => void
@@ -69,7 +68,9 @@ export function createMessageService(ctx: CoreContext) {
 
         try {
           const result = (await resolver.run({ messages: emitMessages })).unwrap()
+          // logger.withFields({ result }).debug('Processed messages result')
           emitMessages = result.length > 0 ? result : emitMessages
+          // logger.withFields({ emitMessages }).debug('Processed messages')
         }
         catch (error) {
           logger.withFields({ error }).warn('Failed to process messages')
@@ -81,8 +82,8 @@ export function createMessageService(ctx: CoreContext) {
 
     async function getHistoryWithMessagesCount(chatId: EntityLike): Promise<Result<Api.messages.TypeMessages & { count: number }>> {
       try {
-        const history = await withRetry(
-          () => getClient().invoke(new Api.messages.GetHistory({
+        const history = await getClient()
+          .invoke(new Api.messages.GetHistory({
             peer: chatId,
             limit: 1,
             offsetId: 0,
@@ -91,8 +92,7 @@ export function createMessageService(ctx: CoreContext) {
             maxId: 0,
             minId: 0,
             hash: bigInt(0),
-          })),
-        ) as Api.messages.TypeMessages & { count: number }
+          })) as Api.messages.TypeMessages & { count: number }
 
         return Ok(history)
       }
@@ -110,10 +110,6 @@ export function createMessageService(ctx: CoreContext) {
         return
       }
 
-      let offsetId = 0
-      let hasMore = true
-      let processedCount = 0
-
       const limit = options.pagination.limit
       const minId = options?.minId
       const maxId = options?.maxId
@@ -123,7 +119,6 @@ export function createMessageService(ctx: CoreContext) {
       logger.withFields({
         chatId,
         limit,
-        offsetId,
         minId,
         maxId,
         startTime,
@@ -137,9 +132,8 @@ export function createMessageService(ctx: CoreContext) {
       // }))
       // logger.withFields({ chatId, name: dialog.peer.className, json: dialog.toJSON() }).verbose('Got dialog')
 
-      const history = (await getHistoryWithMessagesCount(chatId)).expect('Failed to get history')
-
-      logger.withFields({ chatId, count: history?.count }).verbose('Got history')
+      // const history = (await getHistoryWithMessagesCount(chatId)).expect('Failed to get history')
+      // logger.withFields({ chatId, count: history?.count }).verbose('Got history')
 
       // await getClient().getDialogs()
 
@@ -148,65 +142,50 @@ export function createMessageService(ctx: CoreContext) {
       //   throw new Error(`Chat not found: ${chatId}`)
       // }
 
-      // TODO: Abort signal
-      while (hasMore) {
-        try {
-          const messages = await withRetry(
-            () => getClient().getMessages(chatId, {
-              limit,
-              offsetId,
-              minId,
-              maxId,
-              addOffset: options.pagination.offset, // TODO: rename this
-            }),
-          )
+      try {
+        logger.withFields({ limit }).debug('Fetching messages from Telegram server')
+        const messages = await getClient()
+          .getMessages(chatId, {
+            limit,
+            minId,
+            maxId,
+            addOffset: options.pagination.offset, // TODO: rename this
+          })
 
-          if (messages.length === 0) {
-            logger.error('Get messages failed or returned empty data')
-            return Err(new Error('Get messages failed or returned empty data'))
-          }
+        if (messages.length === 0) {
+          logger.error('Get messages failed or returned empty data')
+          return Err(new Error('Get messages failed or returned empty data'))
+        }
 
-          // If we got fewer messages than requested, there are no more
-          hasMore = messages.length === limit
-
-          for (const message of messages) {
+        for (const message of messages) {
           // Skip empty messages
-            if (message instanceof Api.MessageEmpty) {
-              continue
-            }
-
-            // Check time range
-            const messageTime = new Date(message.date * 1000)
-            if (startTime && messageTime < startTime) {
-              continue
-            }
-            if (endTime && messageTime > endTime) {
-              continue
-            }
-
-            yield message
-            processedCount++
-
-            // Update offsetId to current message ID
-            offsetId = message.id
-
-            // Check if we've reached the limit
-            if (limit && processedCount >= limit) {
-              break
-            }
+          if (message instanceof Api.MessageEmpty) {
+            continue
           }
+
+          // Check time range
+          const messageTime = new Date(message.date * 1000)
+          if (startTime && messageTime < startTime) {
+            continue
+          }
+          if (endTime && messageTime > endTime) {
+            continue
+          }
+
+          yield message
         }
-        catch (error) {
-          return Err(withError(error, 'Fetch messages failed'))
-        }
+      }
+      catch (error) {
+        return Err(withError(error, 'Fetch messages failed'))
       }
     }
 
     async function sendMessage(chatId: string, content: string) {
-      const message = await withRetry(() => getClient().invoke(new Api.messages.SendMessage({
-        peer: chatId,
-        message: content,
-      })))
+      const message = await getClient()
+        .invoke(new Api.messages.SendMessage({
+          peer: chatId,
+          message: content,
+        }))
 
       return Ok(message)
     }
