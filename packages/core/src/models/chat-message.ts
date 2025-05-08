@@ -1,5 +1,6 @@
 // https://github.com/moeru-ai/airi/blob/main/services/telegram-bot/src/models/chat-message.ts
 
+import type { UUID } from 'node:crypto'
 import type { CoreMessage } from '../utils/message'
 import type { CorePagination } from '../utils/pagination'
 
@@ -70,7 +71,7 @@ export async function fetchMessages(chatId: string, pagination: CorePagination):
 
   const coreMessages = dbMessagesResults.map((message) => {
     return {
-      uuid: message.id,
+      uuid: message.id as UUID,
 
       platform: message.platform,
       platformMessageId: message.platform_message_id,
