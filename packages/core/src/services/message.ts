@@ -52,8 +52,10 @@ export function createMessageService(ctx: CoreContext) {
       logger.withFields({ count: messages.length }).verbose('Process messages')
 
       const coreMessages = messages
-        .map(message => convertToCoreMessage(message))
-        .filter(message => message !== null)
+        .map(message => convertToCoreMessage(message).orUndefined())
+        .filter(message => message != null)
+
+      logger.withFields({ count: coreMessages.length }).debug('Converted messages')
 
       // Return the messages first
       emitter.emit('message:data', { messages: coreMessages })

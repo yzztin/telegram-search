@@ -62,7 +62,7 @@ export function afterConnectedEventHandler(
 
     registry.register('embedding', createEmbeddingResolver())
     registry.register('link', createLinkResolver())
-    registry.register('user', createUserResolver())
+    registry.register('user', createUserResolver(ctx))
     registry.register('jieba', createJiebaResolver())
 
     registerMessageEventHandlers(ctx)(messageService)

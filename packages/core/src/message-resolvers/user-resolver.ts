@@ -1,18 +1,40 @@
+import type { Entity } from 'telegram/define'
 import type { MessageResolver, MessageResolverOpts } from '.'
-import type { CoreMessage } from '../utils/message'
+import type { CoreContext } from '../context'
 
 import { useLogger } from '@tg-search/common'
 
+import { resolveEntity } from '../utils/entity'
 import { Ok } from '../utils/monad'
 
-export function createUserResolver(): MessageResolver {
+export function createUserResolver(ctx: CoreContext): MessageResolver {
   const logger = useLogger('core:resolver:user')
 
+  const entities = new Map<string, Entity>()
+
   return {
-    run: async (_opts: MessageResolverOpts) => {
+    run: async (opts: MessageResolverOpts) => {
       logger.verbose('Executing user resolver')
 
-      return Ok([] as CoreMessage[])
+      const { messages } = opts
+
+      for (const message of messages) {
+        if (!entities.has(message.fromId)) {
+          const entity = await ctx.getClient().getEntity(message.fromId)
+          entities.set(message.fromId, entity)
+          logger.withFields(entity).debug('Resolved entity')
+        }
+
+        const entity = entities.get(message.fromId)!
+        const result = resolveEntity(entity).orUndefined()
+        if (!result) {
+          continue
+        }
+
+        message.fromName = result.name
+      }
+
+      return Ok(messages)
     },
   }
 }

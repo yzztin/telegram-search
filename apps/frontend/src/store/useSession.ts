@@ -1,4 +1,4 @@
-import type { CoreUserInfo } from '@tg-search/core'
+import type { CoreUserEntity } from '@tg-search/core'
 
 import { useLocalStorage } from '@vueuse/core'
 import { defu } from 'defu'
@@ -10,7 +10,7 @@ import { useWebsocketStore } from './useWebsocket'
 export interface SessionContext {
   phoneNumber?: string
   isConnected?: boolean
-  me?: CoreUserInfo
+  me?: CoreUserEntity
 }
 
 export const useSessionStore = defineStore('session', () => {

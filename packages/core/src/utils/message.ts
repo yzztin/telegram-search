@@ -1,8 +1,12 @@
-import { useLogger } from '@tg-search/common'
+import type { UUID } from 'node:crypto'
+import type { Result } from './monad'
+
 import { Api } from 'telegram'
 
+import { Err, Ok } from './monad'
+
 export interface CoreMessage {
-  uuid: string
+  uuid: UUID
 
   platform: string // Telegram
   platformMessageId: string
@@ -47,18 +51,35 @@ export interface CoreMessageVector {
   vector768?: number[]
 }
 
-export function convertToCoreMessage(message: Api.Message): CoreMessage | null {
+export function convertToCoreMessage(message: Api.Message): Result<CoreMessage> {
   const sender = message.sender
-  if (!(sender instanceof Api.User)) {
-    useLogger().withFields({ messageId: message.id }).warn('Message sender is not a user')
-    return null
+  const senderId = message.senderId
+  if ((!sender && !senderId) || (sender instanceof Api.UserEmpty) || (sender instanceof Api.ChatEmpty)) {
+    return Err(new Error(`Message ${message.id} has no sender or sender is empty`))
   }
 
-  const messageId = message.id.toString()
-  const chatId = message.chat?.id.toString() ?? '0'
-  const fromId = sender.id.toString()
-  const fromName = `${sender.firstName ?? ''} ${sender.lastName ?? ''}`
-  const content = message.message ?? ''
+  let fromName = ''
+  if (sender instanceof Api.User) {
+    fromName = `${sender.firstName ?? ''} ${sender.lastName ?? ''}`
+  }
+  else {
+    fromName = sender?.title ?? String(senderId)
+  }
+
+  let chatId = ''
+  if (message.peerId instanceof Api.PeerUser) {
+    chatId = String(message.peerId.userId.toJSNumber())
+  }
+  else if (message.peerId instanceof Api.PeerChat) {
+    chatId = String(message.peerId.chatId.toJSNumber())
+  }
+  else if (message.peerId instanceof Api.PeerChannel) {
+    chatId = String(message.peerId.channelId.toJSNumber())
+  }
+
+  const messageId = String(message.id)
+  const fromId = String(senderId?.toJSNumber())
+  const content = message.message
 
   // Get forward info
   const forward: CoreMessageForward = {
@@ -77,26 +98,25 @@ export function convertToCoreMessage(message: Api.Message): CoreMessage | null {
     replyToName: undefined, // Needs async user lookup
   }
 
-  // Get vectors info
-  const vectors: CoreMessageVector = {
-    vector1536: [],
-    vector1024: [],
-    vector768: [],
-  }
-
-  return {
-    uuid: crypto.randomUUID(),
-    platform: 'telegram',
-    platformMessageId: messageId,
-    chatId,
-    fromId,
-    fromName,
-    content,
-    reply,
-    forward,
-    vectors,
-    jiebaTokens: [],
-    createdAt: message.date,
-    updatedAt: Date.now(),
-  }
+  return Ok(
+    {
+      uuid: crypto.randomUUID(),
+      platform: 'telegram',
+      platformMessageId: messageId,
+      chatId,
+      fromId,
+      fromName,
+      content,
+      reply,
+      forward,
+      vectors: {
+        vector1536: [],
+        vector1024: [],
+        vector768: [],
+      },
+      jiebaTokens: [],
+      createdAt: message.date,
+      updatedAt: Date.now(),
+    } as CoreMessage,
+  )
 }
