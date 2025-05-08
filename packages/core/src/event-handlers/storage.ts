@@ -2,10 +2,12 @@ import type { CoreContext } from '../context'
 import type { CoreDialog } from '../services'
 
 import { useLogger } from '@tg-search/common'
+import { useConfig } from '@tg-search/common/composable'
+import { embed } from '@xsai/embed'
 
-import { fetchMessages, recordMessages } from '../models/chat-message'
+import { fetchMessages, recordMessages, retriveMessages } from '../models/chat-message'
 import { getChatMessagesStats } from '../models/chat-message-stats'
-import { listJoinedChats, recordJoinedChats } from '../models/chats'
+import { fetchChats, recordChats } from '../models/chats'
 
 export function registerStorageEventHandlers(ctx: CoreContext) {
   const { emitter } = ctx
@@ -34,7 +36,7 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
   emitter.on('storage:fetch:dialogs', async () => {
     logger.verbose('Fetching dialogs')
 
-    const dbChats = await listJoinedChats()
+    const dbChats = await fetchChats()
     const chatsMessageStats = await getChatMessagesStats()
 
     logger.withFields({ dbChatsSize: dbChats.length, chatsMessageStatsSize: chatsMessageStats.length }).verbose('Chat message stats')
@@ -60,11 +62,25 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
       channels: dialogs.filter(d => d.type === 'channel').length,
     }).verbose('Recording dialogs')
 
-    await recordJoinedChats(dialogs)
+    await recordChats(dialogs)
   })
 
   emitter.on('storage:search:messages', async ({ params }) => {
     logger.withFields({ params }).verbose('Searching messages')
-    // await findRelevantMessages()
+
+    if (params.useVector) {
+      const embeddingConfig = useConfig().api.embedding
+      const { embedding } = await embed({
+        apiKey: embeddingConfig.apiKey,
+        baseURL: embeddingConfig.apiBase || '',
+        input: params.content,
+        model: embeddingConfig.model,
+      })
+
+      await retriveMessages(params.chatId, { embedding, text: params.content }, params.pagination)
+    }
+    else {
+      await retriveMessages(params.chatId, { text: params.content }, params.pagination)
+    }
   })
 }

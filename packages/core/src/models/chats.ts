@@ -7,7 +7,7 @@ import { eq, sql } from 'drizzle-orm'
 import { withDb } from '../db'
 import { joinedChatsTable } from '../db/schema'
 
-export async function listJoinedChats() {
+export async function fetchChats() {
   return (await withDb(db => db
     .select()
     .from(joinedChatsTable)
@@ -15,7 +15,7 @@ export async function listJoinedChats() {
   )).expect('Failed to list joined chats')
 }
 
-export async function recordJoinedChats(chats: CoreDialog[]) {
+export async function recordChats(chats: CoreDialog[]) {
   // TODO: better way to do this?
   return (await withDb(db => db
     .insert(joinedChatsTable)

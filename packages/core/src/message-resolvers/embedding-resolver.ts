@@ -10,9 +10,6 @@ import { Err, Ok } from '../utils/monad'
 export function createEmbeddingResolver(): MessageResolver {
   const logger = useLogger('core:resolver:embedding')
 
-  const config = useConfig()
-  const embedding = config.api.embedding
-
   return {
     run: async (opts: MessageResolverOpts) => {
       logger.verbose('Executing embedding resolver')
@@ -32,11 +29,12 @@ export function createEmbeddingResolver(): MessageResolver {
 
       logger.withFields({ messages: messages.length }).verbose('Embedding messages')
 
+      const embeddingConfig = useConfig().api.embedding
       const { embeddings, usage } = await embedMany({
-        apiKey: embedding.apiKey,
-        baseURL: embedding.apiBase || '',
+        apiKey: embeddingConfig.apiKey,
+        baseURL: embeddingConfig.apiBase || '',
         input: messages.map(message => message.content),
-        model: embedding.model,
+        model: embeddingConfig.model,
       })
 
       // if (message.sticker != null) {
@@ -52,7 +50,7 @@ export function createEmbeddingResolver(): MessageResolver {
       logger.withFields({ embeddings: embeddings.length, usage }).verbose('Embedding messages done')
 
       for (const [index, message] of messages.entries()) {
-        switch (embedding.dimension) {
+        switch (embeddingConfig.dimension) {
           case EmbeddingDimension.DIMENSION_1536:
             message.vectors.vector1536 = embeddings[index]
             break
@@ -63,7 +61,7 @@ export function createEmbeddingResolver(): MessageResolver {
             message.vectors.vector768 = embeddings[index]
             break
           default:
-            throw new Error(`Unsupported embedding dimension: ${embedding.dimension}`)
+            throw new Error(`Unsupported embedding dimension: ${embeddingConfig.dimension}`)
         }
       }
 
