@@ -14,6 +14,7 @@ import { registerStorageEventHandlers } from './event-handlers/storage'
 import { registerTakeoutEventHandlers } from './event-handlers/takeout'
 import { useMessageResolverRegistry } from './message-resolvers'
 import { createEmbeddingResolver } from './message-resolvers/embedding-resolver'
+import { createJiebaResolver } from './message-resolvers/jieba-resolver'
 import { createLinkResolver } from './message-resolvers/link-resolver'
 import { createUserResolver } from './message-resolvers/user-resolver'
 import { createConfigService } from './services/config'
@@ -62,6 +63,7 @@ export function afterConnectedEventHandler(
     registry.register('embedding', createEmbeddingResolver())
     registry.register('link', createLinkResolver())
     registry.register('user', createUserResolver())
+    registry.register('jieba', createJiebaResolver())
 
     registerMessageEventHandlers(ctx)(messageService)
     registerDialogEventHandlers(ctx)(dialogService)

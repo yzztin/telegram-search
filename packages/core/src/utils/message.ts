@@ -16,6 +16,7 @@ export interface CoreMessage {
   reply: CoreMessageReply
   forward: CoreMessageForward
   vectors: CoreMessageVector
+  jiebaTokens: string[]
 
   createdAt: number
   updatedAt: number
@@ -94,6 +95,7 @@ export function convertToCoreMessage(message: Api.Message): CoreMessage | null {
     reply,
     forward,
     vectors,
+    jiebaTokens: [],
     createdAt: message.date,
     updatedAt: Date.now(),
   }

@@ -1,5 +1,5 @@
 {
-  "id": "db4661b9-e128-4ba1-a47f-e221901568c9",
+  "id": "e8c5f5b1-e635-4c72-84ed-555d67d8042d",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -92,6 +92,13 @@
           "notNull": true,
           "default": 0
         },
+        "jieba_tokens": {
+          "name": "jieba_tokens",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
         "content_vector_1536": {
           "name": "content_vector_1536",
           "type": "vector(1536)",
@@ -179,6 +186,22 @@
           "isUnique": false,
           "concurrently": false,
           "method": "hnsw",
+          "with": {}
+        },
+        "jieba_tokens_index": {
+          "name": "jieba_tokens_index",
+          "columns": [
+            {
+              "expression": "jieba_tokens",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last",
+              "opclass": "jsonb_ops"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "gin",
           "with": {}
         }
       },

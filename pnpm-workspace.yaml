@@ -2,11 +2,9 @@ packages:
   - packages/*
   - libs/*
   - apps/*
-
 catalog:
   '@xsai-ext/providers-cloud': ^0.2.0
   '@xsai/embed': ^0.2.0
-
 ignoredBuiltDependencies:
   - '@parcel/watcher'
   - bufferutil
@@ -19,6 +17,6 @@ ignoredBuiltDependencies:
   - sha3
   - utf-8-validate
   - vue-demi
-
 onlyBuiltDependencies:
+  - nodejieba
   - websocket

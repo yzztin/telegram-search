@@ -4,13 +4,17 @@ import type { SQL } from 'drizzle-orm'
 import type { CoreMessage } from '../utils/message'
 import type { CorePagination } from '../utils/pagination'
 
-import { env } from 'node:process'
-import { useLogger } from '@tg-search/common'
+import { EmbeddingDimension, useLogger } from '@tg-search/common'
+import { useConfig } from '@tg-search/common/composable'
 import { and, cosineDistance, desc, eq, gt, inArray, lt, ne, notInArray, sql } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { chatMessagesTable } from '../db/schema'
+import { Ok } from '../utils/monad'
 import { chatMessageToOneLine } from './common'
+
+type DBInsertMessage = Partial<Omit<typeof chatMessagesTable.$inferSelect, 'id' | 'created_at' | 'updated_at'>>
+type DBSelectMessage = Omit<typeof chatMessagesTable.$inferSelect, 'id' | 'created_at' | 'updated_at'>
 
 export async function recordMessages(messages: CoreMessage[]) {
   const dbMessages = messages.map((message) => {
@@ -18,7 +22,7 @@ export async function recordMessages(messages: CoreMessage[]) {
 
     const text = message.content
 
-    const values: Partial<Omit<typeof chatMessagesTable.$inferSelect, 'id' | 'created_at' | 'updated_at'>> = {
+    const values = {
       platform: message.platform,
       from_id: message.fromId,
       platform_message_id: message.platformMessageId,
@@ -31,7 +35,8 @@ export async function recordMessages(messages: CoreMessage[]) {
       content_vector_1536: message.vectors.vector1536?.length !== 0 ? message.vectors.vector1536 : null,
       content_vector_1024: message.vectors.vector1024?.length !== 0 ? message.vectors.vector1024 : null,
       content_vector_768: message.vectors.vector768?.length !== 0 ? message.vectors.vector768 : null,
-    }
+      jieba_tokens: message.jiebaTokens,
+    } satisfies DBInsertMessage
 
     return values
   })
@@ -49,7 +54,7 @@ export async function recordMessages(messages: CoreMessage[]) {
   )).expect('Failed to record messages')
 }
 
-export async function fetchMessages(chatId: string, pagination: CorePagination) {
+export async function fetchMessages(chatId: string, pagination: CorePagination): Promise<CoreMessage[]> {
   const dbMessagesResults = (await withDb(db => db
     .select()
     .from(chatMessagesTable)
@@ -110,28 +115,108 @@ export async function findLastNMessages(chatId: string, n: number) {
   return res.reverse()
 }
 
-export async function findRelevantMessages(botId: string, chatId: string, unreadHistoryMessagesEmbedding: { embedding: number[] }[], excludeMessageIds: string[] = []) {
+export function getSimilaritySql(dimension: EmbeddingDimension, embedding: number[]) {
+  let similarity: SQL<number>
+
+  switch (dimension) {
+    case EmbeddingDimension.DIMENSION_1536:
+      similarity = sql<number>`(1 - (${cosineDistance(chatMessagesTable.content_vector_1536, embedding)}))`
+      break
+    case EmbeddingDimension.DIMENSION_1024:
+      similarity = sql<number>`(1 - (${cosineDistance(chatMessagesTable.content_vector_1024, embedding)}))`
+      break
+    case EmbeddingDimension.DIMENSION_768:
+      similarity = sql<number>`(1 - (${cosineDistance(chatMessagesTable.content_vector_768, embedding)}))`
+      break
+    default:
+      throw new Error(`Unsupported embedding dimension: ${dimension}`)
+  }
+
+  return similarity
+}
+
+export interface DBRetrivalMessages extends DBSelectMessage {
+  similarity?: number
+  time_relevance?: number
+  combined_score?: number
+}
+
+export async function searchMessages(
+  chatId: string,
+  content: {
+    text?: string
+    embedding?: number[]
+  },
+  pagination?: CorePagination,
+) {
+  const retrivalMessages: DBRetrivalMessages[] = []
+
+  // if (content.text) {
+
+  // }
+
+  if (content.embedding) {
+    const similarity = getSimilaritySql(
+      useConfig().api.embedding.dimension || EmbeddingDimension.DIMENSION_1536,
+      content.embedding,
+    )
+
+    const timeRelevance = sql<number>`(1 - (CEIL(EXTRACT(EPOCH FROM NOW()) * 1000)::bigint - ${chatMessagesTable.created_at}) / 86400 / 30)`
+    const combinedScore = sql<number>`((1.2 * ${similarity}) + (0.2 * ${timeRelevance}))`
+
+    // Get top messages with similarity above threshold
+    const relevantMessages = (await withDb(db => db
+      .select({
+        id: chatMessagesTable.id,
+        platform: chatMessagesTable.platform,
+        platform_message_id: chatMessagesTable.platform_message_id,
+        from_id: chatMessagesTable.from_id,
+        from_name: chatMessagesTable.from_name,
+        in_chat_id: chatMessagesTable.in_chat_id,
+        content: chatMessagesTable.content,
+        is_reply: chatMessagesTable.is_reply,
+        reply_to_name: chatMessagesTable.reply_to_name,
+        reply_to_id: chatMessagesTable.reply_to_id,
+        created_at: chatMessagesTable.created_at,
+        updated_at: chatMessagesTable.updated_at,
+        jieba_tokens: chatMessagesTable.jieba_tokens,
+        similarity: sql`${similarity} AS "similarity"`,
+        time_relevance: sql`${timeRelevance} AS "time_relevance"`,
+        combined_score: sql`${combinedScore} AS "combined_score"`,
+      })
+      .from(chatMessagesTable)
+      .where(and(
+        eq(chatMessagesTable.platform, 'telegram'),
+        eq(chatMessagesTable.in_chat_id, chatId),
+        gt(similarity, 0.5),
+        // notInArray(chatMessagesTable.platform_message_id, excludeMessageIds),
+      ))
+      .orderBy(desc(sql`combined_score`))
+      .limit(pagination?.limit || 20),
+    )).expect('Failed to fetch relevant messages')
+
+    retrivalMessages.push(relevantMessages)
+  }
+
+  return Ok(retrivalMessages)
+}
+
+export async function findRelevantMessages(
+  botId: string,
+  chatId: string,
+  unreadHistoryMessagesEmbedding: { embedding: number[] }[],
+  excludeMessageIds: string[] = [],
+) {
   const contextWindowSize = 10 // Number of messages to include before and after
   const logger = useLogger('findRelevantMessages').useGlobalConfig().withField('chatId', chatId)
 
   logger.withField('context_window_size', contextWindowSize).verbose('Querying relevant chat messages...')
 
   return await Promise.all(unreadHistoryMessagesEmbedding.map(async (embedding) => {
-    let similarity: SQL<number>
-
-    switch (env.EMBEDDING_DIMENSION) {
-      case '1536':
-        similarity = sql<number>`(1 - (${cosineDistance(chatMessagesTable.content_vector_1536, embedding.embedding)}))`
-        break
-      case '1024':
-        similarity = sql<number>`(1 - (${cosineDistance(chatMessagesTable.content_vector_1024, embedding.embedding)}))`
-        break
-      case '768':
-        similarity = sql<number>`(1 - (${cosineDistance(chatMessagesTable.content_vector_768, embedding.embedding)}))`
-        break
-      default:
-        throw new Error(`Unsupported embedding dimension: ${env.EMBEDDING_DIMENSION}`)
-    }
+    const similarity = getSimilaritySql(
+      useConfig().api.embedding.dimension || EmbeddingDimension.DIMENSION_1536,
+      embedding.embedding,
+    )
 
     const timeRelevance = sql<number>`(1 - (CEIL(EXTRACT(EPOCH FROM NOW()) * 1000)::bigint - ${chatMessagesTable.created_at}) / 86400 / 30)`
     const combinedScore = sql<number>`((1.2 * ${similarity}) + (0.2 * ${timeRelevance}))`

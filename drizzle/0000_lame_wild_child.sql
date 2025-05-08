@@ -11,6 +11,7 @@ CREATE TABLE "chat_messages" (
 	"reply_to_id" text DEFAULT '' NOT NULL,
 	"created_at" bigint DEFAULT 0 NOT NULL,
 	"updated_at" bigint DEFAULT 0 NOT NULL,
+	"jieba_tokens" jsonb DEFAULT '{}'::jsonb NOT NULL,
 	"content_vector_1536" vector(1536),
 	"content_vector_1024" vector(1024),
 	"content_vector_768" vector(768),
@@ -82,6 +83,7 @@ CREATE UNIQUE INDEX "chat_messages_platform_platform_message_id_unique_index" ON
 CREATE INDEX "chat_messages_content_vector_1536_index" ON "chat_messages" USING hnsw ("content_vector_1536" vector_cosine_ops);--> statement-breakpoint
 CREATE INDEX "chat_messages_content_vector_1024_index" ON "chat_messages" USING hnsw ("content_vector_1024" vector_cosine_ops);--> statement-breakpoint
 CREATE INDEX "chat_messages_content_vector_768_index" ON "chat_messages" USING hnsw ("content_vector_768" vector_cosine_ops);--> statement-breakpoint
+CREATE INDEX "jieba_tokens_index" ON "chat_messages" USING gin ("jieba_tokens" jsonb_ops);--> statement-breakpoint
 CREATE INDEX "photos_description_vector_1536_index" ON "photos" USING hnsw ("description_vector_1536" vector_cosine_ops);--> statement-breakpoint
 CREATE INDEX "photos_description_vector_1024_index" ON "photos" USING hnsw ("description_vector_1024" vector_cosine_ops);--> statement-breakpoint
 CREATE INDEX "photos_description_vector_768_index" ON "photos" USING hnsw ("description_vector_768" vector_cosine_ops);--> statement-breakpoint
