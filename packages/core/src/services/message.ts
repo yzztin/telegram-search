@@ -1,12 +1,9 @@
-import type { EntityLike } from 'telegram/define'
 import type { CoreContext } from '../context'
 import type { MessageResolverRegistryFn } from '../message-resolvers'
 import type { CoreMessage } from '../utils/message'
-import type { Result } from '../utils/monad'
 import type { CorePagination } from '../utils/pagination'
 
 import { useLogger } from '@tg-search/common'
-import bigInt from 'big-integer'
 import { Api } from 'telegram'
 
 import { convertToCoreMessage } from '../utils/message'
@@ -80,27 +77,6 @@ export function createMessageService(ctx: CoreContext) {
       emitter.emit('storage:record:messages', { messages: emitMessages })
     }
 
-    async function getHistoryWithMessagesCount(chatId: EntityLike): Promise<Result<Api.messages.TypeMessages & { count: number }>> {
-      try {
-        const history = await getClient()
-          .invoke(new Api.messages.GetHistory({
-            peer: chatId,
-            limit: 1,
-            offsetId: 0,
-            offsetDate: 0,
-            addOffset: 0,
-            maxId: 0,
-            minId: 0,
-            hash: bigInt(0),
-          })) as Api.messages.TypeMessages & { count: number }
-
-        return Ok(history)
-      }
-      catch (error) {
-        return Err(withError(error, 'Failed to get history'))
-      }
-    }
-
     async function* fetchMessages(
       chatId: string,
       options: Omit<FetchMessageOpts, 'chatId'>,
@@ -113,34 +89,13 @@ export function createMessageService(ctx: CoreContext) {
       const limit = options.pagination.limit
       const minId = options?.minId
       const maxId = options?.maxId
-      const startTime = options?.startTime
-      const endTime = options?.endTime
 
       logger.withFields({
         chatId,
         limit,
         minId,
         maxId,
-        startTime,
-        endTime,
       }).verbose('Fetch messages options')
-
-      // const entity = await getClient().getInputEntity(Number(chatId))
-
-      // const dialog = await getClient().invoke(new Api.messages.GetPeerDialogs({
-      //   peers: [new Api.PeerChat({ chatId: BigInt(Number(chatId)) })],
-      // }))
-      // logger.withFields({ chatId, name: dialog.peer.className, json: dialog.toJSON() }).verbose('Got dialog')
-
-      // const history = (await getHistoryWithMessagesCount(chatId)).expect('Failed to get history')
-      // logger.withFields({ chatId, count: history?.count }).verbose('Got history')
-
-      // await getClient().getDialogs()
-
-      // const chat = dialogs.find(d => d.id?.toString() === chatId)
-      // if (!chat) {
-      //   throw new Error(`Chat not found: ${chatId}`)
-      // }
 
       try {
         logger.withFields({ limit }).debug('Fetching messages from Telegram server')
@@ -160,15 +115,6 @@ export function createMessageService(ctx: CoreContext) {
         for (const message of messages) {
           // Skip empty messages
           if (message instanceof Api.MessageEmpty) {
-            continue
-          }
-
-          // Check time range
-          const messageTime = new Date(message.date * 1000)
-          if (startTime && messageTime < startTime) {
-            continue
-          }
-          if (endTime && messageTime > endTime) {
             continue
           }
 
@@ -192,7 +138,6 @@ export function createMessageService(ctx: CoreContext) {
 
     return {
       processMessages,
-      getHistoryWithMessagesCount,
       fetchMessages,
       sendMessage,
     }

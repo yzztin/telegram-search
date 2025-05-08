@@ -53,7 +53,7 @@ watch(currentTaskProgress, (progress) => {
     toast.error(currentTask.value.lastError)
   }
   else {
-    loadingToast.value = toast.loading(`同步中... ${progress}%`, {
+    loadingToast.value = toast.loading(currentTask.value?.lastMessage ?? '同步中...', {
       action: {
         label: '取消',
         onClick: handleAbort,

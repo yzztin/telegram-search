@@ -21,7 +21,7 @@ export function registerTakeoutEventHandlers(ctx: CoreContext) {
       for (const chatId of chatIds) {
         for await (const message of takeoutService.takeoutMessages(chatId, { pagination })) {
           messages.push(message)
-          logger.withFields(message).debug('Message taken out')
+          // logger.withFields(message).debug('Message taken out')
 
           if (messages.length >= batchSize) {
             emitter.emit('message:process', { messages })

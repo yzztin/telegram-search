@@ -58,11 +58,11 @@ watch(chatMessages, () => {
 })
 
 // TODO: useInfiniteScroll?
-watch(y, () => {
+watch(y, async () => {
   if (y.value === 0 && !isLoadingMessages.value) {
     isLoadingMessages.value = true
 
-    messageStore.fetchMessagesWithDatabase(id.toString(), { offset: messageOffset.value, limit: messageLimit.value })
+    await messageStore.fetchMessagesWithDatabase(id.toString(), { offset: messageOffset.value, limit: messageLimit.value })
 
     isLoadingMessages.value = false
   }

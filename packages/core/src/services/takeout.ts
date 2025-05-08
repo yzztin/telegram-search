@@ -1,3 +1,4 @@
+import type { EntityLike } from 'telegram/define'
 import type { CoreContext } from '../context'
 import type { Result } from '../utils/monad'
 import type { CorePagination } from '../utils/pagination'
@@ -97,71 +98,81 @@ export function createTakeoutService(ctx: CoreContext) {
     }
   }
 
+  async function getHistoryWithMessagesCount(chatId: EntityLike): Promise<Result<Api.messages.TypeMessages & { count: number }>> {
+    try {
+      const history = await getClient()
+        .invoke(new Api.messages.GetHistory({
+          peer: chatId,
+          limit: 1,
+          offsetId: 0,
+          offsetDate: 0,
+          addOffset: 0,
+          maxId: 0,
+          minId: 0,
+          hash: bigInt(0),
+        })) as Api.messages.TypeMessages & { count: number }
+
+      return Ok(history)
+    }
+    catch (error) {
+      return Err(withError(error, 'Failed to get history'))
+    }
+  }
+
   async function* takeoutMessages(
     chatId: string,
     options: Omit<TakeoutOpts, 'chatId'>,
-    // abortSignal: AbortSignal,
   ): AsyncGenerator<Api.Message> {
     const { taskId, abortController } = createTask({
       chatIds: [chatId],
     })
 
-    emitProgress(taskId, 1, 'Init takeout session')
+    emitProgress(taskId, 0, 'Init takeout session')
 
     let offsetId = options.pagination.offset
     let hasMore = true
     let processedCount = 0
-    let hash: bigint = BigInt(0)
 
     const limit = options.pagination.limit
     const minId = options.minId
     const maxId = options.maxId
-    const startTime = options.startTime
-    const endTime = options.endTime
 
     const takeoutSession = (await initTakeout()).expect('Init takeout session failed')
 
-    emitProgress(taskId, 2, 'Get messages')
+    emitProgress(taskId, 0, 'Get messages')
+
+    const { count } = (await getHistoryWithMessagesCount(chatId)).expect('Failed to get history')
 
     try {
       while (hasMore && !abortController.signal.aborted) {
-        // https://core.telegram.org/api/offsets
+        // https://core.telegram.org/api/offsets#hash-generation
         const id = BigInt(chatId)
-        hash = hash ^ (hash >> 21n)
-        hash = hash ^ (hash << 35n)
-        hash = hash ^ (hash >> 4n)
-        hash = hash + id
+        const hashBigInt = id ^ (id >> 21n) ^ (id << 35n) ^ (id >> 4n) + id
+        const hash = bigInt(hashBigInt.toString())
 
-        // logger.verbose(`get takeout message ${options?.minId}-${options?.maxId}`)
-
+        const peer = await getClient().getInputEntity(chatId)
         const historyQuery = new Api.messages.GetHistory({
-          peer: await getClient().getInputEntity(chatId),
+          peer,
           offsetId,
           addOffset: 0,
+          offsetDate: 0,
           limit,
           maxId,
           minId,
-          hash: bigInt(hash.toString()),
+          hash,
         })
 
         logger.withFields(historyQuery).verbose('Historical messages query')
-
-        // emitter.emit('takeout:progress', {
-        //   taskId: 'takeout',
-        //   progress: 0,
-        // })
 
         const result = await getClient().invoke(
           new Api.InvokeWithTakeout({
             takeoutId: takeoutSession.id,
             query: historyQuery,
           }),
-        ) as Record<string, unknown>
-
-        logger.withFields(result).debug('Get messages result')
+        ) as unknown as Api.messages.MessagesSlice
 
         // Type safe check
-        if (result.length === 0 || !('messages' in result)) {
+        if ('messages' in result && result.messages.length === 0) {
           logger.error('Get messages failed or returned empty data')
           return Err(new Error('Get messages failed or returned empty data'))
         }
@@ -171,35 +182,21 @@ export function createTakeoutService(ctx: CoreContext) {
         // If we got fewer messages than requested, there are no more
         hasMore = messages.length === limit
 
+        logger.withFields({ count: messages.length }).debug('Got messages batch')
+
         for (const message of messages) {
           // Skip empty messages
           if (message instanceof Api.MessageEmpty) {
             continue
           }
 
-          // Check time range
-          const messageTime = new Date(message.date * 1000)
-          if (startTime && messageTime < startTime) {
-            continue
-          }
-          if (endTime && messageTime > endTime) {
-            continue
-          }
-
-          // TODO: progress
-          // emitter.emit('takeout:task:progress', updateTaskProgress(taskId, processedCount / limit))
-
-          yield message
           processedCount++
-
-          // Update offsetId to current message ID
-          offsetId = message.id
-
-          // Check if we've reached the limit
-          if (limit && processedCount >= limit) {
-            break
-          }
+          yield message
         }
+
+        offsetId = messages[messages.length - 1].id
+
+        emitter.emit('takeout:task:progress', updateTaskProgress(taskId, Number((processedCount / count).toFixed(2)), `Processed ${processedCount}/${count} messages`))
       }
 
       await finishTakeout(takeoutSession, true)
