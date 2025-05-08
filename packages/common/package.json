@@ -18,7 +18,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "pkgroll --sourcemap=inline",
+    "build": "unbuild",
+    "stub": "unbuild --stub",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "typecheck": "tsc --noEmit",
@@ -30,7 +31,7 @@
     "defu": "^6.1.4",
     "error-stack-parser": "^2.1.4",
     "path-browserify-esm": "^1.0.6",
-    "pkgroll": "^2.12.2",
+    "unbuild": "^3.5.0",
     "valibot": "^1.0.0",
     "yaml": "^2.7.1"
   },

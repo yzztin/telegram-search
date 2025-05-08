@@ -14,7 +14,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "pkgroll --sourcemap=inline",
+    "build": "unbuild",
+    "stub": "unbuild --stub",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"
   },
@@ -29,9 +30,9 @@
     "grammy": "^1.36.1",
     "nodejieba": "^3.4.4",
     "pg": "^8.15.6",
-    "pkgroll": "^2.12.2",
     "postgres": "^3.4.5",
     "telegram": "^2.26.22",
+    "unbuild": "^3.5.0",
     "valibot": "^1.0.0"
   },
   "devDependencies": {
