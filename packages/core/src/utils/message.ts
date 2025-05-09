@@ -22,8 +22,9 @@ export interface CoreMessage {
   vectors: CoreMessageVector
   jiebaTokens: string[]
 
-  createdAt: number
-  updatedAt: number
+  platformTimestamp: number
+  createdAt?: number
+  updatedAt?: number
   deletedAt?: number
 }
 
@@ -115,8 +116,7 @@ export function convertToCoreMessage(message: Api.Message): Result<CoreMessage> 
         vector768: [],
       },
       jiebaTokens: [],
-      createdAt: message.date,
-      updatedAt: Date.now(),
-    } as CoreMessage,
+      platformTimestamp: message.date,
+    } satisfies CoreMessage,
   )
 }

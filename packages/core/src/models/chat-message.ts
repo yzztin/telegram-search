@@ -41,6 +41,7 @@ export async function recordMessages(messages: CoreMessage[]) {
       content_vector_1024: message.vectors.vector1024?.length !== 0 ? message.vectors.vector1024 : null,
       content_vector_768: message.vectors.vector768?.length !== 0 ? message.vectors.vector768 : null,
       jieba_tokens: message.jiebaTokens,
+      platform_timestamp: message.platformTimestamp,
     } satisfies DBInsertMessage
 
     return values
@@ -104,6 +105,7 @@ export async function fetchMessages(chatId: string, pagination: CorePagination):
 
       createdAt: message.created_at,
       updatedAt: message.updated_at,
+      platformTimestamp: message.platform_timestamp,
     } satisfies CoreMessage
   })
 
