@@ -24,7 +24,7 @@ const chatMessagesMap = computed<Map<string, CoreMessage>>(() =>
 const chatMessages = computed<CoreMessage[]>(() =>
   Array.from(chatMessagesMap.value.values())
     .sort((a, b) =>
-      a.createdAt <= b.createdAt ? -1 : 1,
+      a.platformTimestamp <= b.platformTimestamp ? -1 : 1,
     ),
 )
 const currentChat = computed<CoreDialog | undefined>(() =>
