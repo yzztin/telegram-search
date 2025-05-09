@@ -1,6 +1,6 @@
 # Telegram Search
 
-[简体中文](./README.md) | [TODO](https://github.com/GramSearch/telegram-search/issues/23)
+[简体中文](./README.md)
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+Gs3SH2qAPeFhYmU9)
 [![Discord](https://dcbadge.limes.pink/api/server/NzYsmJSgCT)](https://discord.gg/NzYsmJSgCT)
@@ -10,7 +10,6 @@ A powerful Telegram chat history search tool that supports vector search and sem
 ## ⚠️ **Note**
 
 - PR are welcome!
-- Using UserBot comes with the risk of account suspension, please use with caution.
 - Due to the project being in a rapid iteration phase, database incompatibility may occur. It's recommended to back up your data regularly.
 - Get the API key: [#111](https://github.com/GramSearch/telegram-search/issues/111)
 
@@ -23,34 +22,47 @@ A powerful Telegram chat history search tool that supports vector search and sem
 ```bash
 git clone https://github.com/GramSearch/telegram-search.git
 cd telegram-search
+```
+
+2. Switch to the `release` branch:
+
+```bash
 git checkout release
 ```
 
-2. Install dependencies:
+3. Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-3. Configure environment:
+4. Configure environment:
 
 ```bash
 cp config/config.example.yaml config/config.yaml
 ```
 
-4. Start the database container:
+5. Start the database container:
 
 ```bash
 docker compose up -d
 ```
 
-5. Initialize the database:
+6. Initialize the database:
+
+First time use `db:push` command to initialize the database:
+
+```bash
+pnpm run db:push
+```
+
+Then use `db:migrate` command to migrate the database:
 
 ```bash
 pnpm run db:migrate
 ```
 
-6. Start services:
+7. Start services:
 
 ```bash
 # Start backend service
