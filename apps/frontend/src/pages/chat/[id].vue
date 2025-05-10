@@ -7,8 +7,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import GlobalSearch from '../../components/GlobalSearch.vue'
 import MessageBubble from '../../components/messages/MessageBubble.vue'
+import SearchDialog from '../../components/SearchDialog.vue'
 import { useChatStore } from '../../store/useChat'
 import { useMessageStore } from '../../store/useMessage'
 import { useWebsocketStore } from '../../store/useWebsocket'
@@ -34,7 +34,7 @@ const currentChat = computed<CoreDialog | undefined>(() =>
   chatStore.getChat(id.toString()),
 )
 const isGlobalSearch = ref(false)
-const globalSearchRef = ref<InstanceType<typeof GlobalSearch> | null>(null)
+const searchDialogRef = ref<InstanceType<typeof SearchDialog> | null>(null)
 const isLoadingMessages = ref(false)
 const messageLimit = ref(50)
 const messageOffset = ref(0)
@@ -57,9 +57,9 @@ const { list, containerProps, wrapperProps } = useVirtualList(
 // }
 
 function handleClickOutside(event: MouseEvent) {
-  if (isGlobalSearch.value && globalSearchRef.value) {
+  if (isGlobalSearch.value && searchDialogRef.value) {
     const target = event.target as HTMLElement
-    const searchElement = globalSearchRef.value.$el as HTMLElement
+    const searchElement = searchDialogRef.value.$el as HTMLElement
     const searchButton = document.querySelector('[data-search-button]') as HTMLElement
     if (!searchElement.contains(target) && !searchButton?.contains(target)) {
       isGlobalSearch.value = false
@@ -177,8 +177,8 @@ const isGlobalSearchOpen = ref(false)
     </div>
 
     <Teleport to="body">
-      <GlobalSearch
-        ref="globalSearchRef"
+      <SearchDialog
+        ref="searchDialogRef"
         v-model:open="isGlobalSearchOpen"
         :chat-id="id.toString()"
         class="absolute top-[20%] left-0 w-full"
@@ -189,7 +189,7 @@ const isGlobalSearchOpen = ref(false)
             <label for="searchContent" class="text-sm text-foreground">搜索内容</label>
           </div>
         </template>
-      </GlobalSearch>
+      </SearchDialog>
     </Teleport>
   </div>
 </template>

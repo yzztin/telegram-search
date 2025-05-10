@@ -73,15 +73,15 @@ function toggleActiveChatGroup(group: ChatGroup) {
         />
 
         <SidebarSelector
-          path="/embed"
-          icon="i-lucide-message-circle"
-          name="嵌入"
-        />
-
-        <SidebarSelector
           path="/sync"
           icon="i-lucide-refresh-cw"
           name="同步"
+        />
+
+        <SidebarSelector
+          path="/search"
+          icon="i-lucide-search"
+          name="搜索"
         />
 
         <SidebarSelector

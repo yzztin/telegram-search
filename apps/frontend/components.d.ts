@@ -24,6 +24,7 @@ declare module 'vue' {
     RadioGroup: typeof import('./src/components/ui/RadioGroup.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SearchDialog: typeof import('./src/components/SearchDialog.vue')['default']
     SearchSelect: typeof import('./src/components/ui/SearchSelect.vue')['default']
     SelectDropdown: typeof import('./src/components/ui/SelectDropdown.vue')['default']
     SettingsDialog: typeof import('./src/components/layout/SettingsDialog.vue')['default']
