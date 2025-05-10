@@ -26,13 +26,29 @@ export async function useConfigPath(): Promise<string> {
 
   logger.withFields({ configPath }).log('Config path')
 
-  const defaultConfig = generateDefaultConfig()
   if (!existsSync(configPath)) {
     mkdirSync(dirname(configPath), { recursive: true })
-    writeFileSync(configPath, stringify(defaultConfig))
+    writeFileSync(configPath, stringify(generateDefaultConfig()))
   }
 
   return configPath
+}
+
+export async function useAssetsPath(): Promise<string> {
+  const workspaceDir = await findWorkspaceDir(cwd())
+  if (!workspaceDir) {
+    throw new Error('Failed to find workspace directory')
+  }
+
+  const assetsPath = resolve(workspaceDir, 'assets')
+
+  logger.withFields({ assetsPath }).log('Assets path')
+
+  if (!existsSync(assetsPath)) {
+    mkdirSync(dirname(assetsPath), { recursive: true })
+  }
+
+  return assetsPath
 }
 
 export function getSessionPath(storagePath: string) {
@@ -73,12 +89,13 @@ export function resolveStoragePath(path: string): string {
 export async function initConfig(): Promise<Config> {
   const configPath = await useConfigPath()
   const storagePath = resolveStoragePath(join(homedir(), '.telegram-search'))
-  logger.withFields({ storagePath }).log('Storage path')
+  const assetsPath = await useAssetsPath()
+  logger.withFields({ storagePath, assetsPath }).log('Storage path')
 
   const configData = readFileSync(configPath, 'utf-8')
   const configParsedData = parse(configData)
 
-  const mergedConfig = defu({}, configParsedData, generateDefaultConfig(storagePath))
+  const mergedConfig = defu({}, configParsedData, generateDefaultConfig({ storagePath, assetsPath }))
   const validatedConfig = safeParse(configSchema, mergedConfig)
 
   if (!validatedConfig.success) {

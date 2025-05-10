@@ -53,6 +53,7 @@ export const messageConfigSchema = object({
 
 export const pathConfigSchema = object({
   storage: string(),
+  dict: string(),
 })
 
 export const telegramConfigSchema = object({

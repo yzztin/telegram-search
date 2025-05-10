@@ -1,10 +1,11 @@
 import type { Config } from './config-schema'
 
+import path from 'path-browserify-esm'
 import { safeParse } from 'valibot'
 
 import { configSchema } from './config-schema'
 
-export function generateDefaultConfig(storagePath?: string): Config {
+export function generateDefaultConfig(paths?: { storagePath?: string, assetsPath?: string }): Config {
   const defaultConfig = safeParse(configSchema, {
     // Database settings
     database: {
@@ -38,7 +39,9 @@ export function generateDefaultConfig(storagePath?: string): Config {
 
     // Path settings
     path: {
-      storage: storagePath ?? '~/.telegram-search',
+      storage: paths?.storagePath ?? '~/.telegram-search',
+      assets: paths?.assetsPath ?? '',
+      dict: path.join(paths?.assetsPath ?? '', 'dict.txt.big'),
     },
 
     // API settings
