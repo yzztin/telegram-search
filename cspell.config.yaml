@@ -9,9 +9,12 @@ words:
   - Elysia
   - elysiajs
   - guiiai
+  - hahaqwq
   - iconify
+  - jieba
   - Logg
   - lucide
+  - nodejieba
   - ofetch
   - ollama
   - onnotice
@@ -26,6 +29,8 @@ words:
   - tsvector
   - unocss
   - unplugin
+  - valibot
+  - vitest
   - vueuse
   - xsai
 ignoreWords: []

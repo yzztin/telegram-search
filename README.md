@@ -1,16 +1,13 @@
 # Telegram Search
 
-[English](./README_EN.md) | [TODO](https://github.com/GramSearch/telegram-search/issues/23)
+[English](./README_EN.md)
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+Gs3SH2qAPeFhYmU9)
 [![Discord](https://dcbadge.limes.pink/api/server/NzYsmJSgCT)](https://discord.gg/NzYsmJSgCT)
 
 一个功能强大的 Telegram 聊天记录搜索工具，支持向量搜索和语义匹配。基于 OpenAI 的语义向量技术，让你的 Telegram 消息检索更智能、更精准。
 
-## ⚠️ **注意**
-
 - 欢迎 PR！
-- 使用 UserBot 可能存在封号风险，请谨慎使用。
 - 由于项目处于快速迭代阶段，可能会出现数据库不兼容的情况，建议定期备份数据。
 - 获取 API key: [#111](https://github.com/GramSearch/telegram-search/issues/111)
 
@@ -23,34 +20,43 @@
 ```bash
 git clone https://github.com/GramSearch/telegram-search.git
 cd telegram-search
+```
+
+2. 切换到 `release` 分支：
+
+```bash
 git checkout release
 ```
 
-2. 安装依赖：
+3. 安装依赖：
 
 ```bash
 pnpm install
 ```
 
-3. 配置环境：
+4. 配置环境：
 
 ```bash
 cp config/config.example.yaml config/config.yaml
 ```
 
-4. 启动数据库容器:
+5. 启动数据库容器:
 
 ```bash
 docker compose up -d
 ```
 
-5. 初始化数据库：
+6. 初始化数据库：
 
 ```bash
+# 第一次启动使用 db:push 命令初始化数据库
+pnpm run db:push
+
+# 之后使用 db:migrate 命令迁移数据库
 pnpm run db:migrate
 ```
 
-6. 启动服务：
+7. 启动服务：
 
 ```bash
 # 启动后端服务

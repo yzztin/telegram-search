@@ -1,215 +1,166 @@
-<script setup lang="ts">
-import { onClickOutside } from '@vueuse/core'
+<script lang="ts" setup>
+import type { DialogType } from '@tg-search/core'
+
+import { useDark } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
-import { toast } from 'vue-sonner'
-import DropdownMenu from '../components/ui/DropdownMenu.vue'
-import { useDarkStore } from '../composables/dark'
-import { useLanguage } from '../composables/useLanguage'
-import { useSessionStore } from '../store/useSessionV2'
+import { computed, ref, watch } from 'vue'
+import { RouterView } from 'vue-router'
 
-const router = useRouter()
-const { isDark } = useDarkStore()
-const { supportedLanguages, setLanguage, locale } = useLanguage()
-const { t } = useI18n()
+import ChatsCollapse from '../components/layout/ChatsCollapse.vue'
+import SettingsDialog from '../components/layout/SettingsDialog.vue'
+import SidebarSelector from '../components/layout/SidebarSelector.vue'
+import { Button } from '../components/ui/Button'
+import { useChatStore } from '../store/useChat'
+import { useSessionStore } from '../store/useSession'
+import { useSettingsStore } from '../store/useSettings'
 
-const showUserMenu = ref(false)
-const showLanguageMenu = ref(false)
-const showCommandMenu = ref(false)
-
-const userMenuRef = ref<HTMLElement | null>(null)
-const languageMenuRef = ref<HTMLElement | null>(null)
-const commandMenuRef = ref<HTMLElement | null>(null)
+const settingsStore = useSettingsStore()
+const { theme } = storeToRefs(settingsStore)
+const isDark = useDark()
 
 const sessionStore = useSessionStore()
-const { handleAuth } = sessionStore
-const { activeSessionComputed } = storeToRefs(sessionStore)
 
-// Use VueUse's onClickOutside to handle closing the menus
-onClickOutside(userMenuRef, () => {
-  showUserMenu.value = false
+const settingsDialog = ref(false)
+const searchParams = ref('')
+
+const chatStore = useChatStore()
+const chats = computed(() => chatStore.chats)
+const chatsFiltered = computed(() => {
+  return chats.value.filter(chat => chat.name.toLowerCase().includes(searchParams.value.toLowerCase()))
 })
 
-onClickOutside(languageMenuRef, () => {
-  showLanguageMenu.value = false
-})
+type ChatGroup = DialogType | ''
+const activeChatGroup = ref<ChatGroup>('user')
 
-onClickOutside(commandMenuRef, () => {
-  showCommandMenu.value = false
-})
+watch(theme, (newTheme) => {
+  document.documentElement.setAttribute('data-theme', newTheme)
+}, { immediate: true })
 
-// onMounted(async () => {
-//   if (isConnected.value && !me.value) {
-//     const { sendEvent } = getWsContext()
-//     sendEvent('entity:getMe', undefined)
-//   }
-// })
-
-// Handle logout
-async function handleLogout() {
-  showUserMenu.value = false
-  handleAuth().logout()
-  toast.success(t('header.logout_success'))
-  router.push('/login')
+function toggleSettingsDialog() {
+  settingsDialog.value = !settingsDialog.value
 }
 
-// Handle login
-async function handleLogin() {
-  showUserMenu.value = false
-  router.push('/login')
-}
-
-// Handle language change
-function handleLanguageChange(langCode: string) {
-  setLanguage(langCode)
-  showLanguageMenu.value = false
-  toast.success(t('header.language_changed'))
+function toggleActiveChatGroup(group: ChatGroup) {
+  if (activeChatGroup.value === group)
+    activeChatGroup.value = 'user'
+  else
+    activeChatGroup.value = group
 }
 </script>
 
 <template>
-  <div class="min-h-screen" :class="{ dark: isDark }">
-    <!-- Header -->
-    <header class="sticky top-0 z-50 border-b bg-white transition-colors duration-300 dark:border-gray-800 dark:bg-gray-900">
-      <div class="mx-auto h-14 flex items-center justify-between px-4 container">
-        <router-link to="/" class="text-lg font-semibold transition-colors duration-300 dark:text-white">
-          {{ $t('header.title') }}
-        </router-link>
+  <div
+    class="h-screen w-full flex overflow-hidden bg-background text-sm font-medium"
+  >
+    <div class="w-[20%] md:w-[15%] flex flex-col h-dvh border-r border-r-secondary">
+      <div class="relative p-4">
+        <div
+          class="i-lucide-search absolute left-7 top-1/2 -translate-y-1/2 h-4 w-4"
+        />
+        <input
+          v-model="searchParams"
+          type="text"
+          class="w-full border border-secondary rounded-md bg-muted px-3 py-2 pl-9  ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring dark:border-secondary dark:bg-muted"
+          placeholder="Search"
+        >
+      </div>
 
-        <div class="flex items-center gap-4">
-          <IconButton
-            icon="i-lucide-download"
-            with-transition
-            :aria-label="$t('header.export_command')"
-            @click="router.push('/commands/export')"
+      <div class="mb-4">
+        <SidebarSelector
+          path="/"
+          icon="i-lucide-home"
+          name="主页"
+        />
+
+        <SidebarSelector
+          path="/sync"
+          icon="i-lucide-refresh-cw"
+          name="同步"
+        />
+
+        <SidebarSelector
+          path="/search"
+          icon="i-lucide-search"
+          name="搜索"
+        />
+
+        <SidebarSelector
+          path="/settings"
+          icon="i-lucide-settings"
+          name="设置"
+        />
+      </div>
+
+      <div class="pt-4 flex-1 overflow-y-auto flex flex-col justify-start h-full border-t border-t-secondary">
+        <ChatsCollapse
+          class="flex flex-col max-h-[85%]"
+          :class="{ 'flex-1': activeChatGroup === 'user' }"
+          name="用户"
+          icon="i-lucide-user"
+          type="user"
+          :chats="chatsFiltered.filter(chat => chat.type === 'user')"
+          :active="activeChatGroup === 'user'"
+          @update:toggle-active="toggleActiveChatGroup('user')"
+        />
+
+        <ChatsCollapse
+          class="flex flex-col max-h-[85%]"
+          :class="{ 'flex-1': activeChatGroup === 'group' }"
+          name="群组"
+          icon="i-lucide-users"
+          type="group"
+          :chats="chatsFiltered.filter(chat => chat.type === 'group')"
+          :active="activeChatGroup === 'group'"
+          @update:toggle-active="toggleActiveChatGroup('group')"
+        />
+
+        <ChatsCollapse
+          class="flex flex-col max-h-[85%]"
+          :class="{ 'flex-1': activeChatGroup === 'channel' }"
+          name="频道"
+          icon="i-lucide-message-circle"
+          type="channel"
+          :chats="chatsFiltered.filter(chat => chat.type === 'channel')"
+          :active="activeChatGroup === 'channel'"
+          @update:toggle-active="toggleActiveChatGroup('channel')"
+        />
+      </div>
+
+      <div class="flex items-center justify-between p-4">
+        <div class="flex items-center gap-3">
+          <div class="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full bg-muted">
+            <Avatar
+              :name="sessionStore.getActiveSession()?.me?.username"
+              size="sm"
+            />
+          </div>
+          <div class="flex flex-col">
+            <span class="text-sm text-foreground font-medium">{{ sessionStore.getActiveSession()?.me?.username }}</span>
+            <span class="text-xs text-secondary-foreground">{{ sessionStore.getActiveSession()?.isConnected ? '已链接' : '未链接' }}</span>
+          </div>
+        </div>
+        <div class="flex items-center">
+          <Button
+            :icon="isDark ? 'i-lucide-sun' : 'i-lucide-moon'"
+            class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-foreground hover:bg-muted"
+            @click="() => { isDark = !isDark }"
           />
 
-          <IconButton
-            icon="i-lucide-folder-sync"
-            with-transition
-            :aria-label="$t('header.sync_command')"
-            @click="router.push('/commands/sync')"
-          />
-
-          <IconButton
-            icon="i-lucide-folder-open"
-            with-transition
-            :aria-label="$t('header.embed_command')"
-            @click="router.push('/commands/embed')"
-          />
-
-          <IconButton
+          <Button
             icon="i-lucide-settings"
-            with-transition
-            :aria-label="$t('header.setting')"
-            @click="router.push('/settings')"
+            class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-foreground hover:bg-muted"
+            @click="toggleSettingsDialog"
           />
-
-          <!-- User menu -->
-          <DropdownMenu
-            icon="i-lucide-user"
-            :label="$t('header.usermenu')"
-          >
-            <div v-if="activeSessionComputed?.me" class="px-4 py-2 text-sm text-gray-700 dark:text-gray-200">
-              <div>{{ activeSessionComputed.me.firstName }} {{ activeSessionComputed.me.lastName }}</div>
-              <div class="text-xs text-gray-500">
-                @{{ activeSessionComputed.me.username }}
-              </div>
-            </div>
-
-            <div v-if="activeSessionComputed?.me?.username" class="my-2 border-b border-gray-200 dark:border-gray-700" />
-
-            <button
-              v-if="!activeSessionComputed?.isConnected"
-              class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-              @click="handleLogin"
-            >
-              <div class="flex items-center">
-                <div class="i-lucide-log-in mr-2 h-4 w-4" />
-                <span>{{ $t('header.login') }}</span>
-              </div>
-            </button>
-
-            <button
-              v-if="activeSessionComputed?.isConnected"
-              class="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-              @click="handleLogout"
-            >
-              <div class="flex items-center">
-                <div class="i-lucide-log-out mr-2 h-4 w-4" />
-                <span>{{ $t('header.logout') }}</span>
-              </div>
-            </button>
-          </DropdownMenu>
-
-          <!-- Language switcher -->
-          <DropdownMenu
-            icon="i-lucide-languages"
-            :label="$t('header.language')"
-          >
-            <button
-              v-for="lang in supportedLanguages"
-              :key="lang.code"
-              class="w-full flex items-center justify-between px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
-              @click="handleLanguageChange(lang.code)"
-            >
-              <span>{{ lang.name }}</span>
-              <span v-if="locale === lang.code" class="i-lucide-circle-check h-4 w-4" />
-            </button>
-          </DropdownMenu>
-
-          <ThemeToggle />
         </div>
       </div>
-    </header>
-
-    <!-- Main content -->
-    <main class="mx-auto bg-white p-4 transition-colors duration-300 container dark:bg-gray-900">
-      <slot />
-    </main>
-
-    <!-- Global Dialog Wrapper -->
-    <div class="pointer-events-none fixed left-0 top-0 z-100 h-screen w-screen">
-      <slot name="dialog" />
     </div>
+
+    <div class="flex flex-1 flex-col overflow-auto">
+      <RouterView :key="$route.fullPath" />
+    </div>
+
+    <SettingsDialog
+      v-model:show-dialog="settingsDialog"
+    />
   </div>
 </template>
-
-<style>
-:deep(dialog) {
-  pointer-events: auto;
-}
-
-/* Menu animations */
-.menu-enter-active {
-  animation: menu-in 0.2s ease-out;
-}
-
-.menu-leave-active {
-  animation: menu-out 0.2s ease-in;
-}
-
-@keyframes menu-in {
-  from {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes menu-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-8px);
-  }
-}
-</style>

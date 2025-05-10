@@ -1,28 +1,22 @@
-<script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-
-const { t } = useI18n()
-</script>
-
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center">
     <div class="animate-bounce">
-      <div class="text-8xl text-gray-800">
+      <div class="text-8xl text-foreground">
         <i class="i-lucide-circle-alert" />
       </div>
-      <h1 class="text-6xl text-gray-800 font-bold">
+      <h1 class="text-6xl text-foreground font-bold">
         404
       </h1>
     </div>
-    <p class="mt-4 animate-fade-in text-xl text-gray-600">
-      {{ t('pages.page_404.page_not_found') }}
+    <p class="mt-4 animate-fade-in text-xl text-secondary-foreground">
+      Page not found
     </p>
-    <router-link
+    <RouterLink
       to="/"
-      class="mt-8 flex items-center gap-2 text-blue-500 transition-colors duration-200 hover:text-blue-600"
+      class="mt-8 flex items-center gap-2 text-primary transition-colors duration-200 hover:text-primary/80"
     >
       <i class="i-lucide-house" />
-      <span>{{ t('pages.page_404.return_to_home') }}</span>
-    </router-link>
+      <span>Return to Home</span>
+    </RouterLink>
   </div>
 </template>

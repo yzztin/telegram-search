@@ -1,37 +1,26 @@
 import type { NodeOptions } from 'crossws/adapters/node'
 
 import process from 'node:process'
-import { initConfig, initDB, initLogger, useLogger } from '@tg-search/common'
-import {
-  createApp,
-  eventHandler,
-  setResponseHeaders,
-  toNodeListener,
-} from 'h3'
+import { flags, initLogger, parseEnvFlags, useLogger } from '@tg-search/common'
+import { initConfig } from '@tg-search/common/composable'
+import { initDrizzle } from '@tg-search/core'
+import { createApp, toNodeListener } from 'h3'
 import { listen } from 'listhen'
-import yargs from 'yargs'
-import { hideBin } from 'yargs/helpers'
 
 import { setupWsRoutes } from './app'
-import { setupChatRoutes } from './routes/chat'
-import { setupCommandRoutes } from './routes/commands'
-import { setupConfigRoutes } from './routes/config'
-import { setupMessageRoutes } from './routes/message'
-import { setupSearchRoutes } from './routes/search'
-import { createErrorResponse } from './utils/response'
 
-export type * from './types'
-export type * from './v2'
+export type * from './app'
+export type * from './ws-event'
 
-// Core initialization
 async function initCore(): Promise<ReturnType<typeof useLogger>> {
+  parseEnvFlags(process.env as Record<string, string>)
   initLogger()
   const logger = useLogger()
-  initConfig()
+  await initConfig()
 
   try {
-    await initDB()
-    logger.debug('Database initialized successfully')
+    await initDrizzle()
+    logger.log('Database initialized successfully')
   }
   catch (error) {
     logger.withError(error).error('Failed to initialize services')
@@ -41,20 +30,19 @@ async function initCore(): Promise<ReturnType<typeof useLogger>> {
   return logger
 }
 
-// Error handling setup
 function setupErrorHandlers(logger: ReturnType<typeof useLogger>): void {
-  const handleError = (error: unknown, type: string) => {
-    logger.withError(error).error(type)
+  // TODO: fix type
+  const handleError = (error: any, type: string) => {
+    logger.withFields({ cause: String(error?.cause), cause_json: JSON.stringify(error?.cause) }).withError(error).error(type)
   }
 
   process.on('uncaughtException', error => handleError(error, 'Uncaught exception'))
   process.on('unhandledRejection', error => handleError(error, 'Unhandled rejection'))
 }
 
-// Server configuration
 function configureServer(logger: ReturnType<typeof useLogger>) {
   const app = createApp({
-    debug: true,
+    debug: flags.isDebugMode,
     onRequest(event) {
       const path = event.path
       const method = event.method
@@ -62,7 +50,7 @@ function configureServer(logger: ReturnType<typeof useLogger>) {
       logger.withFields({
         method,
         path,
-      }).debug('Request started')
+      }).log('Request started')
     },
     onError(error, event) {
       const path = event.path
@@ -79,65 +67,48 @@ function configureServer(logger: ReturnType<typeof useLogger>) {
         error: error instanceof Error ? error.message : 'Unknown error',
       }).error('Request failed')
 
-      return createErrorResponse(error)
+      return Response.json({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      })
     },
   })
 
-  // CORS middleware
-  app.use(eventHandler((event) => {
-    setResponseHeaders(event, {
-      'Access-Control-Allow-Origin': 'http://localhost:3333',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Credentials': 'true',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cache-Control, X-Requested-With',
-    })
+  // app.use(eventHandler((event) => {
+  //   setResponseHeaders(event, {
+  //     'Access-Control-Allow-Origin': 'http://localhost:3333',
+  //     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  //     'Access-Control-Allow-Credentials': 'true',
+  //     'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cache-Control, X-Requested-With',
+  //   })
 
-    if (event.method === 'OPTIONS') {
-      setResponseHeaders(event, {
-        'Access-Control-Max-Age': '86400',
-      })
-      return null
-    }
-  }))
+  //   if (event.method === 'OPTIONS') {
+  //     setResponseHeaders(event, {
+  //       'Access-Control-Max-Age': '86400',
+  //     })
+  //     return null
+  //   }
+  // }))
 
-  // Setup routes
-  setupChatRoutes(app)
-  setupCommandRoutes(app)
-  setupConfigRoutes(app)
-  setupMessageRoutes(app)
-  setupSearchRoutes(app)
-
-  // v2 ws routes
   setupWsRoutes(app)
 
   return app
 }
 
-// Main application bootstrap
 async function bootstrap() {
-  const argv = await yargs(hideBin(process.argv))
-    .option('port', {
-      alias: 'p',
-      type: 'number',
-      description: 'Server listen port',
-      default: 3000,
-    })
-    .help()
-    .parse()
-
   const logger = await initCore()
   setupErrorHandlers(logger)
 
   const app = configureServer(logger)
   const listener = toNodeListener(app)
 
-  const port = argv.port
+  const port = process.env.PORT ? Number(process.env.PORT) : 3000
   // const { handleUpgrade } = wsAdapter(app.websocket as NodeOptions)
   await listen(listener, { port, ws: app.websocket as NodeOptions })
   // const server = createServer(listener).listen(port)
   // server.on('upgrade', handleUpgrade)
 
-  logger.withFields({ port }).debug('Server started')
+  logger.log('Server started')
 
   const shutdown = () => process.exit(0)
   process.on('SIGINT', shutdown)

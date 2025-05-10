@@ -1,372 +1,227 @@
 <script setup lang="ts">
-import type { Config } from '@tg-search/common'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { toast, Toaster } from 'vue-sonner'
+import { onMounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
+
+import { Button } from '../components/ui/Button'
 import SelectDropdown from '../components/ui/SelectDropdown.vue'
-import { useConfigStore } from '../store/useConfig'
+import { useSettingsStore } from '../store/useSettings'
+import { useWebsocketStore } from '../store/useWebsocket'
 
-// Initialize config store
-const configStore = useConfigStore()
-const { config, loading, error } = storeToRefs(useConfigStore())
-const { t } = useI18n()
 const isEditing = ref(false)
-const validationError = ref<string | null>(null)
-
-//
-// Validate number fields
-function validateNumberField(value: number, fieldName: string, min = 1, max = 1000): string | null {
-  if (Number.isNaN(value)) {
-    return t('pages.settings.number_is_nan', { fieldName })
-  }
-  if (value < min) {
-    return t('pages.settings.number_lt_min', { fieldName, min })
-  }
-  if (value > max) {
-    return t('pages.settings.number_gt_max', { fieldName, max })
-  }
-  return null
-}
+const { config } = storeToRefs(useSettingsStore())
+const websocketStore = useWebsocketStore()
 
 const embeddingProviderOptions = [
   { label: 'OpenAI', value: 'openai' },
   { label: 'Ollama', value: 'ollama' },
 ]
 
-// Validate all number fields
-function validateConfig(config: Config): string | null {
-  const fields = [
-    { value: config.message.export.batchSize, name: t('pages.settings.batch_size'), max: 1000 },
-    { value: config.message.export.concurrent, name: 'pages.settings.concurrent_requests', max: 10 },
-    { value: config.message.export.retryTimes, name: 'pages.settings.retry_times', max: 10 },
-    { value: config.message.export.maxTakeoutRetries, name: 'pages.settings.max_takeout_retries', max: 10 },
-  ]
-
-  for (const field of fields) {
-    const error = validateNumberField(field.value, field.name, 1, field.max)
-    if (error)
-      return error
-  }
-
-  return null
-}
-
-// Handle number input
-function handleNumberInput(event: Event, path: string[]) {
-  const input = event.target as HTMLInputElement
-  const value = Number(input.value)
-
+async function updateConfig() {
   if (!config.value)
     return
 
-  // Use lodash get and set to safely access and modify nested properties
-  let target = config.value
-  for (let i = 0; i < path.length - 1; i++) {
-    target = target[path[i] as keyof typeof target] as any
-  }
+  websocketStore.sendEvent('config:update', { config: config.value })
 
-  const lastKey = path[path.length - 1]
-  target[lastKey as keyof typeof target] = value as any
-
-  // Validate new value
-  validationError.value = validateNumberField(value, lastKey)
-}
-
-// Load config
-async function loadConfig() {
-  try {
-    await configStore.fetchConfig()
-  }
-  catch (err) {
-    console.error('Failed to load config:', err)
-    toast.error(t('pages.settings.config_error', { error: err instanceof Error ? err.message : 'Unknown error' }))
-  }
-}
-
-// Save config
-async function saveConfig() {
-  if (!config.value)
-    return
-
-  try {
-    // Ensure all number fields have correct type
-    const safeConfig: Config = {
-      ...config.value,
-      database: {
-        ...config.value.database,
-        port: Number(config.value.database.port),
-      },
-      message: {
-        export: {
-          batchSize: Number(config.value.message.export.batchSize),
-          concurrent: Number(config.value.message.export.concurrent),
-          retryTimes: Number(config.value.message.export.retryTimes),
-          maxTakeoutRetries: Number(config.value.message.export.maxTakeoutRetries),
-        },
-        batch: {
-          size: Number(config.value.message.batch.size),
-        },
-      },
-      api: {
-        ...config.value.api,
-        telegram: {
-          ...config.value.api.telegram,
-          apiId: config.value.api.telegram.apiId.toString(),
-        },
-      },
-    }
-
-    // Validate config
-    const configValidationError = validateConfig(safeConfig)
-    if (configValidationError) {
-      toast.error(configValidationError)
-      return
-    }
-    await configStore.updateConfig(safeConfig)
-    isEditing.value = false
-    toast.success(t('pages.settings.save_success'))
-
-    // Fix: Only set validationError if it exists
-    if (validationError.value && validationError.value !== undefined)
-      validationError.value = null
-  }
-  catch (err) {
-    console.error('Failed to save config:', err)
-    toast.error(t('pages.settings.save_config_error', { error: err instanceof Error ? err.message : 'Unknown error' }))
-  }
-}
-
-// Reset config
-function resetConfig() {
   isEditing.value = false
-  // Fix: Only set validationError if it exists
-  if (validationError.value && validationError.value !== undefined)
-    validationError.value = null
-
-  loadConfig()
-  toast(t('pages.settings.reset_config'))
+  toast.success('Settings saved successfully')
 }
 
-// Load initial config
-loadConfig()
+onMounted(() => {
+  websocketStore.sendEvent('config:fetch')
+})
 </script>
 
 <template>
+  <header class="flex items-center border-b border-b-secondary px-4 dark:border-b-secondary p-4">
+    <div class="flex items-center gap-2">
+      <span class="text-lg font-medium">Settings</span>
+    </div>
+
+    <div class="ml-auto flex items-center gap-2">
+      <Button
+        icon="i-lucide-pencil"
+        :disabled="isEditing"
+        @click="isEditing = !isEditing"
+      >
+        Edit
+      </Button>
+
+      <Button
+        icon="i-lucide-save"
+        :disabled="!isEditing"
+        @click="updateConfig"
+      >
+        Save
+      </Button>
+    </div>
+  </header>
+
   <div class="mx-auto p-4 container space-y-6">
-    <Toaster position="top-right" rich-colors />
-    <div class="flex items-center justify-between">
-      <h1 class="text-2xl font-bold dark:text-white">
-        {{ $t('pages.settings.settings') }}
-      </h1>
-      <div class="space-x-2">
-        <button
-          v-if="!isEditing"
-          class="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-          @click="isEditing = true"
-        >
-          {{ $t('pages.settings.edit') }}
-        </button>
-        <template v-else>
-          <button
-            class="rounded-lg bg-gray-500 px-4 py-2 text-white hover:bg-gray-600"
-            @click="resetConfig"
-          >
-            {{ $t('pages.settings.cancel') }}
-          </button>
-          <button
-            class="rounded-lg bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
-            @click="saveConfig"
-          >
-            {{ $t('pages.settings.save') }}
-          </button>
-        </template>
-      </div>
-    </div>
-
-    <!-- Loading state -->
-    <div v-if="loading" class="text-center text-gray-500 dark:text-gray-400">
-      {{ $t('pages.settings.loading') }}
-    </div>
-
-    <!-- Error state -->
-    <div v-else-if="error" class="text-center text-red-500 dark:text-red-400">
-      {{ error }}
-    </div>
-
-    <!-- Validation error -->
-    <div v-if="validationError" class="mt-2 text-sm text-red-500">
-      {{ validationError }}
-    </div>
-
     <!-- Settings form -->
-    <div v-else-if="config" class="space-y-6">
+    <div class="space-y-6">
       <!-- Database settings -->
-      <div class="border border-gray-200 rounded-lg p-4 dark:border-gray-800">
-        <h2 class="mb-4 text-xl font-semibold dark:text-white">
-          {{ $t('pages.settings.database_settings') }}
+      <div class="border border-secondary rounded-lg bg-card p-4">
+        <h2 class="mb-4 text-xl text-foreground font-semibold">
+          Database Settings
         </h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.host') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Host</label>
             <input
               v-model="config.database.host"
               type="text"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.port') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Port</label>
             <input
               v-model.number="config.database.port"
               type="number"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.username') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Username</label>
             <input
               v-model="config.database.user"
               type="text"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.password') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Password</label>
             <input
               v-model="config.database.password"
               type="password"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
           <div class="md:col-span-2">
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.database_name') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Database Name</label>
             <input
               v-model="config.database.database"
               type="text"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
         </div>
       </div>
 
       <!-- Message settings -->
-      <div class="border border-gray-200 rounded-lg p-4 dark:border-gray-800">
-        <h2 class="mb-4 text-xl font-semibold dark:text-white">
-          {{ $t("pages.settings.message_settings") }}
+      <div class="border border-secondary rounded-lg bg-card p-4">
+        <h2 class="mb-4 text-xl text-foreground font-semibold">
+          Message Settings
         </h2>
         <div class="grid gap-4 md:grid-cols-2">
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.batch_size') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Batch Size</label>
             <input
               v-model.number="config.message.export.batchSize"
               type="number"
               :min="1"
               :max="1000"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-              @input="(e: Event) => handleNumberInput(e, ['message', 'export', 'batchSize'])"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.concurrent_requests') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Concurrent Requests</label>
             <input
               v-model.number="config.message.export.concurrent"
               type="number"
               :min="1"
               :max="10"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-              @input="(e: Event) => handleNumberInput(e, ['message', 'export', 'concurrent'])"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.retry_times') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Retry Times</label>
             <input
               v-model.number="config.message.export.retryTimes"
               type="number"
               :min="1"
               :max="10"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-              @input="(e: Event) => handleNumberInput(e, ['message', 'export', 'retryTimes'])"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.max_takeout_retries') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Max Takeout Retries</label>
             <input
               v-model.number="config.message.export.maxTakeoutRetries"
               type="number"
               :min="1"
               :max="10"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
-              @input="(e: Event) => handleNumberInput(e, ['message', 'export', 'maxTakeoutRetries'])"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
         </div>
       </div>
 
       <!-- Path settings -->
-      <div class="border border-gray-200 rounded-lg p-4 dark:border-gray-800">
-        <h2 class="mb-4 text-xl font-semibold dark:text-white">
-          {{ $t('pages.settings.path_settings') }}
+      <div class="border border-secondary rounded-lg bg-card p-4">
+        <h2 class="mb-4 text-xl text-foreground font-semibold">
+          Path Settings
         </h2>
         <div class="grid gap-4">
           <div>
-            <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.storage_path') }}</label>
+            <label class="block text-sm text-secondary-foreground font-medium">Storage Path</label>
             <input
               v-model="config.path.storage"
               type="text"
               :disabled="!isEditing"
-              class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+              class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
             >
           </div>
         </div>
       </div>
 
       <!-- API settings -->
-      <div class="border border-gray-200 rounded-lg p-4 dark:border-gray-800">
-        <h2 class="mb-4 text-xl font-semibold dark:text-white">
-          {{ $t('pages.settings.api_settings') }}
+      <div class="border border-secondary rounded-lg bg-card p-4">
+        <h2 class="mb-4 text-xl text-foreground font-semibold">
+          API Settings
         </h2>
         <div class="space-y-4">
           <!-- Telegram API -->
           <div>
-            <h3 class="mb-2 text-lg font-medium dark:text-white">
-              {{ $t('pages.settings.telegram_api') }}
+            <h3 class="mb-2 text-lg text-foreground font-medium">
+              Telegram API
             </h3>
             <div class="grid gap-4 md:grid-cols-2">
               <div>
-                <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.api_id') }}</label>
+                <label class="block text-sm text-secondary-foreground font-medium">API ID</label>
                 <input
                   v-model="config.api.telegram.apiId"
                   type="text"
                   :disabled="!isEditing"
-                  class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
                 >
               </div>
               <div>
-                <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.api_hash') }}</label>
+                <label class="block text-sm text-secondary-foreground font-medium">API Hash</label>
                 <input
                   v-model="config.api.telegram.apiHash"
                   type="password"
                   :disabled="!isEditing"
-                  class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
                 >
               </div>
               <div class="md:col-span-2">
-                <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.phone_number') }}</label>
+                <label class="block text-sm text-secondary-foreground font-medium">Phone Number</label>
                 <input
                   v-model="config.api.telegram.phoneNumber"
                   type="tel"
                   :disabled="!isEditing"
-                  class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
                 >
               </div>
             </div>
@@ -374,38 +229,46 @@ loadConfig()
 
           <!-- OpenAI API -->
           <div>
-            <h3 class="mb-2 text-lg font-medium dark:text-white">
-              {{ $t('pages.settings.embedding') }}
+            <h3 class="mb-2 text-lg text-foreground font-medium">
+              Embedding
             </h3>
             <div class="grid gap-4">
               <div>
-                <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.provider') }}</label>
+                <label class="block text-sm text-secondary-foreground font-medium">Provider</label>
                 <SelectDropdown v-model="config.api.embedding.provider" :options="embeddingProviderOptions" :disabled="!isEditing" />
               </div>
               <div>
-                <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.model') }}</label>
+                <label class="block text-sm text-secondary-foreground font-medium">Model</label>
                 <input
                   v-model="config.api.embedding.model"
                   :disabled="!isEditing"
-                  class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
                 >
               </div>
               <div>
-                <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.api_key') }}</label>
+                <label class="block text-sm text-secondary-foreground font-medium">Dimension</label>
+                <input
+                  v-model="config.api.embedding.dimension"
+                  :disabled="!isEditing"
+                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
+                >
+              </div>
+              <div>
+                <label class="block text-sm text-secondary-foreground font-medium">API Key</label>
                 <input
                   v-model="config.api.embedding.apiKey"
                   type="password"
                   :disabled="!isEditing"
-                  class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
                 >
               </div>
               <div>
-                <label class="block text-sm text-gray-700 font-medium dark:text-gray-300">{{ $t('pages.settings.api_base_url') }}</label>
+                <label class="block text-sm text-secondary-foreground font-medium">API Base URL</label>
                 <input
                   v-model="config.api.embedding.apiBase"
                   type="text"
                   :disabled="!isEditing"
-                  class="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
                 >
               </div>
             </div>

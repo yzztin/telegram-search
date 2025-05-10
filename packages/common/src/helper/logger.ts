@@ -1,32 +1,53 @@
-import path from 'node:path'
 import { Format, LogLevel, setGlobalFormat, setGlobalLogLevel, useLogg } from '@guiiai/logg'
+import ErrorStackParser from 'error-stack-parser'
+import path from 'path-browserify-esm'
+
+import { isBrowser } from './browser'
+import { flags } from './flags'
 
 export type Logger = ReturnType<typeof useLogg>
+export { Format as LoggerFormat, LogLevel as LoggerLevel }
 
-export function initLogger() {
-  setGlobalLogLevel(LogLevel.Debug)
-  setGlobalFormat(Format.Pretty)
+export function initLogger(
+  level = flags.logLevel,
+  format = flags.logFormat,
+) {
+  setGlobalLogLevel(level)
+  setGlobalFormat(format)
 
   const logger = useLogg('logger').useGlobalConfig()
-  logger.log('Logger initialized')
+  logger.withFields({ level: LogLevel[level], format }).log('Logger initialized')
 }
 
-/**
- * Get logger instance with directory name and filename
- * @returns logger instance configured with "directoryName/filename"
- */
+export function circularStringify(object: Record<string, any>) {
+  const simpleObject: Record<string, any> = {}
+  for (const prop in object) {
+    if (!Object.prototype.hasOwnProperty.call(object, prop)) {
+      continue
+    }
+    if (typeof (object[prop]) === 'object') {
+      continue
+    }
+    if (typeof (object[prop]) == 'function') {
+      continue
+    }
+    simpleObject[prop] = object[prop]
+  }
+  return JSON.stringify(simpleObject)
+}
+
+export function circularObject(object: Record<string, any>) {
+  return JSON.parse(circularStringify(object))
+}
+
 export function useLogger(name?: string): Logger {
-  const stack = new Error('logger').stack
-  const caller = stack?.split('\n')[2]
+  // eslint-disable-next-line unicorn/error-message
+  const stack = ErrorStackParser.parse(new Error())
+  const currentStack = stack[1]
+  const basePath = currentStack.fileName?.replace('async', '').trim() || ''
+  const fileName = path.join(...basePath.split(path.sep).slice(-2))
 
-  // Extract directory, filename and line number from stack trace
-  const match = caller?.match(/(?:([^/]+)\/)?([^/\s]+?)(?:\.[jt]s)?:(\d+)(?::\d+)?\)?$/)
-  const dirName = match?.[1] || path.basename(path.dirname(__filename))
-  const fileName = match?.[2] || path.basename(__filename, '.ts')
-  const lineNumber = match?.[3] || '?'
-
-  if (name)
-    return useLogg(`${name}] [${dirName}/${fileName}:${lineNumber}`).useGlobalConfig()
-
-  return useLogg(`${dirName}/${fileName}:${lineNumber}`).useGlobalConfig()
+  const nameToDisplay = name || `${fileName}:${currentStack.lineNumber}`
+  const hyperlink = !isBrowser() ? `\x1B]8;;file://${basePath}\x1B\\${nameToDisplay}\x1B]8;;\x1B\\` : nameToDisplay
+  return useLogg(hyperlink).useGlobalConfig()
 }

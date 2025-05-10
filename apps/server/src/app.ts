@@ -1,40 +1,28 @@
-import type { CoreContext } from '@tg-search/core'
+import type { CoreContext, CoreEventData, FromCoreEvent, ToCoreEvent } from '@tg-search/core'
 import type { Peer } from 'crossws'
 import type { App } from 'h3'
-import type { WsMessageToServer } from './v2/ws-event'
+import type { UUID } from 'node:crypto'
+import type { WsEventToClientData, WsMessageToServer } from './ws-event'
 
 import { useLogger } from '@tg-search/common'
 import { createCoreInstance } from '@tg-search/core'
-import { createRouter, defineEventHandler, defineWebSocketHandler, getQuery } from 'h3'
+import { defineWebSocketHandler } from 'h3'
 
-import { createResponse } from './utils/response'
-import { handleConnectionEvent, registerConnectionEventHandler } from './v2/connection'
-import { handleDialogsEvent, registerDialogsEventHandler } from './v2/dialogs'
-import { handleEntityEvent, registerEntityEventHandler } from './v2/entity'
-import { handleMessageEvent, registerMessageEventHandler } from './v2/messages'
-import { registerWsMessageRoute, routeWsMessage } from './v2/routes'
-import { handleTakeoutEvent, registerTakeoutEventHandler } from './v2/takeout'
-import { sendWsError, sendWsEvent } from './v2/ws-event'
-
-// function setupServer(app: App, port: number) {
-//   const listener = toNodeListener(app)
-//   const server = createServer(listener).listen(port)
-//   const { handleUpgrade } = wsAdapter(app.websocket as NodeOptions)
-//   server.on('upgrade', handleUpgrade)
-// }
+import { sendWsEvent } from './ws-event'
 
 export interface ClientState {
   ctx?: CoreContext
-  peer: Peer
 
-  isConnected?: boolean
+  isConnected: boolean
   phoneNumber?: string
 }
 
-type UUID = ReturnType<typeof crypto.randomUUID>
+type EventListener = <T extends keyof FromCoreEvent>(data: WsEventToClientData<T>) => void
 
 export function setupWsRoutes(app: App) {
-  const clientStates = new Map<string, Omit<ClientState, 'peer'>>()
+  const logger = useLogger('server:ws')
+  const clientStatesBySession = new Map<string, ClientState>()
+  const eventListenersByPeer = new Map<string, Map<keyof FromCoreEvent, EventListener>>()
 
   function useSessionId(peer: Peer) {
     const url = new URL(peer.request.url)
@@ -42,27 +30,41 @@ export function setupWsRoutes(app: App) {
     return urlSessionId || crypto.randomUUID()
   }
 
-  function useSessionState(sessionId: UUID) {
-    if (!clientStates.has(sessionId)) {
-      const ctx = createCoreInstance()
-      clientStates.set(sessionId, { ctx, isConnected: false })
-      useLogger().withFields({ sessionId }).debug('[/ws] Session restored')
+  function updatePeerSessionState(peer: Peer) {
+    const sessionId = useSessionId(peer)
+    let state: ClientState
 
-      return { ctx }
+    if (!clientStatesBySession.has(sessionId)) {
+      logger.withFields({ sessionId }).log('Session created')
+
+      const ctx = createCoreInstance()
+      state = {
+        ctx,
+        isConnected: false,
+      }
+
+      clientStatesBySession.set(sessionId, state)
+    }
+    else {
+      logger.withFields({ sessionId }).log('Session restored')
+
+      state = clientStatesBySession.get(sessionId)!
     }
 
-    return clientStates.get(sessionId)
+    return {
+      sessionId,
+      state,
+    }
   }
 
-  const router = createRouter()
+  function usePeerSessionState(peer: Peer) {
+    const sessionId = useSessionId(peer)
 
-  router.post('/session', defineEventHandler(async (req) => {
-    const query = getQuery(req)
-    const sessionId = query.sessionId as UUID ?? crypto.randomUUID()
-    return createResponse({ sessionId })
-  }))
-
-  app.use('/v2', router.handler)
+    return {
+      sessionId,
+      state: clientStatesBySession.get(sessionId)!,
+    }
+  }
 
   app.use('/ws', defineWebSocketHandler({
     async upgrade(req) {
@@ -70,116 +72,72 @@ export function setupWsRoutes(app: App) {
       const urlSessionId = url.searchParams.get('sessionId') as UUID
 
       if (!urlSessionId) {
-        // FIXME: fix response type
+        // TODO: add error response
         return new Response('Session ID is required', { status: 400 })
       }
     },
 
     async open(peer) {
-      const sessionId = useSessionId(peer)
-      const state = { ...useSessionState(sessionId), peer }
+      const { state, sessionId } = updatePeerSessionState(peer)
 
-      useLogger().withFields({ peer: peer.id }).debug('[/ws] Websocket connection opened')
+      logger.withFields({ peerId: peer.id }).log('Websocket connection opened')
 
-      // Setup session and login
-      // setupSession(ctx)
+      sendWsEvent(peer, 'server:connected', { sessionId, connected: state.isConnected })
 
-      // const client = ctx.getClient()
-      // ctx.emitter.on('auth:connected', async () => {
-      //   if (client && await client.isUserAuthorized()) {
-      //     peer.send({ type: 'CONNECTED', data: { isAuthorized: true } })
-      //   }
-      //   else {
-      //     peer.send({ type: 'CONNECTED', data: { isAuthorized: false } })
-      //   }
-      // })
-
-      // ctx.emitter.on(event: keyof CoreEvent, data: CoreEventData<CoreEvent[typeof event]>) => {
-      // ctx.emitter.onAny((event, data) => {
-      //   peer.send({ type: event, data })
-      // })
-
-      registerConnectionEventHandler(state)
-      registerMessageEventHandler(state)
-      registerDialogsEventHandler(state)
-      registerEntityEventHandler(state)
-      registerTakeoutEventHandler(state)
-
-      registerWsMessageRoute('auth', handleConnectionEvent)
-      registerWsMessageRoute('message', handleMessageEvent)
-      registerWsMessageRoute('dialog', handleDialogsEvent)
-      registerWsMessageRoute('entity', handleEntityEvent)
-      registerWsMessageRoute('takeout', handleTakeoutEvent)
-
-      // state.ctx?.emitter.on()
-      // const events = state.ctx?.emitter.eventNames()
-      // events?.forEach((event) => {
-      //   state.ctx?.emitter.on(event, (data) => {
-      //     sendWsEvent(peer, event, data)
-      //   })
-      // })
-
-      state.ctx?.emitter.on('core:error', ({ error }: { error?: string | Error | unknown }) => {
-        sendWsError(peer, error)
-      })
-
-      sendWsEvent(peer, 'server:connected', { sessionId, connected: state.isConnected ?? false })
-
-      clientStates.set(sessionId, state)
+      if (!eventListenersByPeer.has(peer.id)) {
+        eventListenersByPeer.set(peer.id, new Map())
+      }
     },
 
     async message(peer, message) {
-      const sessionId = useSessionId(peer)
-      const state = { ...useSessionState(sessionId), peer }
+      const { state } = usePeerSessionState(peer)
 
-      const data = message.json<WsMessageToServer>()
-
-      useLogger().withFields({ type: data.type }).debug('[/ws] Message received')
-
-      // const wsMessage = toWsMessage(data)
-      // if (!wsMessage) {
-      //   sendWsError(peer, 'Unknown message request')
-      //   return
-      // }
-
-      // useLogger().withFields({ wsMessage }).debug('[/ws] WsMessage converted')
-      // console.log(wsMessage)
+      const event = message.json<WsMessageToServer>()
 
       try {
-        routeWsMessage(state, data)
+        if (event.type === 'server:event:register') {
+          if (!event.data.event.startsWith('server:')) {
+            const eventName = event.data.event as keyof FromCoreEvent
+
+            const fn = (data: WsEventToClientData<keyof FromCoreEvent>) => {
+              logger.withFields({ eventName }).log('Sending event to client')
+              sendWsEvent(peer, eventName, data)
+            }
+
+            state.ctx?.emitter.on(eventName, (...args) => fn(args[0]))
+            eventListenersByPeer.get(peer.id)?.set(eventName, fn)
+          }
+        }
+        else {
+          logger.withFields({ type: event.type }).log('Message received')
+
+          state.ctx?.emitter.emit(event.type, event.data as CoreEventData<keyof ToCoreEvent>)
+        }
+
+        switch (event.type) {
+          case 'auth:login':
+            state.phoneNumber = event.data.phoneNumber
+            state.ctx?.emitter.once('auth:connected', () => {
+              state.isConnected = true
+            })
+            break
+          case 'auth:logout':
+            state.isConnected = false
+            break
+        }
       }
       catch (error) {
-        useLogger().withError(error).error('[/ws] Handle websocket message failed')
+        logger.withError(error).error('Handle websocket message failed')
       }
-
-      clientStates.set(sessionId, state)
     },
 
     close(peer) {
-      // const sessionId = useSessionId(peer)
-      // const state = useSessionState(sessionId)
+      logger.withFields({ peerId: peer.id }).log('Websocket connection closed')
 
-      // if (state && state.ctx) {
-      //   destoryCoreInstance(state.ctx)
-      // }
-
-      useLogger().withFields({ peerId: peer.id }).debug('[/ws] Websocket connection closed')
+      const { state } = usePeerSessionState(peer)
+      eventListenersByPeer.get(peer.id)?.forEach((fn, eventName) => {
+        state.ctx?.emitter.removeListener(eventName, (...args) => fn(args[0]))
+      })
     },
   }))
 }
-
-// (async () => {
-//   initLogger()
-//   const logger = useLogger()
-//   initConfig()
-//   initDB()
-
-//   const app = createApp()
-//   setupServer(app, 3000)
-
-//   setupWsRoutes(app)
-
-//   logger.withFields({ port: 3000 }).debug('Server started')
-// })().catch((error) => {
-//   console.error(error)
-// })
