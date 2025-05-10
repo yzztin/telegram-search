@@ -22,31 +22,25 @@ git clone https://github.com/GramSearch/telegram-search.git
 cd telegram-search
 ```
 
-2. 切换到 `release` 分支：
-
-```bash
-git checkout release
-```
-
-3. 安装依赖：
+2. 安装依赖：
 
 ```bash
 pnpm install
 ```
 
-4. 配置环境：
+3. 配置环境：
 
 ```bash
 cp config/config.example.yaml config/config.yaml
 ```
 
-5. 启动数据库容器:
+4. 启动数据库容器:
 
 ```bash
 docker compose up -d
 ```
 
-6. 初始化数据库：
+5. 初始化数据库：
 
 ```bash
 # 第一次启动使用 db:push 命令初始化数据库
@@ -56,7 +50,7 @@ pnpm run db:push
 pnpm run db:migrate
 ```
 
-7. 启动服务：
+6. 启动服务：
 
 ```bash
 # 启动后端服务

@@ -22,31 +22,25 @@ git clone https://github.com/GramSearch/telegram-search.git
 cd telegram-search
 ```
 
-2. Switch to the `release` branch:
-
-```bash
-git checkout release
-```
-
-3. Install dependencies:
+2. Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-4. Configure environment:
+3. Configure environment:
 
 ```bash
 cp config/config.example.yaml config/config.yaml
 ```
 
-5. Start the database container:
+4. Start the database container:
 
 ```bash
 docker compose up -d
 ```
 
-6. Initialize the database:
+5. Initialize the database:
 
 ```bash
 # First time use db:push command to initialize the database
@@ -56,7 +50,7 @@ pnpm run db:push
 pnpm run db:migrate
 ```
 
-7. Start services:
+6. Start services:
 
 ```bash
 # Start backend service
