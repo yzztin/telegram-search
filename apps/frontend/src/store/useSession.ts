@@ -23,6 +23,7 @@ export const useSessionStore = defineStore('session', () => {
   })
 
   const activeSessionComputed = computed(() => storageSessions.value.get(storageActiveSessionId.value))
+  const isLoggedInComputed = computed(() => activeSessionComputed.value?.isConnected)
 
   const getActiveSession = () => {
     return storageSessions.value.get(storageActiveSessionId.value)
@@ -101,6 +102,6 @@ export const useSessionStore = defineStore('session', () => {
     getActiveSession,
     updateActiveSession,
     attemptLogin,
-    isLoggedIn: computed(() => activeSessionComputed.value?.isConnected),
+    isLoggedIn: isLoggedInComputed,
   }
 })
