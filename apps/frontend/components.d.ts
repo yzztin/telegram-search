@@ -8,31 +8,19 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AlertCard: typeof import('./src/components/ui/AlertCard.vue')['default']
     Avatar: typeof import('./src/components/ui/Avatar.vue')['default']
     Button: typeof import('./src/components/ui/Button/Button.vue')['default']
     ChatsCollapse: typeof import('./src/components/layout/ChatsCollapse.vue')['default']
     ChatSelector: typeof import('./src/components/ChatSelector.vue')['default']
-    CheckboxGroup: typeof import('./src/components/ui/CheckboxGroup.vue')['default']
     Dialog: typeof import('./src/components/ui/Dialog.vue')['default']
-    DropdownMenu: typeof import('./src/components/ui/DropdownMenu.vue')['default']
-    GlobalSearch: typeof import('./src/components/GlobalSearch.vue')['default']
-    HighlightText: typeof import('./src/components/ui/HighlightText.vue')['default']
     MessageBubble: typeof import('./src/components/messages/MessageBubble.vue')['default']
     Pagination: typeof import('./src/components/ui/Pagination.vue')['default']
-    ProgressBar: typeof import('./src/components/ui/ProgressBar.vue')['default']
-    RadioGroup: typeof import('./src/components/ui/RadioGroup.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchDialog: typeof import('./src/components/SearchDialog.vue')['default']
-    SearchSelect: typeof import('./src/components/ui/SearchSelect.vue')['default']
     SelectDropdown: typeof import('./src/components/ui/SelectDropdown.vue')['default']
     SettingsDialog: typeof import('./src/components/layout/SettingsDialog.vue')['default']
     SidebarSelector: typeof import('./src/components/layout/SidebarSelector.vue')['default']
-    StatusBadge: typeof import('./src/components/ui/StatusBadge.vue')['default']
-    StepIndicator: typeof import('./src/components/ui/StepIndicator.vue')['default']
     Stepper: typeof import('./src/components/ui/Stepper.vue')['default']
-    Switch: typeof import('./src/components/ui/Switch.vue')['default']
-    ThemeToggle: typeof import('./src/components/ThemeToggle.vue')['default']
   }
 }
