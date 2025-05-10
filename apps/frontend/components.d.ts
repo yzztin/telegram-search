@@ -31,6 +31,7 @@ declare module 'vue' {
     SidebarSelector: typeof import('./src/components/layout/SidebarSelector.vue')['default']
     StatusBadge: typeof import('./src/components/ui/StatusBadge.vue')['default']
     StepIndicator: typeof import('./src/components/ui/StepIndicator.vue')['default']
+    Stepper: typeof import('./src/components/ui/Stepper.vue')['default']
     Switch: typeof import('./src/components/ui/Switch.vue')['default']
     ThemeToggle: typeof import('./src/components/ThemeToggle.vue')['default']
   }

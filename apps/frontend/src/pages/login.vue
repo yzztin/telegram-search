@@ -22,9 +22,6 @@ const state = ref({
   phoneNumber: connectionStore.getActiveSession()?.phoneNumber ?? '',
   verificationCode: '',
   twoFactorPassword: '',
-
-  apiId: '',
-  apiHash: '',
 })
 
 const {
@@ -96,202 +93,106 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="mx-auto max-w-3xl rounded-lg bg-card p-6 shadow-md">
-    <h1 class="mb-6 text-center text-2xl text-foreground font-bold">
-      Telegram 登录
-    </h1>
+  <div class="flex items-center justify-center min-h-screen bg-background">
+    <div class="w-full max-w-md rounded-2xl bg-card p-10 shadow-2xl">
+      <h1 class="text-3xl font-bold text-center mb-6 tracking-tight">
+        Telegram 登录
+      </h1>
+      <Stepper :steps="steps" :current-step="state.currentStep" />
+      <p class="text-center text-lg text-secondary-foreground mb-8 font-medium">
+        {{ steps.find(s => s.value === state.currentStep)?.description }}
+      </p>
 
-    <!-- Custom Stepper -->
-    <div class="mb-8 w-full">
-      <div class="flex items-center">
-        <template v-for="(step, index) in steps" :key="step.value">
-          <!-- Step Item -->
-          <div class="flex items-center gap-2">
-            <!-- Step Indicator -->
-            <div
-              class="h-7 min-w-7 flex items-center justify-center border-2 rounded-full text-sm"
-              :class="{
-                'border-primary text-primary': state.currentStep === step.value,
-                'border-primary bg-primary text-foreground':
-                  steps.findIndex(s => s.value === state.currentStep) > steps.findIndex(s => s.value === step.value),
-                'border-secondary text-secondary-foreground':
-                  steps.findIndex(s => s.value === state.currentStep) < steps.findIndex(s => s.value === step.value),
-              }"
-            >
-              <span v-if="step.value === 'complete' || steps.findIndex(s => s.value === state.currentStep) > steps.findIndex(s => s.value === step.value)">✓</span>
-              <span v-else>{{ step.step }}</span>
-            </div>
-
-            <!-- Step Text -->
-            <div>
-              <div
-                class="text-sm font-medium"
-                :class="{
-                  'text-foreground': state.currentStep === step.value
-                    || steps.findIndex(s => s.value === state.currentStep) > steps.findIndex(s => s.value === step.value),
-                  'text-secondary-foreground': steps.findIndex(s => s.value === state.currentStep) < steps.findIndex(s => s.value === step.value),
-                }"
-              >
-                {{ step.title }}
-              </div>
-              <div
-                class="text-xs"
-                :class="{
-                  'text-foreground': state.currentStep === step.value
-                    || steps.findIndex(s => s.value === state.currentStep) > steps.findIndex(s => s.value === step.value),
-                  'text-secondary-foreground': steps.findIndex(s => s.value === state.currentStep) < steps.findIndex(s => s.value === step.value),
-                }"
-              >
-                {{ step.description }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Separator (not after the last item) -->
-          <div
-            v-if="index < steps.length - 1"
-            class="mx-2 h-0.5 flex-1"
-            :class="{
-              'bg-primary': steps.findIndex(s => s.value === state.currentStep) > index,
-              'bg-secondary': steps.findIndex(s => s.value === state.currentStep) <= index,
-            }"
-          />
-        </template>
-      </div>
-    </div>
-
-    <!-- 手机号码表单 -->
-    <form v-if="state.currentStep === 'phone'" class="space-y-4" @submit.prevent="handleLogin">
-      <div>
-        <label for="phoneNumber" class="block text-sm text-foreground font-medium">手机号码</label>
-        <input
-          id="phoneNumber"
-          v-model="state.phoneNumber"
-          type="tel"
-          placeholder="+86 123 4567 8901"
-          class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-          required
-        >
-        <p class="mt-1 text-sm text-secondary-foreground">
-          请输入完整的手机号，包括国家代码
-        </p>
-      </div>
-
-      <div>
-        <button
-          type="button"
-          class="text-sm text-primary hover:text-primary/80"
-          @click="state.showAdvancedSettings = !state.showAdvancedSettings"
-        >
-          {{ state.showAdvancedSettings ? '隐藏高级设置' : '显示高级设置' }}
-        </button>
-      </div>
-
-      <div v-if="state.showAdvancedSettings" class="space-y-3">
+      <!-- 手机号码表单 -->
+      <form v-if="state.currentStep === 'phone'" class="space-y-6" @submit.prevent="handleLogin">
         <div>
-          <label for="apiId" class="block text-sm text-foreground font-medium">API ID</label>
+          <label for="phoneNumber" class="block text-base text-foreground font-semibold mb-2">手机号码</label>
           <input
-            id="apiId"
-            v-model="state.apiId"
-            type="text"
-            placeholder="API ID"
-            class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+            id="phoneNumber"
+            v-model="state.phoneNumber"
+            type="tel"
+            placeholder="+86 123 4567 8901"
+            class="w-full rounded-xl border border-border bg-muted px-5 py-4 text-xl focus:ring-2 focus:ring-primary focus:outline-none transition"
+            required
           >
         </div>
-
-        <div>
-          <label for="apiHash" class="block text-sm text-foreground font-medium">API Hash</label>
-          <input
-            id="apiHash"
-            v-model="state.apiHash"
-            type="text"
-            placeholder="API Hash"
-            class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-          >
-        </div>
-      </div>
-
-      <div>
         <button
           type="submit"
-          class="w-full flex justify-center border border-transparent rounded-md bg-primary px-4 py-2 text-sm text-foreground font-medium shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          class="w-full rounded-xl bg-primary text-white py-4 text-lg font-bold hover:bg-primary/90 transition flex items-center justify-center"
           :disabled="state.isLoading"
         >
+          <span v-if="state.isLoading" class="animate-spin mr-2" />
           {{ state.isLoading ? '处理中...' : '发送验证码' }}
         </button>
-      </div>
-    </form>
+      </form>
 
-    <!-- 验证码表单 -->
-    <form v-if="state.currentStep === 'code'" class="space-y-4" @submit.prevent="handleLogin">
-      <div>
-        <label for="verificationCode" class="block text-sm text-foreground font-medium">验证码</label>
-        <input
-          id="verificationCode"
-          v-model="state.verificationCode"
-          type="text"
-          placeholder="请输入 Telegram 发送的验证码"
-          class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-          required
-        >
-        <p class="mt-1 text-sm text-secondary-foreground">
-          请检查您的 Telegram 应用或短信
-        </p>
-      </div>
-
-      <div>
+      <!-- 验证码表单 -->
+      <form v-if="state.currentStep === 'code'" class="space-y-6" @submit.prevent="handleLogin">
+        <div>
+          <label for="verificationCode" class="block text-base text-foreground font-semibold mb-2">验证码</label>
+          <input
+            id="verificationCode"
+            v-model="state.verificationCode"
+            type="text"
+            placeholder="请输入 Telegram 发送的验证码"
+            class="w-full rounded-xl border border-border bg-muted px-5 py-4 text-xl focus:ring-2 focus:ring-primary focus:outline-none transition"
+            required
+          >
+          <p class="mt-2 text-sm text-secondary-foreground">
+            请检查您的 Telegram 应用或短信
+          </p>
+        </div>
         <button
           type="submit"
-          class="w-full flex justify-center border border-transparent rounded-md bg-primary px-4 py-2 text-sm text-foreground font-medium shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          class="w-full rounded-xl bg-primary text-white py-4 text-lg font-bold hover:bg-primary/90 transition flex items-center justify-center"
           :disabled="state.isLoading"
         >
+          <span v-if="state.isLoading" class="animate-spin mr-2" />
           {{ state.isLoading ? '处理中...' : '验证' }}
         </button>
-      </div>
-    </form>
+      </form>
 
-    <!-- 两步验证密码表单 -->
-    <form v-if="state.currentStep === 'password'" class="space-y-4" @submit.prevent="handleLogin">
-      <div>
-        <label for="twoFactorPassword" class="block text-sm text-foreground font-medium">两步验证密码</label>
-        <input
-          id="twoFactorPassword"
-          v-model="state.twoFactorPassword"
-          type="password"
-          placeholder="请输入您的两步验证密码"
-          class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-          required
-        >
-      </div>
-
-      <div>
+      <!-- 两步验证密码表单 -->
+      <form v-if="state.currentStep === 'password'" class="space-y-6" @submit.prevent="handleLogin">
+        <div>
+          <label for="twoFactorPassword" class="block text-base text-foreground font-semibold mb-2">两步验证密码</label>
+          <input
+            id="twoFactorPassword"
+            v-model="state.twoFactorPassword"
+            type="password"
+            placeholder="请输入您的两步验证密码"
+            class="w-full rounded-xl border border-border bg-muted px-5 py-4 text-xl focus:ring-2 focus:ring-primary focus:outline-none transition"
+            required
+          >
+        </div>
         <button
           type="submit"
-          class="w-full flex justify-center border border-transparent rounded-md bg-primary px-4 py-2 text-sm text-foreground font-medium shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          class="w-full rounded-xl bg-primary text-white py-4 text-lg font-bold hover:bg-primary/90 transition flex items-center justify-center"
           :disabled="state.isLoading"
         >
+          <span v-if="state.isLoading" class="animate-spin mr-2" />
           {{ state.isLoading ? '处理中...' : '登录' }}
         </button>
-      </div>
-    </form>
+      </form>
 
-    <!-- 登录完成 -->
-    <div v-if="state.currentStep === 'complete'" class="text-center">
-      <div class="mb-4 text-3xl">
-        🎉
+      <!-- 登录完成 -->
+      <div v-if="state.currentStep === 'complete'" class="text-center">
+        <div class="mb-4 text-3xl">
+          🎉
+        </div>
+        <h2 class="text-xl font-bold text-foreground">
+          登录成功！
+        </h2>
+        <p class="mt-2 text-lg text-secondary-foreground">
+          您已成功登录 Telegram 账号
+        </p>
+        <button
+          class="mt-6 w-full rounded-xl bg-primary text-white py-4 text-lg font-bold hover:bg-primary/90 transition"
+          @click="$router.push('/')"
+        >
+          进入主页
+        </button>
       </div>
-      <h2 class="text-xl text-foreground font-medium">
-        登录成功！
-      </h2>
-      <p class="mt-2 text-secondary-foreground">
-        您已成功登录 Telegram 账号
-      </p>
-      <button
-        class="mt-6 w-full flex justify-center border border-transparent rounded-md bg-primary px-4 py-2 text-sm text-foreground font-medium shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-        @click="$router.push('/')"
-      >
-        进入主页
-      </button>
     </div>
   </div>
 </template>
