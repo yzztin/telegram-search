@@ -5,18 +5,13 @@ packages:
 catalog:
   '@xsai-ext/providers-cloud': ^0.2.0
   '@xsai/embed': ^0.2.0
-ignoredBuiltDependencies:
+onlyBuiltDependencies:
   - '@parcel/watcher'
   - bufferutil
-  - core-js
   - es5-ext
   - esbuild
-  - keccak
-  - scrypt
-  - secp256k1
-  - sha3
+  - nodejieba
+  - unrs-resolver
   - utf-8-validate
   - vue-demi
-onlyBuiltDependencies:
-  - nodejieba
   - websocket
