@@ -13,7 +13,7 @@ A powerful Telegram chat history search tool that supports vector search and sem
 
 ## 💖 Sponsors
 
-![Sponsors](./sponsorkit/sponsor.png)
+![Sponsors](./sponsorkit/sponsors.png)
 
 ## 🚀 Quick Start
 

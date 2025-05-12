@@ -13,7 +13,7 @@
 
 ## 💖 赞助者
 
-![Sponsors](./sponsorkit/sponsor.png)
+![Sponsors](./sponsorkit/sponsors.png)
 
 ## 🚀 快速开始
 
