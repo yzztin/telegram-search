@@ -2,12 +2,15 @@ packages:
   - packages/*
   - libs/*
   - apps/*
+patchedDependencies:
+  electron-vite: patches/electron-vite.patch
 catalog:
   '@xsai-ext/providers-cloud': ^0.2.2
   '@xsai/embed': ^0.2.2
 onlyBuiltDependencies:
   - '@parcel/watcher'
   - bufferutil
+  - electron
   - es5-ext
   - esbuild
   - nodejieba
