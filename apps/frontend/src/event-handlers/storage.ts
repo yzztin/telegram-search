@@ -6,15 +6,12 @@ import { useMessageStore } from '../store/useMessage'
 export function registerStorageEventHandlers(
   registerEventHandler: ClientRegisterEventHandler,
 ) {
-  const chatsStore = useChatStore()
-  const messagesStore = useMessageStore()
-
   registerEventHandler('storage:dialogs', (data) => {
-    chatsStore.chats = data.dialogs
+    useChatStore().chats = data.dialogs
   })
 
   registerEventHandler('storage:messages', ({ messages }) => {
-    messagesStore.pushMessages(messages)
+    useMessageStore().pushMessages(messages)
   })
 
   // Wait for result event

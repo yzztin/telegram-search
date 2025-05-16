@@ -7,10 +7,8 @@ import { useSessionStore } from '../store/useSession'
 export function registerServerEventHandlers(
   registerEventHandler: ClientRegisterEventHandler,
 ) {
-  const connectionStore = useSessionStore()
-
   registerEventHandler('server:connected', (data) => {
-    connectionStore.updateActiveSession(data.sessionId, { isConnected: data.connected })
+    useSessionStore().updateActiveSession(data.sessionId, { isConnected: data.connected })
   })
 
   registerEventHandler('server:error', ({ error }) => {

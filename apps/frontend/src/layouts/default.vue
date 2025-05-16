@@ -52,7 +52,7 @@ function toggleActiveChatGroup(group: ChatGroup) {
   <div
     class="h-screen w-full flex overflow-hidden bg-background text-sm font-medium"
   >
-    <div class="w-[20%] md:w-[15%] flex flex-col h-dvh border-r border-r-secondary min-w-min">
+    <div class="w-[20%] md:w-[15%] flex flex-col h-dvh border-r border-r-secondary">
       <div class="relative p-4">
         <div
           class="i-lucide-search absolute left-7 top-1/2 -translate-y-1/2 h-4 w-4"
