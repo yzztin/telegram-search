@@ -11,6 +11,8 @@
 - 由于项目处于快速迭代阶段，可能会出现数据库不兼容的情况，建议定期备份数据。
 - 获取 API key: [#111](https://github.com/GramSearch/telegram-search/issues/111)
 
+![image](https://github.com/user-attachments/assets/0fa3ba2f-9a3d-4530-9ecd-3336a0f952ad)
+
 ## 💖 赞助者
 
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
