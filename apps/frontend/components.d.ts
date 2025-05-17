@@ -14,6 +14,7 @@ declare module 'vue' {
     ChatSelector: typeof import('./src/components/ChatSelector.vue')['default']
     Dialog: typeof import('./src/components/ui/Dialog.vue')['default']
     MessageBubble: typeof import('./src/components/messages/MessageBubble.vue')['default']
+    MessageList: typeof import('./src/components/messages/MessageList.vue')['default']
     Pagination: typeof import('./src/components/ui/Pagination.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
