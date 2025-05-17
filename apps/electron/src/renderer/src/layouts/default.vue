@@ -153,7 +153,7 @@ function toggleActiveChatGroup(group: ChatGroup) {
           />
         </div>
       </div>
-    </div>``
+    </div>
 
     <div class="flex flex-1 flex-col overflow-auto">
       <RouterView :key="$route.fullPath" />
