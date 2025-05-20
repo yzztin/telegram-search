@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.13.1",
-    "@types/node": "^22.15.18",
+    "@types/node": "^22.15.19",
     "@unocss/eslint-config": "^66.1.2",
     "@unocss/eslint-plugin": "^66.1.2",
     "@unocss/reset": "^66.1.2",
