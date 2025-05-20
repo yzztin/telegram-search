@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+    # Disable
+    branches-ignore:
+      - '**'
+
 jobs:
   release:
     strategy:
