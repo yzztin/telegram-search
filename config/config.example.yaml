@@ -1,6 +1,9 @@
 # Database settings
 database:
-  # You can use url or separate fields
+  # Database type: postgres, pglite
+  type: postgres
+  # PostgreSQL configuration (used when type: postgres)
+  # Can use URL or separate field configuration
   # url: postgres://postgres:postgres@localhost:5432/tg_search
   host: localhost
   port: 5433

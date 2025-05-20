@@ -6,23 +6,28 @@ import { dirname, join, resolve } from 'node:path'
 import { cwd } from 'node:process'
 import { findWorkspaceDir } from '@pnpm/find-workspace-dir'
 import defu from 'defu'
+import path from 'path-browserify-esm'
 import { safeParse } from 'valibot'
 import { parse, stringify } from 'yaml'
 
-import { configSchema } from '../helper/config-schema'
+import { configSchema, DatabaseType } from '../helper/config-schema'
 import { generateDefaultConfig } from '../helper/default-config'
 import { useLogger } from '../helper/logger'
 
 let config: Config
 const logger = useLogger('common:config')
 
-export async function useConfigPath(): Promise<string> {
+async function getWorkspacePath() {
   const workspaceDir = await findWorkspaceDir(cwd())
   if (!workspaceDir) {
     throw new Error('Failed to find workspace directory')
   }
 
-  const configPath = resolve(workspaceDir, 'config', 'config.yaml')
+  return workspaceDir
+}
+
+export async function useConfigPath(): Promise<string> {
+  const configPath = resolve(await getWorkspacePath(), 'config', 'config.yaml')
 
   logger.withFields({ configPath }).log('Config path')
 
@@ -34,12 +39,15 @@ export async function useConfigPath(): Promise<string> {
   return configPath
 }
 
-export async function useAssetsPath(): Promise<string> {
-  const workspaceDir = await findWorkspaceDir(cwd())
-  if (!workspaceDir) {
-    throw new Error('Failed to find workspace directory')
-  }
+export async function getDrizzlePath(): Promise<string> {
+  const workspaceDir = await getWorkspacePath()
+  const drizzlePath = resolve(workspaceDir, 'drizzle')
+  logger.withFields({ drizzlePath }).log('Drizzle migrations path')
+  return drizzlePath
+}
 
+export async function useAssetsPath(): Promise<string> {
+  const workspaceDir = await getWorkspacePath()
   const assetsPath = resolve(workspaceDir, 'assets')
 
   logger.withFields({ assetsPath }).log('Assets path')
@@ -75,6 +83,21 @@ export function getMediaPath(storagePath: string) {
 export function getDatabaseDSN(config: Config): string {
   const { database } = config
   return database.url || `postgres://${database.user}:${database.password}@${database.host}:${database.port}/${database.database}`
+}
+
+export function getDatabaseFilePath(config: Config): string {
+  const { database, path: configPath } = config
+
+  let extension = ''
+  switch (database.type) {
+    case DatabaseType.PGLITE:
+      extension = '.pglite'
+      break
+    default:
+      return ''
+  }
+
+  return path.join(configPath.storage, `db${extension}`)
 }
 
 export function resolveStoragePath(path: string): string {

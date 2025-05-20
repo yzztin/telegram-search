@@ -20,6 +20,7 @@
     "lint:fix": "eslint src --fix"
   },
   "dependencies": {
+    "@electric-sql/pglite": "^0.3.1",
     "@tg-search/common": "workspace:*",
     "@xsai-ext/providers-cloud": "catalog:",
     "@xsai/embed": "catalog:",
@@ -33,7 +34,8 @@
     "postgres": "^3.4.5",
     "telegram": "^2.26.22",
     "unbuild": "^3.5.0",
-    "valibot": "^1.1.0"
+    "valibot": "^1.1.0",
+    "vectorlite": "^0.2.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.18",
