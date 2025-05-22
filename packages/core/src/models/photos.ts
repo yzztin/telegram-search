@@ -4,6 +4,7 @@ import { eq, inArray } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { photosTable } from '../db/schema'
+import { Ok } from '../utils/monad'
 
 export async function findPhotoDescription(fileId: string) {
   const photo = (await withDb(db => db
@@ -21,7 +22,7 @@ export async function findPhotoDescription(fileId: string) {
 }
 
 export async function recordPhoto(photoBase64: string, fileId: string, filePath: string, description: string) {
-  (await withDb(db => db
+  (await withDb(async db => Ok(await db
     .insert(photosTable)
     .values({
       platform: 'telegram',
@@ -29,7 +30,7 @@ export async function recordPhoto(photoBase64: string, fileId: string, filePath:
       image_base64: photoBase64,
       image_path: filePath,
       description,
-    }),
+    })),
   )).expect('Failed to record photo')
 }
 

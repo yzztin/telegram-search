@@ -4,6 +4,7 @@ import { desc, eq } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { recentSentStickersTable, stickersTable } from '../db/schema'
+import { Ok } from '../utils/monad'
 
 export async function findStickerDescription(fileId: string) {
   const sticker = await findStickerByFileId(fileId)
@@ -30,7 +31,7 @@ export async function findStickerByFileId(fileId: string) {
 }
 
 export async function recordSticker(stickerBase64: string, fileId: string, filePath: string, description: string, name: string, emoji: string, label: string) {
-  (await withDb(db => db
+  (await withDb(async db => Ok(await db
     .insert(stickersTable)
     .values({
       platform: 'telegram',
@@ -41,7 +42,7 @@ export async function recordSticker(stickerBase64: string, fileId: string, fileP
       name,
       emoji,
       label,
-    }),
+    })),
   )).expect('Failed to record sticker')
 }
 

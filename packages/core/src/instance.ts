@@ -26,7 +26,7 @@ export function createCoreInstance(): CoreContext {
   return ctx
 }
 
-export async function destoryCoreInstance(ctx: CoreContext) {
+export async function destroyCoreInstance(ctx: CoreContext) {
   // ctx.emitter.emit('auth:logout')
   ctx.emitter.emit('core:cleanup')
   ctx.emitter.removeAllListeners()

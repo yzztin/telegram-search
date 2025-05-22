@@ -4,16 +4,17 @@ import { desc } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { stickerPacksTable } from '../db/schema'
+import { Ok } from '../utils/monad'
 
 export async function recordStickerPack(platformId: string, name: string, platform = 'telegram') {
-  (await withDb(db => db
+  (await withDb(async db => Ok(await db
     .insert(stickerPacksTable)
     .values({
       platform,
       platform_id: platformId,
       name,
       description: '',
-    }),
+    })),
   )).expect('Failed to record sticker pack')
 }
 

@@ -10,8 +10,8 @@ import { withDb } from '../db'
 import { chatMessagesTable } from '../db/schema'
 import { Ok } from '../utils/monad'
 import { convertToCoreMessageFromDB, convertToDBInsertMessage } from './utils/message'
-import { retrieveJieba } from './utils/retrive-jieba'
-import { retriveVector } from './utils/retrive-vector'
+import { retrieveJieba } from './utils/retrieve-jieba'
+import { retrieveVector } from './utils/retrieve-vector'
 
 export async function recordMessages(messages: CoreMessage[]) {
   const dbMessages = messages.map(convertToDBInsertMessage)
@@ -20,13 +20,13 @@ export async function recordMessages(messages: CoreMessage[]) {
     return
   }
 
-  (await withDb(db => db
+  (await withDb(async db => Ok(await db
     .insert(chatMessagesTable)
     .values(dbMessages)
     .onConflictDoNothing({
       // TODO: on conflict replace
       target: [chatMessagesTable.platform, chatMessagesTable.platform_message_id],
-    }),
+    })),
   )).expect('Failed to record messages')
 }
 
@@ -45,7 +45,7 @@ export async function fetchMessages(chatId: string, pagination: CorePagination):
   return coreMessages
 }
 
-export async function retriveMessages(
+export async function retrieveMessages(
   chatId: string,
   content: {
     text?: string
@@ -53,17 +53,17 @@ export async function retriveMessages(
   },
   pagination?: CorePagination,
 ) {
-  const retrivalMessages: DBRetrievalMessages[] = []
+  const retrievalMessages: DBRetrievalMessages[] = []
 
   if (content.text) {
     const relevantMessages = await retrieveJieba(chatId, content.text, pagination)
-    retrivalMessages.push(...relevantMessages)
+    retrievalMessages.push(...relevantMessages)
   }
 
   if (content.embedding && content.embedding.length !== 0) {
-    const relevantMessages = await retriveVector(chatId, content.embedding, pagination)
-    retrivalMessages.push(...relevantMessages)
+    const relevantMessages = await retrieveVector(chatId, content.embedding, pagination)
+    retrievalMessages.push(...relevantMessages)
   }
 
-  return Ok(retrivalMessages)
+  return Ok(retrievalMessages)
 }

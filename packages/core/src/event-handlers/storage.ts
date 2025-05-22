@@ -4,7 +4,7 @@ import type { CoreDialog } from '../services'
 
 import { useLogger } from '@tg-search/common'
 
-import { fetchMessages, recordMessages, retriveMessages } from '../models/chat-message'
+import { fetchMessages, recordMessages, retrieveMessages } from '../models/chat-message'
 import { getChatMessagesStats } from '../models/chat-message-stats'
 import { fetchChats, recordChats } from '../models/chats'
 import { convertToCoreRetrievalMessages } from '../models/utils/message'
@@ -81,14 +81,14 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
     if (params.useVector) {
       const { embeddings } = (await embedContents([params.content])).expect('Failed to embed content')
 
-      dbMessages = (await retriveMessages(params.chatId, { embedding: embeddings[0], text: params.content }, params.pagination)).expect('Failed to retrive messages')
+      dbMessages = (await retrieveMessages(params.chatId, { embedding: embeddings[0], text: params.content }, params.pagination)).expect('Failed to retrieve messages')
     }
     else {
-      dbMessages = (await retriveMessages(params.chatId, { text: params.content }, params.pagination)).expect('Failed to retrive messages')
+      dbMessages = (await retrieveMessages(params.chatId, { text: params.content }, params.pagination)).expect('Failed to retrieve messages')
     }
 
-    logger.withFields({ messages: dbMessages.length }).verbose('Retrived messages')
-    logger.withFields(dbMessages).debug('Retrived messages')
+    logger.withFields({ messages: dbMessages.length }).verbose('Retrieved messages')
+    logger.withFields(dbMessages).debug('Retrieved messages')
 
     const coreMessages = convertToCoreRetrievalMessages(dbMessages)
 

@@ -6,6 +6,7 @@ import { eq, sql } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { joinedChatsTable } from '../db/schema'
+import { Ok } from '../utils/monad'
 
 export async function fetchChats() {
   return (await withDb(db => db
@@ -17,7 +18,7 @@ export async function fetchChats() {
 
 export async function recordChats(chats: CoreDialog[]) {
   // TODO: better way to do this?
-  return (await withDb(db => db
+  return (await withDb(async db => Ok(await db
     .insert(joinedChatsTable)
     .values(chats.map(chat => ({
       platform: 'telegram',
@@ -34,6 +35,6 @@ export async function recordChats(chats: CoreDialog[]) {
         chat_type: sql`excluded.chat_type`,
         updated_at: Date.now(), // TODO: is it correct?
       },
-    }),
+    })),
   )).expect('Failed to record joined chats')
 }
