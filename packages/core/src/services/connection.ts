@@ -79,6 +79,7 @@ export function createConnectionService(ctx: CoreContext) {
         options.apiHash,
         {
           connectionRetries: 3,
+          retryDelay: 10000,
           useWSS: proxy ? false : undefined,
           proxy,
         },

@@ -20,6 +20,7 @@ words:
   - ofetch
   - ollama
   - onnotice
+  - pathe
   - pglite
   - pgvector
   - pinia

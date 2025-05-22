@@ -120,7 +120,7 @@ export function createCoreContext() {
   }
 
   function setClient(client: TelegramClient) {
-    useLogger().debug('Setted Telegram client')
+    useLogger().debug('Set Telegram client')
     telegramClient = client
   }
 
