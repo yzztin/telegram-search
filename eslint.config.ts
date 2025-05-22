@@ -1,6 +1,10 @@
 import antfu from '@antfu/eslint-config'
 
-export default antfu({
+export default await antfu({
+  ignores: [
+    'cspell.config.yaml',
+    '**/drizzle/**/*.json',
+  ],
   rules: {
     'ts/ban-ts-comment': 'off',
     'import/order': [

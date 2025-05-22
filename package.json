@@ -13,8 +13,8 @@
     "dev:server": "pnpm run packages:build && pnpm -F @tg-search/server dev",
     "dev:frontend": "pnpm run build:server && pnpm -F @tg-search/frontend dev",
     "dev:electron": "pnpm -F @tg-search/electron dev",
-    "lint": "pnpm -r --parallel lint",
-    "lint:fix": "pnpm -r --parallel lint:fix",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "typecheck": "pnpm -r --parallel typecheck",
     "bump": "bumpp",
     "bump:deps": "taze -I -f -w -r",
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.13.1",
+    "@types/node": "^22.15.21",
     "bumpp": "^10.1.1",
     "drizzle-kit": "^0.31.1",
     "eslint": "^9.27.0",
@@ -32,10 +33,9 @@
     "lint-staged": "^16.0.0",
     "taze": "^19.1.0",
     "tsx": "^4.19.4",
-    "typescript": "^5.8.3"
-  },
-  "resolutions": {
-    "unplugin": "^2.3.4",
-    "vite": "^6.3.5"
+    "typescript": "^5.8.3",
+    "unbuild": "^3.5.0",
+    "vite": "^6.3.5",
+    "vitest": "^3.1.4"
   }
 }
