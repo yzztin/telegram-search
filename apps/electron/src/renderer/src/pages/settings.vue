@@ -215,15 +215,6 @@ onMounted(() => {
                   class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
                 >
               </div>
-              <div class="md:col-span-2">
-                <label class="block text-sm text-secondary-foreground font-medium">Phone Number</label>
-                <input
-                  v-model="config.api.telegram.phoneNumber"
-                  type="tel"
-                  :disabled="!isEditing"
-                  class="mt-1 block w-full border border-secondary rounded-md bg-muted px-3 py-2 text-foreground"
-                >
-              </div>
             </div>
           </div>
 

@@ -65,7 +65,6 @@ export const pathConfigSchema = object({
 export const telegramConfigSchema = object({
   apiId: optional(string(), ''),
   apiHash: optional(string(), ''),
-  phoneNumber: optional(string(), ''),
   proxy: optional(proxyConfigSchema),
 })
 
