@@ -1,3 +1,4 @@
+import { env } from 'node:process'
 import Vue from '@vitejs/plugin-vue'
 import UnoCSS from 'unocss/vite'
 import Components from 'unplugin-vue-components/vite'
@@ -43,13 +44,13 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: process.env.BACKEND_URL ?? 'http://localhost:3000',
+        target: env.BACKEND_URL ?? 'http://localhost:3000',
         changeOrigin: true,
         // Remove /api prefix when forwarding to target
         rewrite: path => path.replace(/^\/api/, ''),
       },
       '/ws': {
-        target: process.env.BACKEND_URL ?? 'http://localhost:3000',
+        target: env.BACKEND_URL ?? 'http://localhost:3000',
         changeOrigin: true,
         ws: true,
       },

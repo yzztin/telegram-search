@@ -1,4 +1,4 @@
-import { dirname } from 'node:path'
+import { dirname, join } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import Vue from '@vitejs/plugin-vue'
@@ -47,7 +47,7 @@ export default defineConfig({
 
       // https://github.com/posva/unplugin-vue-router
       VueRouter({
-        routesFolder: 'src/renderer/src/pages',
+        routesFolder: join('src', 'renderer', 'src', 'pages'),
       }),
 
       VueMacros({
