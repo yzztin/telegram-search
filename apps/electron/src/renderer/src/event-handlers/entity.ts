@@ -1,11 +1,11 @@
 import type { ClientRegisterEventHandler } from '.'
 
-import { useSessionStore } from '../store/useSession'
+import { useWebsocketStore } from '../store/useWebsocket'
 
 export function registerEntityEventHandlers(
   registerEventHandler: ClientRegisterEventHandler,
 ) {
   registerEventHandler('entity:me:data', (data) => {
-    useSessionStore().getActiveSession()!.me = data
+    useWebsocketStore().getActiveSession()!.me = data
   })
 }

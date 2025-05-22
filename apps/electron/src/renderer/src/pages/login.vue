@@ -4,14 +4,16 @@ import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import { useSessionStore } from '../store/useSession'
+import { useAuthStore } from '../store/useAuth'
+import { useWebsocketStore } from '../store/useWebsocket'
 
 type LoginStep = 'phone' | 'code' | 'password' | 'complete'
 
 const router = useRouter()
 
-const connectionStore = useSessionStore()
-const { isLoggedIn } = storeToRefs(connectionStore)
+const authStore = useAuthStore()
+const websocketStore = useWebsocketStore()
+const { isLoggedIn } = storeToRefs(authStore)
 
 const state = ref({
   isLoading: false,
@@ -19,7 +21,7 @@ const state = ref({
   currentStep: 'phone' as LoginStep,
   showAdvancedSettings: false,
 
-  phoneNumber: connectionStore.getActiveSession()?.phoneNumber ?? '',
+  phoneNumber: websocketStore.getActiveSession()?.phoneNumber ?? '',
   verificationCode: '',
   twoFactorPassword: '',
 })
@@ -28,14 +30,14 @@ const {
   login,
   submitCode,
   submitPassword,
-} = connectionStore.handleAuth()
+} = authStore.handleAuth()
 
-watch(() => connectionStore.auth.needCode, (value) => {
+watch(() => authStore.auth.needCode, (value) => {
   if (value)
     state.value.currentStep = 'code'
 })
 
-watch(() => connectionStore.auth.needPassword, (value) => {
+watch(() => authStore.auth.needPassword, (value) => {
   if (value)
     state.value.currentStep = 'password'
 })
@@ -59,7 +61,7 @@ watch(isLoggedIn, (value) => {
 })
 
 onMounted(() => {
-  connectionStore.attemptLogin()
+  authStore.attemptLogin()
 
   if (isLoggedIn.value) {
     redirectRoot()

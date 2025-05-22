@@ -6,13 +6,13 @@ import { toast } from 'vue-sonner'
 import ChatSelector from '../components/ChatSelector.vue'
 import { Button } from '../components/ui/Button'
 import { useChatStore } from '../store/useChat'
-import { useSessionStore } from '../store/useSession'
+import { useAuthStore } from '../store/useAuth'
 import { useSyncTaskStore } from '../store/useSyncTask'
 import { useWebsocketStore } from '../store/useWebsocket'
 
 const selectedChats = ref<number[]>([])
 
-const sessionStore = useSessionStore()
+const sessionStore = useAuthStore()
 const { isLoggedIn } = storeToRefs(sessionStore)
 const websocketStore = useWebsocketStore()
 

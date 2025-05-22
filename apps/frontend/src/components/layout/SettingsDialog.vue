@@ -2,7 +2,7 @@
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
-import { useSessionStore } from '../../store/useSession'
+import { useAuthStore } from '../../store/useAuth'
 import { useSettingsStore } from '../../store/useSettings'
 import Dialog from '../ui/Dialog.vue'
 
@@ -12,11 +12,15 @@ const showDialog = defineModel<boolean>('showDialog', { required: true })
 const settingsStore = useSettingsStore()
 const { theme: selectedTheme, themesOptions } = storeToRefs(settingsStore)
 
-const sessionStore = useSessionStore()
+const sessionStore = useAuthStore()
+const { isLoggedIn } = storeToRefs(sessionStore)
 const { logout } = sessionStore.handleAuth()
 
 function handleLogout() {
   logout()
+}
+
+function handleLogin() {
   router.push('/login')
 }
 </script>
@@ -56,7 +60,18 @@ function handleLogout() {
           None
         </button>
       </div>
-      <div class="flex items-center justify-between rounded-lg p-3 text-foreground transition-colors hover:bg-popover/50">
+
+      <div v-if="!isLoggedIn" class="flex items-center justify-between rounded-lg p-3 text-foreground transition-colors hover:bg-popover/50">
+        <div class="flex items-center gap-2">
+          <div class="i-lucide-log-in h-5 w-5" />
+          <span>登录</span>
+        </div>
+        <button class="text-primary transition-colors hover:text-primary/80" @click="handleLogin">
+          登录
+        </button>
+      </div>
+
+      <div v-if="isLoggedIn" class="flex items-center justify-between rounded-lg p-3 text-foreground transition-colors hover:bg-popover/50">
         <div class="flex items-center gap-2">
           <div class="i-lucide-log-out h-5 w-5" />
           <span>退出登录</span>

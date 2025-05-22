@@ -1,22 +1,39 @@
 import type { WsEventToClient, WsEventToClientData, WsEventToServer, WsEventToServerData, WsMessageToClient, WsMessageToServer } from '@tg-search/server'
 import type { ClientEventHandlerMap, ClientEventHandlerQueueMap } from '../event-handlers'
+import type { SessionContext } from './useAuth'
 
-import { useWebSocket } from '@vueuse/core'
-import { defineStore, storeToRefs } from 'pinia'
+import { useLocalStorage, useWebSocket } from '@vueuse/core'
+import { defu } from 'defu'
+import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
 import { WS_API_BASE } from '../constants'
 import { getRegisterEventHandler, registerAllEventHandlers } from '../event-handlers'
-import { useSessionStore } from './useSession'
 
 export type ClientSendEventFn = <T extends keyof WsEventToServer>(event: T, data?: WsEventToServerData<T>) => void
 export type ClientCreateWsMessageFn = <T extends keyof WsEventToServer>(event: T, data?: WsEventToServerData<T>) => WsMessageToServer
 
 export const useWebsocketStore = defineStore('websocket', () => {
-  const sessionStore = useSessionStore()
-  const { activeSessionId } = storeToRefs(sessionStore)
+  const storageSessions = useLocalStorage('websocket/sessions', new Map<string, SessionContext>())
+  const storageActiveSessionId = useLocalStorage('websocket/active-session-id', crypto.randomUUID())
 
-  const wsUrlComputed = computed(() => `${WS_API_BASE}?sessionId=${activeSessionId.value}`)
+  const getActiveSession = () => {
+    return storageSessions.value.get(storageActiveSessionId.value)
+  }
+
+  const updateActiveSession = (sessionId: string, partialSession: Partial<SessionContext>) => {
+    const mergedSession = defu({}, partialSession, storageSessions.value.get(sessionId))
+
+    storageSessions.value.set(sessionId, mergedSession)
+    storageActiveSessionId.value = sessionId
+  }
+
+  const cleanup = () => {
+    storageSessions.value.clear()
+    storageActiveSessionId.value = crypto.randomUUID()
+  }
+
+  const wsUrlComputed = computed(() => `${WS_API_BASE}?sessionId=${storageActiveSessionId.value}`)
   const wsSocket = ref(useWebSocket<keyof WsMessageToClient>(wsUrlComputed.value, {
     onDisconnected: () => {
       // eslint-disable-next-line no-console
@@ -103,6 +120,13 @@ export const useWebsocketStore = defineStore('websocket', () => {
   })
 
   return {
+    sessions: storageSessions,
+    activeSessionId: storageActiveSessionId,
+    getActiveSession,
+    updateActiveSession,
+    cleanup,
+
+    // WebSocket
     sendEvent,
     waitForEvent,
   }

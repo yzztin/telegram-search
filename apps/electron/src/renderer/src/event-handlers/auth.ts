@@ -1,19 +1,20 @@
 import type { ClientRegisterEventHandler } from '.'
 
-import { useSessionStore } from '../store/useSession'
+import { useAuthStore } from '../store/useAuth'
+import { useWebsocketStore } from '../store/useWebsocket'
 
 export function registerAuthEventHandlers(
   registerEventHandler: ClientRegisterEventHandler,
 ) {
   registerEventHandler('auth:code:needed', () => {
-    useSessionStore().auth.needCode = true
+    useAuthStore().auth.needCode = true
   })
 
   registerEventHandler('auth:password:needed', () => {
-    useSessionStore().auth.needPassword = true
+    useAuthStore().auth.needPassword = true
   })
 
   registerEventHandler('auth:connected', () => {
-    useSessionStore().getActiveSession()!.isConnected = true
+    useWebsocketStore().getActiveSession()!.isConnected = true
   })
 }

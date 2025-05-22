@@ -2,13 +2,13 @@ import type { ClientRegisterEventHandler } from '.'
 
 import { toast } from 'vue-sonner'
 
-import { useSessionStore } from '../store/useSession'
+import { useWebsocketStore } from '../store/useWebsocket'
 
 export function registerServerEventHandlers(
   registerEventHandler: ClientRegisterEventHandler,
 ) {
   registerEventHandler('server:connected', (data) => {
-    useSessionStore().updateActiveSession(data.sessionId, { isConnected: data.connected })
+    useWebsocketStore().updateActiveSession(data.sessionId, { isConnected: data.connected })
   })
 
   registerEventHandler('server:error', ({ error }) => {

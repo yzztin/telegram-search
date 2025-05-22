@@ -11,14 +11,14 @@ import SettingsDialog from '../components/layout/SettingsDialog.vue'
 import SidebarSelector from '../components/layout/SidebarSelector.vue'
 import { Button } from '../components/ui/Button'
 import { useChatStore } from '../store/useChat'
-import { useSessionStore } from '../store/useSession'
 import { useSettingsStore } from '../store/useSettings'
+import { useWebsocketStore } from '../store/useWebsocket'
 
 const settingsStore = useSettingsStore()
 const { theme } = storeToRefs(settingsStore)
 const isDark = useDark()
 
-const sessionStore = useSessionStore()
+const websocketStore = useWebsocketStore()
 
 const settingsDialog = ref(false)
 const searchParams = ref('')
@@ -130,13 +130,13 @@ function toggleActiveChatGroup(group: ChatGroup) {
         <div class="flex items-center gap-3 mr-3">
           <div class="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full bg-muted">
             <Avatar
-              :name="sessionStore.getActiveSession()?.me?.username"
+              :name="websocketStore.getActiveSession()?.me?.username"
               size="sm"
             />
           </div>
           <div class="flex flex-col">
-            <span class="text-sm text-foreground font-medium whitespace-nowrap">{{ sessionStore.getActiveSession()?.me?.username }}</span>
-            <span class="text-xs text-secondary-foreground whitespace-nowrap">{{ sessionStore.getActiveSession()?.isConnected ? '已链接' : '未链接' }}</span>
+            <span class="text-sm text-foreground font-medium whitespace-nowrap">{{ websocketStore.getActiveSession()?.me?.username }}</span>
+            <span class="text-xs text-secondary-foreground whitespace-nowrap">{{ websocketStore.getActiveSession()?.isConnected ? '已链接' : '未链接' }}</span>
           </div>
         </div>
         <div class="flex items-center">
