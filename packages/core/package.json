@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.1",
+    "@node-rs/jieba": "^2.0.1",
     "@tg-search/common": "workspace:*",
     "@xsai-ext/providers-cloud": "catalog:",
     "@xsai/embed": "catalog:",
@@ -29,7 +30,6 @@
     "drizzle-orm": "^0.43.1",
     "eventemitter3": "^5.0.1",
     "grammy": "^1.36.1",
-    "nodejieba": "^3.4.4",
     "pg": "^8.16.0",
     "postgres": "^3.4.5",
     "telegram": "^2.26.22",

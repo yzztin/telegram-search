@@ -21,9 +21,6 @@ const alias = {
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin({
-      include: [
-        'nodejieba',
-      ],
       exclude: [
         ...Object.keys(alias),
       ],

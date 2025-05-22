@@ -10,7 +10,7 @@ export interface CoreMessageSearchParams {
   pagination?: CorePagination
 }
 
-export type CoreRetrivalMessages = CoreMessage & {
+export type CoreRetrievalMessages = CoreMessage & {
   similarity?: number
   timeRelevance?: number
   combinedScore?: number
@@ -31,7 +31,7 @@ export interface StorageEventFromCore {
 
   'storage:dialogs': (data: { dialogs: CoreDialog[] }) => void
 
-  'storage:search:messages:data': (data: { messages: CoreRetrivalMessages[] }) => void
+  'storage:search:messages:data': (data: { messages: CoreRetrievalMessages[] }) => void
 }
 
 export type StorageEvent = StorageEventFromCore & StorageEventToCore

@@ -1,5 +1,5 @@
 import type { CoreContext } from '../context'
-import type { DBRetrivalMessages } from '../models/utils/message'
+import type { DBRetrievalMessages } from '../models/utils/message'
 import type { CoreDialog } from '../services'
 
 import { useLogger } from '@tg-search/common'
@@ -7,7 +7,7 @@ import { useLogger } from '@tg-search/common'
 import { fetchMessages, recordMessages, retriveMessages } from '../models/chat-message'
 import { getChatMessagesStats } from '../models/chat-message-stats'
 import { fetchChats, recordChats } from '../models/chats'
-import { convertToCoreRetrivalMessages } from '../models/utils/message'
+import { convertToCoreRetrievalMessages } from '../models/utils/message'
 import { embedContents } from '../utils/embed'
 
 export function registerStorageEventHandlers(ctx: CoreContext) {
@@ -77,7 +77,7 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
       params.chatId = '0'
     }
 
-    let dbMessages: DBRetrivalMessages[] = []
+    let dbMessages: DBRetrievalMessages[] = []
     if (params.useVector) {
       const { embeddings } = (await embedContents([params.content])).expect('Failed to embed content')
 
@@ -90,7 +90,7 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
     logger.withFields({ messages: dbMessages.length }).verbose('Retrived messages')
     logger.withFields(dbMessages).debug('Retrived messages')
 
-    const coreMessages = convertToCoreRetrivalMessages(dbMessages)
+    const coreMessages = convertToCoreRetrievalMessages(dbMessages)
 
     emitter.emit('storage:search:messages:data', { messages: coreMessages })
   })

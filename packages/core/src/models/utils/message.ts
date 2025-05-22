@@ -1,12 +1,12 @@
 import type { UUID } from 'node:crypto'
 import type { chatMessagesTable } from '../../db/schema'
-import type { CoreRetrivalMessages } from '../../services'
+import type { CoreRetrievalMessages } from '../../services'
 import type { CoreMessage } from '../../utils/message'
 
 export type DBInsertMessage = typeof chatMessagesTable.$inferInsert
 export type DBSelectMessage = typeof chatMessagesTable.$inferSelect
 
-export interface DBRetrivalMessages extends Omit<DBSelectMessage, 'content_vector_1536' | 'content_vector_1024' | 'content_vector_768'> {
+export interface DBRetrievalMessages extends Omit<DBSelectMessage, 'content_vector_1536' | 'content_vector_1024' | 'content_vector_768'> {
   similarity?: number
   time_relevance?: number
   combined_score?: number
@@ -70,11 +70,11 @@ export function convertToDBInsertMessage(message: CoreMessage): DBInsertMessage 
   } satisfies DBInsertMessage
 }
 
-export function convertToCoreRetrivalMessages(messages: DBRetrivalMessages[]): CoreRetrivalMessages[] {
+export function convertToCoreRetrievalMessages(messages: DBRetrievalMessages[]): CoreRetrievalMessages[] {
   return messages.map(message => ({
     ...convertToCoreMessageFromDB(message as DBSelectMessage),
     similarity: message?.similarity,
     timeRelevance: message?.time_relevance,
     combinedScore: message?.combined_score,
-  })) satisfies CoreRetrivalMessages[]
+  })) satisfies CoreRetrievalMessages[]
 }

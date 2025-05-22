@@ -29,7 +29,7 @@ cd telegram-search
 2. Install dependencies:
 
 ```bash
-CXX=clang++-19 pnpm install
+pnpm install
 ```
 
 3. Configure environment:
@@ -44,13 +44,9 @@ cp config/config.example.yaml config/config.yaml
 docker compose up -d
 ```
 
-5. Initialize the database:
+5. Apply all schema to the database:
 
 ```bash
-# First time use db:push command to initialize the database
-pnpm run db:push
-
-# Then use db:migrate command to migrate the database
 pnpm run db:migrate
 ```
 

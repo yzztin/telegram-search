@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CoreRetrivalMessages } from '@tg-search/core'
+import type { CoreRetrievalMessages } from '@tg-search/core'
 
 import { useDebounce } from '@vueuse/core'
 import { ref, watch } from 'vue'
@@ -20,7 +20,7 @@ const keyword = ref<string>('')
 const keywordDebounced = useDebounce(keyword, 1000)
 
 const websocketStore = useWebsocketStore()
-const searchResult = ref<CoreRetrivalMessages[]>([])
+const searchResult = ref<CoreRetrievalMessages[]>([])
 
 // TODO: Infinite scroll
 watch(keywordDebounced, (newKeyword) => {

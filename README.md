@@ -31,7 +31,7 @@ cd telegram-search
 2. 安装依赖：
 
 ```bash
-CXX=clang++-19 pnpm install
+pnpm install
 ```
 
 3. 配置环境：
@@ -46,13 +46,9 @@ cp config/config.example.yaml config/config.yaml
 docker compose up -d
 ```
 
-5. 初始化数据库：
+5. 同步数据库表结构：
 
 ```bash
-# 第一次启动使用 db:push 命令初始化数据库
-pnpm run db:push
-
-# 之后使用 db:migrate 命令迁移数据库
 pnpm run db:migrate
 ```
 

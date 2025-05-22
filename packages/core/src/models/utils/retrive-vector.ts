@@ -1,5 +1,5 @@
 import type { CorePagination } from '../../utils/pagination'
-import type { DBRetrivalMessages } from './message'
+import type { DBRetrievalMessages } from './message'
 
 import { EmbeddingDimension } from '@tg-search/common'
 import { useConfig } from '@tg-search/common/composable'
@@ -9,7 +9,7 @@ import { withDb } from '../../db'
 import { chatMessagesTable } from '../../db/schema'
 import { getSimilaritySql } from './similarity'
 
-export async function retriveVector(chatId: string | undefined, embedding: number[], pagination?: CorePagination): Promise<DBRetrivalMessages[]> {
+export async function retriveVector(chatId: string | undefined, embedding: number[], pagination?: CorePagination): Promise<DBRetrievalMessages[]> {
   const similarity = getSimilaritySql(
     useConfig().api.embedding.dimension || EmbeddingDimension.DIMENSION_1536,
     embedding,

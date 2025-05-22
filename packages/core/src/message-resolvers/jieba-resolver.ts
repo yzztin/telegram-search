@@ -1,14 +1,14 @@
 import type { MessageResolver, MessageResolverOpts } from '.'
 import type { CoreMessage } from '../utils/message'
 
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { Jieba } from '@node-rs/jieba'
 import { useLogger } from '@tg-search/common'
 import { useConfig } from '@tg-search/common/composable'
-import nodejieba from 'nodejieba'
 
 import { Err, Ok } from '../utils/monad'
 
-const { cut, load } = nodejieba
+let jieba: Jieba | undefined
 
 export function createJiebaResolver(): MessageResolver {
   const logger = useLogger('core:resolver:jieba')
@@ -16,9 +16,7 @@ export function createJiebaResolver(): MessageResolver {
   const dictPath = useConfig().path.dict
   if (existsSync(dictPath)) {
     logger.withFields({ dictPath }).log('Loading jieba dict')
-    load({
-      userDict: dictPath,
-    })
+    jieba = Jieba.withDict(readFileSync(dictPath))
   }
 
   return {
@@ -37,7 +35,7 @@ export function createJiebaResolver(): MessageResolver {
 
       const jiebaMessages = messages.map((message) => {
         // Token without empty strings
-        const tokens = cut(message.content).filter(token => !!token)
+        const tokens = jieba?.cut(message.content).filter(token => !!token) || []
         logger.withFields({ message: message.content, tokens }).debug('Jieba tokens')
 
         return {

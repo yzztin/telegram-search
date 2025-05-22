@@ -2,7 +2,7 @@
 
 import type { CoreMessage } from '../utils/message'
 import type { CorePagination } from '../utils/pagination'
-import type { DBRetrivalMessages } from './utils/message'
+import type { DBRetrievalMessages } from './utils/message'
 
 import { desc, eq } from 'drizzle-orm'
 
@@ -10,7 +10,7 @@ import { withDb } from '../db'
 import { chatMessagesTable } from '../db/schema'
 import { Ok } from '../utils/monad'
 import { convertToCoreMessageFromDB, convertToDBInsertMessage } from './utils/message'
-import { retriveJieba } from './utils/retrive-jieba'
+import { retrieveJieba } from './utils/retrive-jieba'
 import { retriveVector } from './utils/retrive-vector'
 
 export async function recordMessages(messages: CoreMessage[]) {
@@ -53,10 +53,10 @@ export async function retriveMessages(
   },
   pagination?: CorePagination,
 ) {
-  const retrivalMessages: DBRetrivalMessages[] = []
+  const retrivalMessages: DBRetrievalMessages[] = []
 
   if (content.text) {
-    const relevantMessages = await retriveJieba(chatId, content.text, pagination)
+    const relevantMessages = await retrieveJieba(chatId, content.text, pagination)
     retrivalMessages.push(...relevantMessages)
   }
 

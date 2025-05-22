@@ -1,30 +1,27 @@
 import type { CorePagination } from '../../utils/pagination'
-import type { DBRetrivalMessages } from './message'
+import type { DBRetrievalMessages } from './message'
 
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { Jieba } from '@node-rs/jieba'
 import { useLogger } from '@tg-search/common'
 import { useConfig } from '@tg-search/common/composable'
 import { and, eq, sql } from 'drizzle-orm'
-import nodejieba from 'nodejieba'
 
 import { withDb } from '../../db'
 import { chatMessagesTable } from '../../db/schema'
 
-const { cut, load } = nodejieba
+let jieba: Jieba | undefined
 
-export async function retriveJieba(chatId: string, content: string, pagination?: CorePagination): Promise<DBRetrivalMessages[]> {
-  const logger = useLogger('models:retrive-jieba')
+export async function retrieveJieba(chatId: string, content: string, pagination?: CorePagination): Promise<DBRetrievalMessages[]> {
+  const logger = useLogger('models:retrieve-jieba')
 
   const dictPath = useConfig().path.dict
   if (existsSync(dictPath)) {
     logger.withFields({ dictPath }).log('Loading jieba dict')
-    load({
-      userDict: dictPath,
-    })
+    jieba = Jieba.withDict(readFileSync(dictPath))
   }
 
-  const jiebaTokens = cut(content)
-
+  const jiebaTokens = jieba?.cut(content) || []
   if (jiebaTokens.length === 0) {
     return []
   }
@@ -33,7 +30,7 @@ export async function retriveJieba(chatId: string, content: string, pagination?:
     chatId,
     content,
     jiebaTokens,
-  }).debug('Retriving jieba tokens')
+  }).debug('Retrieving jieba tokens')
 
   return (await withDb(db => db
     .select({
