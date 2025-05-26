@@ -1,6 +1,6 @@
 # Telegram Search
 
-[English](./README_EN.md)
+[English](./README_EN.md) | [快速开始](./getting-started.md)
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+Gs3SH2qAPeFhYmU9)
 [![Discord](https://dcbadge.limes.pink/api/server/NzYsmJSgCT)](https://discord.gg/NzYsmJSgCT)

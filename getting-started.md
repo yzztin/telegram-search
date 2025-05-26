@@ -48,7 +48,7 @@ Telegram Search提供以下核心功能：
 1. 安装 NodeJS
 
   #### Windows
-  
+
   访问 [Node.js官网](https://nodejs.org/) 下载并安装最新的LTS版本
 
   #### macOS
@@ -138,8 +138,8 @@ Telegram Search提供以下核心功能：
 ```yaml
 api:
   telegram:
-    apiId: '你的API ID'
-    apiHash: '你的API Hash'
+    apiId: 你的API ID
+    apiHash: 你的API Hash
 ```
 
 ### OpenAI API配置
@@ -158,7 +158,7 @@ api:
   embedding:
     provider: openai
     model: text-embedding-3-small
-    apiKey: '你的OpenAI API密钥'
+    apiKey: 你的OpenAI API密钥
     dimension: 1536
 ```
 
@@ -174,8 +174,8 @@ api:
 api:
   embedding:
     provider: ollama
-    model: '你选择的模型'  # 例如 llama2 或 nomic-embed-text
-    dimension: 1536      # 取决于你的模型的维度
+    model: 你选择的模型 # 例如 llama2 或 nomic-embed-text
+    dimension: 1536 # 取决于你的模型的维度
 ```
 
 ### 数据库配置
@@ -187,7 +187,7 @@ database:
   type: postgres
   # 使用URL
   url: postgres://username:password@localhost:5432/database_name
-  
+
   # 或者使用分离字段配置
   host: localhost
   port: 5433
@@ -202,7 +202,7 @@ database:
 
 ```yaml
 path:
-  storage: ~/.telegram-search  # 默认路径
+  storage: ~/.telegram-search # 默认路径
 ```
 
 ### 消息导出设置
@@ -212,9 +212,9 @@ path:
 ```yaml
 message:
   export:
-    batchSize: 200    # 每次请求获取的消息数量
-    concurrent: 3     # 并发请求数
-    retryTimes: 3     # 重试次数
+    batchSize: 200 # 每次请求获取的消息数量
+    concurrent: 3 # 并发请求数
+    retryTimes: 3 # 重试次数
 ```
 
 ### 配置文件示例
@@ -248,12 +248,12 @@ path:
 # API设置
 api:
   telegram:
-    apiId: '你的API ID'
-    apiHash: '你的API哈希'
+    apiId: 你的API ID
+    apiHash: 你的API哈希
   embedding:
     provider: openai
     model: text-embedding-3-small
-    apiKey: '你的OpenAI API密钥'
+    apiKey: 你的OpenAI API密钥
     dimension: 1536
 ```
 
