@@ -1,42 +1,42 @@
 # Telegram Search 入门指南
 
-欢迎使用 Telegram Search ！这个工具可以帮助你更智能地搜索和检索 Telegram 聊天记录。本指南将帮助你快速上手并开始使用。
+欢迎使用 Telegram Search！这个工具可以帮助你更智能地搜索和检索 Telegram 聊天记录。本指南将帮助你快速上手并开始使用。
 
 ## 功能概述
 
-Telegram Search提供以下核心功能：
+Telegram Search 提供以下核心功能：
 
 - **语义搜索**：不仅可以搜索关键词，还能理解消息的上下文和含义
-- **向量匹配**：基于OpenAI的嵌入向量技术，实现相似度搜索
-- **高效检索**：比Telegram原生搜索更精准、更智能的检索体验
-- **多平台支持**：提供Web界面和桌面应用程序
+- **向量匹配**：基于 OpenAI 的嵌入向量技术，实现相似度搜索
+- **高效检索**：比 Telegram 原生搜索更精准、更智能的检索体验
+- **多平台支持**：提供 Web 界面和桌面应用程序
 
 ## 系统要求
 
 - **操作系统**：Windows、macOS 或 Linux
 - **Node.js**：20.0 或更高版本
-- **Docker**：用于运行数据库(可选，也可使用本地数据库)
+- **Docker**：用于运行数据库（可选，也可使用本地数据库）
 
 ## 快速入门流程
 
-使用Telegram Search的基本流程如下：
+使用 Telegram Search 的基本流程如下：
 
-1. **安装与配置**：安装应用程序并配置必要的API
-2. **连接Telegram账号**：登录你的Telegram账号
+1. **安装与配置**：安装应用程序并配置必要的 API
+2. **连接 Telegram 账号**：登录你的 Telegram 账号
 3. **同步聊天记录**：选择需要搜索的聊天记录进行同步
 4. **开始搜索**：使用语义搜索功能查找消息
 
 ## 下一步
 
-- 查看[安装指南](#安装指南)了解详细的安装步骤
-- 参考[配置指南](#配置指南)了解如何配置API密钥
-- 阅读[使用指南](#使用指南)学习如何使用各项功能
+- 查看 [安装指南](#安装指南)了解详细的安装步骤
+- 参考 [配置指南](#配置指南)了解如何配置 API 密钥
+- 阅读 [使用指南](#使用指南)学习如何使用各项功能
 
-如果你在使用过程中遇到任何问题，请查看[故障排除](#故障排除)章节。
+如果你在使用过程中遇到任何问题，请查看 [故障排除](#故障排除)章节。
 
 ## 安装指南
 
-本文档提供了在不同操作系统上安装Telegram Search的详细步骤。
+本文档提供了在不同操作系统上安装 Telegram Search 的详细步骤。
 
 ### 安装步骤
 
@@ -49,7 +49,7 @@ Telegram Search提供以下核心功能：
 
   #### Windows
 
-  访问 [Node.js官网](https://nodejs.org/) 下载并安装最新的LTS版本
+  访问 [Node.js 官网](https://nodejs.org/) 下载并安装最新的 LTS 版本
 
   #### macOS
 
@@ -67,7 +67,7 @@ Telegram Search提供以下核心功能：
    corepack enable
    ```
 
-3. 安装Docker
+3. 安装 Docker
   [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
 </details>
@@ -123,52 +123,52 @@ Telegram Search提供以下核心功能：
 
 ## 配置指南
 
-### Telegram API配置
+### Telegram API 配置
 
-要使用Telegram Search，你需要获取Telegram API凭证：
+要使用 Telegram Search，你需要获取 Telegram API 凭证：
 
 1. 访问 [https://my.telegram.org/apps](https://my.telegram.org/apps)
-2. 登录你的Telegram账号
+2. 登录你的 Telegram 账号
 3. 点击"API development tools"
 4. 填写应用信息（应用标题和简短名称可以自定义）
 5. 创建应用后，你将获得`api_id`和`api_hash`
 
-将获取的API ID和哈希填入配置文件：
+将获取的 API ID 和哈希填入配置文件：
 
 ```yaml
 api:
   telegram:
-    apiId: 你的API ID
-    apiHash: 你的API Hash
+    apiId: 你的 API ID
+    apiHash: 你的 API Hash
 ```
 
-### OpenAI API配置
+### OpenAI API 配置
 
-语义搜索功能需要使用OpenAI API：
+语义搜索功能需要使用 OpenAI API：
 
-1. 访问 [OpenAI平台](https://platform.openai.com/)
+1. 访问 [OpenAI 平台](https://platform.openai.com/)
 2. 注册或登录账号
-3. 进入API Keys页面: [https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
-4. 创建新的API密钥
+3. 进入 API Keys 页面：[https://platform.openai.com/account/api-keys](https://platform.openai.com/account/api-keys)
+4. 创建新的 API 密钥
 
-将OpenAI API密钥填入配置文件：
+将 OpenAI API 密钥填入配置文件：
 
 ```yaml
 api:
   embedding:
     provider: openai
     model: text-embedding-3-small
-    apiKey: 你的OpenAI API密钥
+    apiKey: 你的 OpenAI API 密钥
     dimension: 1536
 ```
 
-### 使用Ollama作为替代
+### 使用 Ollama 作为替代
 
-如果你不想使用OpenAI API，也可以使用Ollama作为替代：
+如果你不想使用 OpenAI API，也可以使用 Ollama 作为替代：
 
-1. 安装Ollama: [https://ollama.ai/download](https://ollama.ai/download)
-2. 启动Ollama服务
-3. 配置Telegram Search使用Ollama：
+1. 安装 Ollama: [https://ollama.ai/download](https://ollama.ai/download)
+2. 启动 Ollama 服务
+3. 配置 Telegram Search 使用 Ollama：
 
 ```yaml
 api:
@@ -180,12 +180,12 @@ api:
 
 ### 数据库配置
 
-Telegram Search支持PostgreSQL和PGLite作为数据库：
+Telegram Search 支持 PostgreSQL 和 PGLite 作为数据库：
 
 ```yaml
 database:
   type: postgres
-  # 使用URL
+  # 使用 URL
   url: postgres://username:password@localhost:5432/database_name
 
   # 或者使用分离字段配置
@@ -198,7 +198,7 @@ database:
 
 ### 存储路径配置
 
-你可以自定义Telegram Search的存储路径：
+你可以自定义 Telegram Search 的存储路径：
 
 ```yaml
 path:
@@ -245,15 +245,15 @@ message:
 path:
   storage: ~/.telegram-search
 
-# API设置
+# API 设置
 api:
   telegram:
-    apiId: 你的API ID
-    apiHash: 你的API哈希
+    apiId: 你的 API ID
+    apiHash: 你的 API 哈希
   embedding:
     provider: openai
     model: text-embedding-3-small
-    apiKey: 你的OpenAI API密钥
+    apiKey: 你的 OpenAI API 密钥
     dimension: 1536
 ```
 
@@ -289,7 +289,7 @@ api:
 
 #### 数据库连接失败
 
-- 确保Docker服务正在运行
+- 确保 Docker 服务正在运行
 - 检查数据库配置是否正确
 
 #### 搜索结果太少
@@ -331,7 +331,7 @@ api:
 ├── drizzle/               # 数据库迁移和管理
 ├── packages/              # 共享包和模块
 ├── scripts/               # 脚本工具
-└── sql/                   # SQL相关文件
+└── sql/                   # SQL 相关文件
 ```
 
 ### 开发环境设置
@@ -349,7 +349,7 @@ pnpm run dev:frontend
 
 ### 代码风格
 
-项目使用ESLint和Prettier来保持代码风格一致。在提交代码前，请确保运行：
+项目使用 ESLint 和 Prettier 来保持代码风格一致。在提交代码前，请确保运行：
 
 ```bash
 pnpm run lint
@@ -357,4 +357,4 @@ pnpm run lint
 
 ## 结语
 
-恭喜！你现在已经了解了如何安装、配置和使用Telegram Search。如果你有任何问题或建议，欢迎在 [Telegram Search GitHub](https://github.com/GramSearch/telegram-search) 上提交 Issue 或 Pull Request。
+恭喜！你现在已经了解了如何安装、配置和使用 Telegram Search。如果你有任何问题或建议，欢迎在 [Telegram Search GitHub](https://github.com/GramSearch/telegram-search) 上提交 Issue 或 Pull Request。

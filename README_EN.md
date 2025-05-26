@@ -11,7 +11,8 @@ A powerful Telegram chat history search tool that supports vector search and sem
 
 - PR are welcome!
 - Due to the project being in a rapid iteration phase, database incompatibility may occur. It's recommended to back up your data regularly.
-- Get the API key: [#111](https://github.com/GramSearch/telegram-search/issues/111)
+
+![preview](./docs/assets/preview.png)
 
 ## 💖 Sponsors
 
