@@ -87,8 +87,15 @@ Telegram Search 提供以下核心功能：
 
 3. **配置环境**：
 
+  #### Windows
+
    ```sh
    copy config\config.example.yaml config\config.yaml
+   ```
+  #### macOS
+
+   ```sh
+   cp config/config.example.yaml config/config.yaml
    ```
 
    然后使用文本编辑器编辑 `config\config.yaml` 文件
