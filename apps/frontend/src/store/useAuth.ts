@@ -39,7 +39,10 @@ export const useAuthStore = defineStore('session', () => {
 
   function handleAuth() {
     function login(phoneNumber: string) {
-      websocketStore.sessions.get(websocketStore.activeSessionId)!.phoneNumber = phoneNumber
+      const session = websocketStore.sessions.get(websocketStore.activeSessionId)
+
+      if (session)
+        session!.phoneNumber = phoneNumber
 
       websocketStore.sendEvent('auth:login', {
         phoneNumber,
