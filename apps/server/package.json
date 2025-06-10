@@ -3,14 +3,11 @@
   "type": "module",
   "version": "1.0.0-beta.11",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
-    }
+    ".": "./src/index.ts",
+    "./package.json": "./package.json"
   },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist"
@@ -18,8 +15,7 @@
   "scripts": {
     "serve": "vite-node src/index.ts",
     "dev": "vite-node src/index.ts",
-    "build": "unbuild",
-    "stub": "unbuild --stub",
+    "build": "tsdown",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
