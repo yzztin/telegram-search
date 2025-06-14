@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_DATABASE: postgres
-      POSTGRES_PASSWORD: "123456"
+      POSTGRES_PASSWORD: '123456'
     volumes:
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
       - pgvector_data:/var/lib/postgresql/data
@@ -30,7 +30,6 @@ services:
       - ./config/:/app/config/
       - app_data:/root/.telegram-search
     restart: unless-stopped
-
 
 volumes:
   pgvector_data:
