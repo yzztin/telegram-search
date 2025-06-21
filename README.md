@@ -1,5 +1,11 @@
 # Telegram Search
 
+> 唯一官方网站为 `intentchat.app`，其他网站均为诈骗。
+
+> 我们未发行任何虚拟货币，请勿上当受骗。
+
+> 本软件仅可导出您自己的聊天记录以便搜索，请勿用于非法用途。
+
 [English](./README_EN.md) | [快速开始](./getting-started.md)
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+Gs3SH2qAPeFhYmU9)

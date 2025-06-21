@@ -1,5 +1,11 @@
 # Telegram Search
 
+> The only official website is `intentchat.app`, all other websites are scams.
+
+> We have not issued any virtual currency, please do not be deceived.
+
+> This software can only export your own chat records for search, please do not use it for illegal purposes.
+
 [简体中文](./README.md) | [Getting Started](./getting-started.md)
 
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+Gs3SH2qAPeFhYmU9)
