@@ -57,7 +57,7 @@ onMounted(() => {
     </div>
   </header>
 
-  <div class="mx-auto p-4 container space-y-6">
+  <div class="container mx-auto p-4 space-y-6">
     <!-- Settings form -->
     <div class="space-y-6">
       <!-- Database settings -->
