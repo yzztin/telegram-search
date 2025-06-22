@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "^4.15.0",
+    "@proj-airi/unocss-preset-chromatic": "^0.0.3",
     "@types/node": "^24.0.3",
     "bumpp": "^10.2.0",
     "drizzle-kit": "^0.31.1",
