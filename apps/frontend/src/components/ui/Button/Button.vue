@@ -24,7 +24,7 @@ const iconSizeClasses = {
 
 <template>
   <button
-    class="flex flex-row items-center justify-center gap-2 rounded-lg p-2 hover:bg-muted"
+    class="hover:bg-muted flex flex-row items-center justify-center gap-2 rounded-lg p-2"
     :class="[
       sizeClasses[size ?? 'md'],
       disabled ? 'cursor-not-allowed opacity-50' : '',

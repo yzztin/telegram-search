@@ -25,15 +25,15 @@ function handleLogin() {
   <Dialog v-model="showDialog">
     <div class="mb-6 flex items-center justify-between">
       <div class="flex items-center gap-2">
-        <div class="i-lucide-settings h-5 w-5 text-foreground" />
-        <span class="text-lg text-foreground font-medium">设置</span>
+        <div class="text-foreground i-lucide-settings h-5 w-5" />
+        <span class="text-foreground text-lg font-medium">设置</span>
       </div>
-      <button class="rounded-md p-1 text-foreground transition-colors hover:bg-popover/50" @click="showDialog = false">
+      <button class="text-foreground hover:bg-popover/50 rounded-md p-1 transition-colors" @click="showDialog = false">
         <div class="i-lucide-x h-5 w-5" />
       </button>
     </div>
     <div class="space-y-4">
-      <div v-if="!isLoggedIn" class="flex items-center justify-between rounded-lg p-3 text-foreground transition-colors hover:bg-popover/50">
+      <div v-if="!isLoggedIn" class="text-foreground hover:bg-popover/50 flex items-center justify-between rounded-lg p-3 transition-colors">
         <div class="flex items-center gap-2">
           <div class="i-lucide-log-in h-5 w-5" />
           <span>登录</span>
@@ -43,7 +43,7 @@ function handleLogin() {
         </button>
       </div>
 
-      <div v-if="isLoggedIn" class="flex items-center justify-between rounded-lg p-3 text-foreground transition-colors hover:bg-popover/50">
+      <div v-if="isLoggedIn" class="text-foreground hover:bg-popover/50 flex items-center justify-between rounded-lg p-3 transition-colors">
         <div class="flex items-center gap-2">
           <div class="i-lucide-log-out h-5 w-5" />
           <span>退出登录</span>

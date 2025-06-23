@@ -33,11 +33,11 @@ function toggleActive() {
 <template>
   <div>
     <div
-      class="flex cursor-pointer items-center justify-between gap-4 py-2 hover:bg-muted"
+      class="hover:bg-muted flex cursor-pointer items-center justify-between gap-4 py-2"
       @click="toggleActive"
     >
       <div
-        class="flex items-center gap-4 rounded-md px-6 text-foreground"
+        class="text-foreground flex items-center gap-4 rounded-md px-6"
       >
         <span :class="icon" class="h-5 w-5" />
         <span class="whitespace-nowrap">{{ name }}</span>
@@ -58,7 +58,7 @@ function toggleActive() {
         v-for="chat in chats.filter(chat => chat.type === type)"
         :key="chat.id"
         :class="{ 'bg-muted': isActiveChat(chat.id.toString()) }"
-        class="flex flex-row cursor-pointer items-center justify-start gap-2 px-6 py-2 transition-all duration-200 hover:bg-muted hover:-translate-y-0.5"
+        class="hover:bg-muted flex flex-row cursor-pointer items-center justify-start gap-2 px-6 py-2 transition-all duration-200 hover:-translate-y-0.5"
         @click="router.push(`/chat/${chat.id}`)"
       >
         <Avatar
@@ -70,7 +70,7 @@ function toggleActive() {
             {{ chat.name }}
           </span>
 
-          <span class="whitespace-nowrap text-xs text-secondary-foreground">
+          <span class="text-secondary-foreground whitespace-nowrap text-xs">
             {{ chat.id }}
           </span>
         </div>

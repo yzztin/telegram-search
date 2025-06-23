@@ -14,9 +14,9 @@
 </p>
 
 > 唯一官方网站为 `intentchat.app`，其他网站均为诈骗。
-> 
+>
 > 我们未发行任何虚拟货币，请勿上当受骗。
-> 
+>
 > 本软件仅可导出您自己的聊天记录以便搜索，请勿用于非法用途。
 
 <a href="https://trendshift.io/repositories/13868" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13868" alt="groupultra%2Ftelegram-search | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
@@ -25,7 +25,6 @@
 
 - 欢迎 PR 贡献！
 - 由于项目处于快速迭代阶段，可能会出现数据库不兼容的情况，建议定期备份数据。
-
 
 ## 💖 赞助者
 
