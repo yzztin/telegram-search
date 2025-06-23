@@ -1,15 +1,23 @@
-# Telegram Search
+![preview](./docs/assets/preview.png)
+
+<h1 align="center">Telegram Search</h1>
+
+<p align="center">
+  [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="https://github.com/GramSearch/telegram-search/blob/main/README.md">简体中文</a>]
+</p>
+
+<p align="center">
+  <a href="https://deepwiki.com/GramSearch/telegram-search"><img src="https://deepwiki.com/badge.svg"></a>
+  <a href="https://github.com/GramSearch/telegram-search/blob/main/LICENSE"><img src="https://img.shields.io/github/license/GramSearch/telegram-search.svg?style=flat&colorA=080f12&colorB=1fa669"></a>
+    <a href="https://discord.gg/NzYsmJSgCT"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscord.com%2Fapi%2Finvites%2FNzYsmJSgCT%3Fwith_counts%3Dtrue&query=%24.approximate_member_count&suffix=%20members&logo=discord&logoColor=white&label=%20&color=7389D8&labelColor=6A7EC2"></a>
+  <a href="https://t.me/+Gs3SH2qAPeFhYmU9"><img src="https://img.shields.io/badge/Telegram-%235AA9E6?logo=telegram&labelColor=FFFFFF"></a>
+</p>
 
 > The only official website is `intentchat.app`, all other websites are scams.
-
+>
 > We have not issued any virtual currency, please do not be deceived.
-
+>
 > This software can only export your own chat records for search, please do not use it for illegal purposes.
-
-[简体中文](./README.md) | [Getting Started](./getting-started.md)
-
-[![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+Gs3SH2qAPeFhYmU9)
-[![Discord](https://dcbadge.limes.pink/api/server/NzYsmJSgCT)](https://discord.gg/NzYsmJSgCT)
 
 <a href="https://trendshift.io/repositories/13868" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13868" alt="groupultra%2Ftelegram-search | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
@@ -17,8 +25,6 @@ A powerful Telegram chat history search tool that supports vector search and sem
 
 - PR are welcome!
 - Due to the project being in a rapid iteration phase, database incompatibility may occur. It's recommended to back up your data regularly.
-
-![preview](./docs/assets/preview.png)
 
 ## 💖 Sponsors
 
