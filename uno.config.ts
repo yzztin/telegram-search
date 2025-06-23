@@ -40,7 +40,13 @@ export function sharedUnoConfig() {
           sans: 'Roboto',
         },
       }),
-      presetChromatic(),
+      presetChromatic({
+        baseHue: 220.44,
+        colors: {
+          primary: 0,
+          complementary: 180,
+        },
+      }),
     ],
     theme: {
       animation: {
@@ -63,20 +69,6 @@ export function sharedUnoConfig() {
           spin: 'infinite',
           pulse: 'infinite',
         },
-      },
-      colors: {
-        'background': 'var(--c-background)',
-        'foreground': 'var(--c-foreground)',
-        'card': 'var(--c-card)',
-        'card-foreground': 'var(--c-card-foreground)',
-        'popover': 'var(--c-popover)',
-        'popover-foreground': 'var(--c-popover-foreground)',
-        'primary': 'var(--c-primary)',
-        'primary-foreground': 'var(--c-primary-foreground)',
-        'secondary': 'var(--c-secondary)',
-        'secondary-foreground': 'var(--c-secondary-foreground)',
-        'muted': 'var(--c-muted)',
-        'muted-foreground': 'var(--c-muted-foreground)',
       },
     },
     safelist: [
