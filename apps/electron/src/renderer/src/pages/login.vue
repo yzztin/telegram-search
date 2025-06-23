@@ -104,7 +104,7 @@ async function handleLogin() {
             v-model="state.phoneNumber"
             type="tel"
             placeholder="+86 123 4567 8901"
-            class="border-border bg-muted w-full border rounded-xl px-5 py-4 text-xl transition focus:outline-none focus:ring-2 focus:ring-primary"
+            class="bg-muted border-border w-full border rounded-xl px-5 py-4 text-xl transition focus:outline-none focus:ring-2 focus:ring-primary"
             required
           >
         </div>
