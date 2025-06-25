@@ -54,7 +54,7 @@
     docker compose up -d
     ```
 
-访问 `http://<host>:3333` 即可打开搜索界面。
+访问 `http://localhost:3333` 即可打开搜索界面。
 
 ## 💻 本地运行
 
@@ -105,7 +105,3 @@
 ## 🚀 Activity
 
 [![Star History Chart](https://api.star-history.com/svg?repos=luoling8192/telegram-search&type=Date)](https://star-history.com/#luoling8192/telegram-search&Date)
-
-## 📝 License
-
-MIT License © 2025

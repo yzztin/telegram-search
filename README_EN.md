@@ -54,7 +54,7 @@ This is the simplest way to start Telegram Search, which will launch all necessa
     docker compose up -d
     ```
 
-Access `http://<host>:3333` to open the search interface.
+Access `http://localhost:3333` to open the search interface.
 
 ## 💻 Local Run
 
@@ -105,9 +105,3 @@ Visit `http://localhost:3333` to open the search interface.
 ## 🚀 Activity
 
 [![Star History Chart](https://api.star-history.com/svg?repos=luoling8192/telegram-search&type=Date)](https://star-history.com/#luoling8192/telegram-search&Date)
-
-![Alt](https://repobeats.axiom.co/api/embed/c0fe5f057a33ce830a632c6ae421433f50e9083f.svg "Repobeats analytics image")
-
-## 📝 License
-
-MIT License © 2025
