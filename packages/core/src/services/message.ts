@@ -70,15 +70,17 @@ export function createMessageService(ctx: CoreContext) {
 
         try {
           const result = (await resolver.run({ messages: emitMessages })).unwrap()
-          // logger.withFields({ result }).debug('Processed messages result')
-          emitMessages = result.length > 0 ? result : emitMessages
-          // logger.withFields({ emitMessages }).debug('Processed messages')
+
+          if (result.length > 0) {
+            emitMessages = result
+          }
         }
         catch (error) {
           logger.withFields({ error }).warn('Failed to process messages')
         }
       }
 
+      emitter.emit('message:data', { messages: emitMessages })
       emitter.emit('storage:record:messages', { messages: emitMessages })
     }
 

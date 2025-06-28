@@ -5,6 +5,8 @@ import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
+import Stepper from '../components/ui/Stepper.vue'
+
 type LoginStep = 'phone' | 'code' | 'password' | 'complete'
 
 const router = useRouter()

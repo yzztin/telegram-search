@@ -10,8 +10,7 @@ import { toast } from 'vue-sonner'
 
 import MessageBubble from '../../components/messages/MessageBubble.vue'
 import SearchDialog from '../../components/SearchDialog.vue'
-
-// const { ctrl_f, command_f } = useMagicKeys()
+import { Button } from '../../components/ui/Button'
 
 const route = useRoute('/chat/:id')
 const id = route.params.id
@@ -45,15 +44,6 @@ const { list, containerProps, wrapperProps } = useVirtualList(
   },
 )
 
-// function toggleGlobalSearch() {
-//   isGlobalSearch.value = !isGlobalSearch.value
-//   if (isGlobalSearch.value) {
-//     nextTick(() => {
-//       globalSearchRef.value?.focus()
-//     })
-//   }
-// }
-
 function handleClickOutside(event: MouseEvent) {
   if (isGlobalSearch.value && searchDialogRef.value) {
     const target = event.target as HTMLElement
@@ -72,18 +62,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
-
-// watch(ctrl_f, () => {
-//   if (ctrl_f.value) {
-//     toggleGlobalSearch()
-//   }
-// })
-
-// watch(command_f, () => {
-//   if (command_f.value) {
-//     toggleGlobalSearch()
-//   }
-// })
 
 const websocketStore = useWebsocketStore()
 
