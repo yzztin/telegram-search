@@ -1,2 +1,2 @@
-export { initDrizzle } from './db'
+export { initDrizzle } from './drizzle'
 export * from './models'

@@ -9,8 +9,8 @@ import { useLogger } from '@tg-search/common'
 import { useConfig } from '@tg-search/common/node'
 import { and, eq, sql } from 'drizzle-orm'
 
-import { withDb } from '../../db'
-import { chatMessagesTable } from '../../db/schema'
+import { withDb } from '../../drizzle'
+import { chatMessagesTable } from '../../schema'
 
 let jieba: Jieba | undefined
 

@@ -396,6 +396,9 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.3.3
         version: 0.3.3
+      '@node-rs/jieba':
+        specifier: ^2.0.1
+        version: 2.0.1
       '@tg-search/common':
         specifier: workspace:*
         version: link:../common

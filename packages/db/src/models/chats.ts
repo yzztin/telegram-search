@@ -5,8 +5,8 @@ import type { CoreDialog } from '../../../core/src'
 import { Ok } from '@tg-search/common/utils/monad'
 import { eq, sql } from 'drizzle-orm'
 
-import { withDb } from '../db'
-import { joinedChatsTable } from '../db/schema'
+import { withDb } from '../drizzle'
+import { joinedChatsTable } from '../schema'
 
 export async function fetchChats() {
   return (await withDb(db => db

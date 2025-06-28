@@ -3,8 +3,8 @@
 import { Ok } from '@tg-search/common/utils/monad'
 import { desc } from 'drizzle-orm'
 
-import { withDb } from '../db'
-import { stickerPacksTable } from '../db/schema'
+import { withDb } from '../drizzle'
+import { stickerPacksTable } from '../schema'
 
 export async function recordStickerPack(platformId: string, name: string, platform = 'telegram') {
   (await withDb(async db => Ok(await db

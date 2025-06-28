@@ -6,8 +6,8 @@ import { EmbeddingDimension } from '@tg-search/common'
 import { useConfig } from '@tg-search/common/node'
 import { and, desc, eq, gt, sql } from 'drizzle-orm'
 
-import { withDb } from '../../db'
-import { chatMessagesTable } from '../../db/schema'
+import { withDb } from '../../drizzle'
+import { chatMessagesTable } from '../../schema'
 import { getSimilaritySql } from './similarity'
 
 export async function retrieveVector(chatId: string | undefined, embedding: number[], pagination?: CorePagination): Promise<DBRetrievalMessages[]> {

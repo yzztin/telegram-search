@@ -1,7 +1,7 @@
 import type { UUID } from 'node:crypto'
 
 import type { CoreMessage, CoreRetrievalMessages } from '../../../../core/src/index'
-import type { chatMessagesTable } from '../../db/schema'
+import type { chatMessagesTable } from '../../schema'
 
 export type DBInsertMessage = typeof chatMessagesTable.$inferInsert
 export type DBSelectMessage = typeof chatMessagesTable.$inferSelect
