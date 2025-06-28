@@ -1,44 +1,12 @@
 <script setup lang="ts">
 import type { CoreMessage } from '@tg-search/core/types'
 
-// eslint-disable-next-line unicorn/prefer-node-protocol
-import { Buffer } from 'buffer'
-
 import Avatar from '../ui/Avatar.vue'
+import MediaRenderer from './MediaRenderer.vue'
 
 defineProps<{
   message: CoreMessage
 }>()
-
-function getMediaBase64(media: string | { type: 'Buffer', data: number[] } | ArrayBuffer | null | undefined): string | null {
-  if (!media)
-    return null
-
-  if (typeof media === 'string') {
-    return media.startsWith('data:') ? media : `data:image/jpeg;base64,${media}`
-  }
-
-  if (media && typeof media === 'object' && 'type' in media && media.type === 'Buffer' && 'data' in media) {
-    const buffer = Buffer.from(media.data)
-    return `data:image/jpeg;base64,${buffer.toString('base64')}`
-  }
-
-  if (media instanceof ArrayBuffer) {
-    const base64 = Buffer.from(media).toString('base64')
-    return base64 ? `data:image/jpeg;base64,${base64}` : null
-  }
-
-  return null
-}
-
-// Computed property to safely get media src
-function getMediaSrc(message: CoreMessage): string | null {
-  if (!message.media || message.media.length === 0 || !message.media[0]?.data) {
-    return null
-  }
-
-  return getMediaBase64(message.media[0].data)
-}
 </script>
 
 <template>
@@ -56,56 +24,7 @@ function getMediaSrc(message: CoreMessage): string | null {
       </div>
 
       <div class="text-foreground">
-        <!-- Text content when no media -->
-        <template v-if="!message.media || message.media?.length === 0">
-          {{ message.content }}
-        </template>
-
-        <!-- Media content -->
-        <template v-else>
-          <!-- Loading state -->
-          <template v-if="!message.media[0]?.data">
-            <div class="flex items-center gap-2">
-              <div class="i-lucide-loader-circle h-4 w-4 animate-spin" />
-              <span class="text-secondary-foreground whitespace-nowrap text-xs">
-                加载中...
-              </span>
-            </div>
-          </template>
-
-          <!-- Media loaded -->
-          <template v-else>
-            <div>
-              <!-- Show text content if available -->
-              <div v-if="message.content" class="mb-2">
-                {{ message.content }}
-              </div>
-
-              <!-- Try to render image -->
-              <template v-if="getMediaSrc(message)">
-                <img
-                  :src="getMediaSrc(message)!"
-                  class="h-auto max-w-full rounded-lg"
-                  alt="Media content"
-                  @error="(e) => {
-                    console.error('Image load error:', e);
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }"
-                >
-              </template>
-
-              <!-- Fallback when media processing fails -->
-              <template v-else>
-                <div class="flex items-center gap-2 rounded bg-gray-100 p-2 dark:bg-gray-800">
-                  <div class="i-lucide-file-image h-4 w-4" />
-                  <span class="text-secondary-foreground text-sm">
-                    媒体文件无法显示
-                  </span>
-                </div>
-              </template>
-            </div>
-          </template>
-        </template>
+        <MediaRenderer :message="message" />
       </div>
     </div>
   </div>

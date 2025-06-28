@@ -27,6 +27,7 @@
     "@vueuse/core": "^13.4.0",
     "buffer": "^6.0.3",
     "defu": "^6.1.4",
+    "file-type": "^21.0.0",
     "ofetch": "^1.4.1",
     "pinia": "^3.0.3",
     "radix-vue": "^1.9.17",
