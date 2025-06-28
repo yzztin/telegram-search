@@ -1,10 +1,10 @@
 // https://github.com/moeru-ai/airi/blob/main/services/telegram-bot/src/models/photos.ts
 
+import { Ok } from '@tg-search/common/utils/monad'
 import { eq, inArray } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { photosTable } from '../db/schema'
-import { Ok } from '../utils/monad'
 
 export async function findPhotoDescription(fileId: string) {
   const photo = (await withDb(db => db

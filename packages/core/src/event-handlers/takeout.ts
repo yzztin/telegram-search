@@ -4,10 +4,10 @@ import type { CoreContext } from '../context'
 import type { TakeoutService } from '../services'
 
 import { useLogger } from '@tg-search/common'
+import { usePagination } from '@tg-search/common/utils/pagination'
+import { getChatMessageStatsByChatId } from '@tg-search/db'
 
 import { useConfig } from '../../../common/src/node'
-import { getChatMessageStatsByChatId } from '../models/chat-message-stats'
-import { usePagination } from '../utils/pagination'
 
 export function registerTakeoutEventHandlers(ctx: CoreContext) {
   const { emitter } = ctx

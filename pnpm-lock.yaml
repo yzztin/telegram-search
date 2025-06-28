@@ -294,6 +294,9 @@ importers:
       '@tg-search/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@tg-search/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       crossws:
         specifier: 0.3.5
         version: 0.3.5
@@ -345,9 +348,6 @@ importers:
 
   packages/core:
     dependencies:
-      '@electric-sql/pglite':
-        specifier: ^0.3.3
-        version: 0.3.3
       '@moeru/std':
         specifier: 0.1.0-beta.4
         version: 0.1.0-beta.4
@@ -357,6 +357,9 @@ importers:
       '@tg-search/common':
         specifier: workspace:*
         version: link:../common
+      '@tg-search/db':
+        specifier: workspace:*
+        version: link:../db
       '@xsai-ext/providers-cloud':
         specifier: 'catalog:'
         version: 0.3.0-beta.4
@@ -372,9 +375,6 @@ importers:
       defu:
         specifier: ^6.1.4
         version: 6.1.4
-      drizzle-orm:
-        specifier: ^0.44.2
-        version: 0.44.2(@electric-sql/pglite@0.3.3)(@types/better-sqlite3@7.6.13)(@types/pg@8.15.4)(better-sqlite3@11.10.0)(gel@2.0.1)(pg@8.16.2)(postgres@3.4.7)
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
@@ -384,21 +384,30 @@ importers:
       pathe:
         specifier: ^2.0.3
         version: 2.0.3
-      pg:
-        specifier: ^8.16.2
-        version: 8.16.2
-      postgres:
-        specifier: ^3.4.7
-        version: 3.4.7
       telegram:
         specifier: ^2.26.22
         version: 2.26.22
       valibot:
         specifier: ^1.1.0
         version: 1.1.0(typescript@5.8.3)
-      vectorlite:
-        specifier: ^0.2.0
-        version: 0.2.0
+
+  packages/db:
+    dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.3.3
+        version: 0.3.3
+      '@tg-search/common':
+        specifier: workspace:*
+        version: link:../common
+      drizzle-orm:
+        specifier: ^0.44.2
+        version: 0.44.2(@electric-sql/pglite@0.3.3)(@types/better-sqlite3@7.6.13)(@types/pg@8.15.4)(better-sqlite3@11.10.0)(gel@2.0.1)(pg@8.16.2)(postgres@3.4.7)
+      pg:
+        specifier: ^8.16.2
+        version: 8.16.2
+      postgres:
+        specifier: ^3.4.7
+        version: 3.4.7
     devDependencies:
       '@types/pg':
         specifier: ^8.15.4
@@ -545,26 +554,6 @@ packages:
 
   7zip-bin@5.2.0:
     resolution: {integrity: sha512-ukTPVhqG4jNzMro2qA9HSCSSVJN3aN7tlb+hfqYCt3ER0yWroeA2VR38MNrOHLQ/cVj+DaIMad0kFCtWWowh/A==}
-
-  '@1yefuwang1/vectorlite-darwin-arm64@0.2.0':
-    resolution: {integrity: sha512-taYA4xt4zFgQi0DwZvS1pr0bYmP7uAYVScxFGf5rl3CIxOXDxPyHytHRrvU5rqPUprLZlnxEb/gNGvCplYLNhA==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@1yefuwang1/vectorlite-darwin-x64@0.2.0':
-    resolution: {integrity: sha512-vOU7h+PPE7VoJkUw6UQ2IT+a4Stzgj103yKdr85iLJqi4oX8TjxNH2OP5c1LKU8ZT/vQziKAqUE+p63XmFP8LA==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@1yefuwang1/vectorlite-linux-x64@0.2.0':
-    resolution: {integrity: sha512-VWgE4DVPVKoVzStnUR+PASWUloi5mUO+z7TEfsu6zHEBzPkOgL9ofC0DDr9/rFo1UNozN93j17ZOZL0HTsZKcQ==}
-    cpu: [x64]
-    os: [linux]
-
-  '@1yefuwang1/vectorlite-win32-x64@0.2.0':
-    resolution: {integrity: sha512-NLZLfxQf2wS+PrhL1bavrULOSQhaOItGVsLebKy0Tu8Hpn81M3KPmweKwNiVTSqfLzy0IlhSalLlb+ypUdRm0Q==}
-    cpu: [x64]
-    os: [win32]
 
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
@@ -5811,9 +5800,6 @@ packages:
       typescript:
         optional: true
 
-  vectorlite@0.2.0:
-    resolution: {integrity: sha512-hHFAISJuUblqTecD/EtNmEhIm4P6vTax4tswN486qCBDtse9uqBPLGdUsW4+CSjyG9Zoc0Jxj+dubQSZjvYGqg==}
-
   verror@1.10.1:
     resolution: {integrity: sha512-veufcmxri4e3XSrT0xwfUR7kguIkaxBeosDg00yDWhk49wdwkSUrvvsm7nc75e1PUyvIeZj6nS8VQRYz2/S4Xg==}
     engines: {node: '>=0.6.0'}
@@ -6152,18 +6138,6 @@ packages:
 snapshots:
 
   7zip-bin@5.2.0: {}
-
-  '@1yefuwang1/vectorlite-darwin-arm64@0.2.0':
-    optional: true
-
-  '@1yefuwang1/vectorlite-darwin-x64@0.2.0':
-    optional: true
-
-  '@1yefuwang1/vectorlite-linux-x64@0.2.0':
-    optional: true
-
-  '@1yefuwang1/vectorlite-win32-x64@0.2.0':
-    optional: true
 
   '@ampproject/remapping@2.3.0':
     dependencies:
@@ -12186,13 +12160,6 @@ snapshots:
   valibot@1.1.0(typescript@5.8.3):
     optionalDependencies:
       typescript: 5.8.3
-
-  vectorlite@0.2.0:
-    optionalDependencies:
-      '@1yefuwang1/vectorlite-darwin-arm64': 0.2.0
-      '@1yefuwang1/vectorlite-darwin-x64': 0.2.0
-      '@1yefuwang1/vectorlite-linux-x64': 0.2.0
-      '@1yefuwang1/vectorlite-win32-x64': 0.2.0
 
   verror@1.10.1:
     dependencies:

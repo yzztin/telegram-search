@@ -1,13 +1,11 @@
+import type { DBRetrievalMessages } from '@tg-search/db'
+
 import type { CoreContext } from '../context'
-import type { DBRetrievalMessages } from '../models/utils/message'
 import type { CoreDialog } from '../services'
 
 import { useLogger } from '@tg-search/common'
+import { convertToCoreRetrievalMessages, fetchChats, fetchMessages, getChatMessagesStats, recordChats, recordMessages, retrieveMessages } from '@tg-search/db'
 
-import { fetchMessages, recordMessages, retrieveMessages } from '../models/chat-message'
-import { getChatMessagesStats } from '../models/chat-message-stats'
-import { fetchChats, recordChats } from '../models/chats'
-import { convertToCoreRetrievalMessages } from '../models/utils/message'
 import { embedContents } from '../utils/embed'
 
 export function registerStorageEventHandlers(ctx: CoreContext) {

@@ -5,9 +5,9 @@ import { existsSync, readFileSync } from 'node:fs'
 
 import { Jieba } from '@node-rs/jieba'
 import { useLogger } from '@tg-search/common'
+import { Err, Ok } from '@tg-search/common/utils/monad'
 
 import { useConfig } from '../../../common/src/node'
-import { Err, Ok } from '../utils/monad'
 
 let jieba: Jieba | undefined
 

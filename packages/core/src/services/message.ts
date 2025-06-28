@@ -1,13 +1,14 @@
+import type { CorePagination } from '@tg-search/common/utils/pagination'
+
 import type { CoreContext } from '../context'
 import type { MessageResolverRegistryFn } from '../message-resolvers'
 import type { CoreMessage } from '../utils/message'
-import type { CorePagination } from '../utils/pagination'
 
 import { useLogger } from '@tg-search/common'
+import { Err, Ok } from '@tg-search/common/utils/monad'
 import { Api } from 'telegram'
 
 import { convertToCoreMessage } from '../utils/message'
-import { Err, Ok } from '../utils/monad'
 
 export interface MessageEventToCore {
   'message:fetch': (data: { chatId: string, pagination: CorePagination }) => void

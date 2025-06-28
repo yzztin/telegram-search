@@ -1,10 +1,10 @@
 // https://github.com/moeru-ai/airi/blob/main/services/telegram-bot/src/models/sticker-packs.ts
 
+import { Ok } from '@tg-search/common/utils/monad'
 import { desc } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { stickerPacksTable } from '../db/schema'
-import { Ok } from '../utils/monad'
 
 export async function recordStickerPack(platformId: string, name: string, platform = 'telegram') {
   (await withDb(async db => Ok(await db

@@ -1,14 +1,15 @@
 // https://github.com/moeru-ai/airi/blob/main/services/telegram-bot/src/models/chat-message.ts
 
-import type { CoreMessage } from '../utils/message'
-import type { CorePagination } from '../utils/pagination'
+import type { CorePagination } from '@tg-search/common/utils/pagination'
+
+import type { CoreMessage } from '../../../core/src'
 import type { DBRetrievalMessages } from './utils/message'
 
+import { Ok } from '@tg-search/common/utils/monad'
 import { desc, eq } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { chatMessagesTable } from '../db/schema'
-import { Ok } from '../utils/monad'
 import { convertToCoreMessageFromDB, convertToDBInsertMessage } from './utils/message'
 import { retrieveJieba } from './utils/retrieve-jieba'
 import { retrieveVector } from './utils/retrieve-vector'

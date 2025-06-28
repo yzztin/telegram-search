@@ -1,10 +1,10 @@
 // https://github.com/moeru-ai/airi/blob/main/services/telegram-bot/src/models/stickers.ts
 
+import { Ok } from '@tg-search/common/utils/monad'
 import { desc, eq } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { recentSentStickersTable, stickersTable } from '../db/schema'
-import { Ok } from '../utils/monad'
 
 export async function findStickerDescription(fileId: string) {
   const sticker = await findStickerByFileId(fileId)

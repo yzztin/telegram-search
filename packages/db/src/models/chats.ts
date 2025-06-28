@@ -1,12 +1,12 @@
 // https://github.com/moeru-ai/airi/blob/main/services/telegram-bot/src/models/chats.ts
 
-import type { CoreDialog } from '../services/dialog'
+import type { CoreDialog } from '../../../core/src'
 
+import { Ok } from '@tg-search/common/utils/monad'
 import { eq, sql } from 'drizzle-orm'
 
 import { withDb } from '../db'
 import { joinedChatsTable } from '../db/schema'
-import { Ok } from '../utils/monad'
 
 export async function fetchChats() {
   return (await withDb(db => db
