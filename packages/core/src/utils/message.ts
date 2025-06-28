@@ -1,13 +1,12 @@
 import type { Buffer } from 'node:buffer'
 import type { UUID } from 'node:crypto'
 
-import type { Result } from './monad'
+import type { Result } from '@tg-search/common/utils/monad'
 
 import { randomUUID } from 'node:crypto'
 
+import { Err, Ok } from '@tg-search/common/utils/monad'
 import { Api } from 'telegram'
-
-import { Err, Ok } from './monad'
 
 export interface CoreMessage {
   uuid: UUID
