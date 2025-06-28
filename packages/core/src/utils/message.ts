@@ -19,7 +19,7 @@ export interface CoreMessage {
   fromName: string
 
   content: string
-  medias?: CoreMessageMedia[]
+  media?: CoreMessageMedia[]
 
   reply: CoreMessageReply
   forward: CoreMessageForward
@@ -109,9 +109,9 @@ export function convertToCoreMessage(message: Api.Message): Result<CoreMessage> 
   }
 
   // Waiting for media resolver to fetch media
-  const medias: CoreMessageMedia[] = []
+  const media: CoreMessageMedia[] = []
   if (message.media) {
-    medias.push({
+    media.push({
       apiMedia: message.media,
       data: undefined,
     })
@@ -126,7 +126,7 @@ export function convertToCoreMessage(message: Api.Message): Result<CoreMessage> 
       fromId,
       fromName,
       content,
-      medias,
+      media,
       reply,
       forward,
       vectors: {

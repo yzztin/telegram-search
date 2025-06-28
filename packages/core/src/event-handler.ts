@@ -77,7 +77,7 @@ export function afterConnectedEventHandler(
     registerEntityEventHandlers(ctx)(entityService)
     registerGramEventsEventHandlers(ctx)(gramEventsService)
 
-    //  Init all entities
+    // Init all entities
     emitter.emit('dialog:fetch')
     gramEventsService.registerGramEvents()
   })
