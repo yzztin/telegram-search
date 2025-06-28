@@ -1,4 +1,4 @@
-// https://github.com/moeru-ai/airi/blob/d4a1e9f5f67201f7a25960956ce97e20edfecdfa/packages/stage-ui/src/stores/settings.ts
+// https://github.com/moeru-ai/airi/blob/d4a1e9f5f67201f7a25960956ce97e20edfecdfa/packages/stage/src/stores/settings.ts
 
 import type { Config } from '@tg-search/common'
 

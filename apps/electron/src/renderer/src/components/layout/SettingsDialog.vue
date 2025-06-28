@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuthStore } from '@tg-search/stage-ui'
+import { useAuthStore } from '@tg-search/stage'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 

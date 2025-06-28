@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CoreDialog, CoreMessage } from '@tg-search/core'
 
-import { useChatStore, useMessageStore, useWebsocketStore } from '@tg-search/stage-ui'
+import { useChatStore, useMessageStore, useWebsocketStore } from '@tg-search/stage'
 import { useScroll, useVirtualList } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'

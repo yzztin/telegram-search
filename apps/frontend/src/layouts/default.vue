@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { DialogType } from '@tg-search/core/types'
 
-import { useAuthStore, useChatStore, useSettingsStore, useWebsocketStore } from '@tg-search/stage-ui'
+import { useAuthStore, useChatStore, useSettingsStore, useWebsocketStore } from '@tg-search/stage'
 import { useDark, useLocalStorage } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'

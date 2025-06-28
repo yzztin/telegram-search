@@ -1,5 +1,5 @@
 {
-  "name": "@tg-search/stage-ui",
+  "name": "@tg-search/stage",
   "type": "module",
   "private": true,
   "packageManager": "pnpm@10.12.1",

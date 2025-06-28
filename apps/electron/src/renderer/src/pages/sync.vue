@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuthStore, useChatStore, useSyncTaskStore, useWebsocketStore } from '@tg-search/stage-ui'
+import { useAuthStore, useChatStore, useSyncTaskStore, useWebsocketStore } from '@tg-search/stage'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'

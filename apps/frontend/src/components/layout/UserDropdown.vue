@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { useAuthStore } from '@tg-search/stage-ui'
+import { useAuthStore } from '@tg-search/stage'
 import { onClickOutside } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, useTemplateRef } from 'vue'

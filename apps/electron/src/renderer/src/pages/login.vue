@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useAuthStore, useWebsocketStore } from '@tg-search/stage-ui'
+import { useAuthStore, useWebsocketStore } from '@tg-search/stage'
 import { storeToRefs } from 'pinia'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
