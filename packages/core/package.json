@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.3.3",
+    "@moeru/std": "0.1.0-beta.4",
     "@node-rs/jieba": "^2.0.1",
     "@tg-search/common": "workspace:*",
     "@xsai-ext/providers-cloud": "catalog:",

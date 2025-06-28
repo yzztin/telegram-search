@@ -345,6 +345,9 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.3.3
         version: 0.3.3
+      '@moeru/std':
+        specifier: 0.1.0-beta.4
+        version: 0.1.0-beta.4
       '@node-rs/jieba':
         specifier: ^2.0.1
         version: 2.0.1
@@ -1269,6 +1272,9 @@ packages:
   '@malept/flatpak-bundler@0.4.0':
     resolution: {integrity: sha512-9QOtNffcOF/c1seMCDnjckb3R9WHcG34tky+FHpNKKCW0wc/scYLwMtO+ptyGUfMW0/b/n4qRiALlaFHc9Oj7Q==}
     engines: {node: '>= 10.0.0'}
+
+  '@moeru/std@0.1.0-beta.4':
+    resolution: {integrity: sha512-L2EPYM0x83MyOP96r80VJmd2BoK/VUlyUtkv3ybCLinIbOOvyYxi4BUxLBcDSxAxoRqp5YsfPniUN+xMPuToFg==}
 
   '@napi-rs/wasm-runtime@0.2.11':
     resolution: {integrity: sha512-9DPkXtvHydrcOsopiYpUgPHpmj0HWZKMUnL2dZqpvC42lsratuBG06V5ipyno0fUek5VlFsNQ+AcFATSrJXgMA==}
@@ -6901,6 +6907,8 @@ snapshots:
       tmp-promise: 3.0.3
     transitivePeerDependencies:
       - supports-color
+
+  '@moeru/std@0.1.0-beta.4': {}
 
   '@napi-rs/wasm-runtime@0.2.11':
     dependencies:
