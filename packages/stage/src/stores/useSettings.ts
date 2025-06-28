@@ -17,6 +17,7 @@ export type ChatGroup = DialogType | ''
 
 export const useSettingsStore = defineStore('settings', () => {
   const selectedGroup = useLocalStorage<ChatGroup>('settings/group-selected', 'user')
+  const messageDebugMode = useLocalStorage<boolean>('settings/message-debug-mode', false)
 
   const theme = useLocalStorage<string>('settings/theme', 'default')
   const storageConfig = useLocalStorage<Config>('settings/config', generateDefaultConfig())
@@ -57,9 +58,10 @@ export const useSettingsStore = defineStore('settings', () => {
     theme,
     themeColorsHue,
     themeColorsHueDynamic,
-    selectedGroup,
     isColorSelectedForPrimary,
     applyPrimaryColorFrom,
     config: storageConfig,
+    selectedGroup,
+    messageDebugMode,
   }
 })
