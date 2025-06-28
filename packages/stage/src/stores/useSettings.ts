@@ -1,6 +1,7 @@
 // https://github.com/moeru-ai/airi/blob/d4a1e9f5f67201f7a25960956ce97e20edfecdfa/packages/stage/src/stores/settings.ts
 
 import type { Config } from '@tg-search/common'
+import type { DialogType } from '@tg-search/core'
 
 import { generateDefaultConfig } from '@tg-search/common'
 import { useLocalStorage } from '@vueuse/core'
@@ -12,7 +13,11 @@ export const DEFAULT_THEME_COLORS_HUE = 220.44
 const convert = converter('oklch')
 const getHueFrom = (color?: string) => color ? convert(color)?.h : DEFAULT_THEME_COLORS_HUE
 
+export type ChatGroup = DialogType | ''
+
 export const useSettingsStore = defineStore('settings', () => {
+  const selectedGroup = useLocalStorage<ChatGroup>('settings/group-selected', 'user')
+
   const theme = useLocalStorage<string>('settings/theme', 'default')
   const storageConfig = useLocalStorage<Config>('settings/config', generateDefaultConfig())
 
@@ -52,6 +57,7 @@ export const useSettingsStore = defineStore('settings', () => {
     theme,
     themeColorsHue,
     themeColorsHueDynamic,
+    selectedGroup,
     isColorSelectedForPrimary,
     applyPrimaryColorFrom,
     config: storageConfig,

@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import type { DialogType } from '@tg-search/core/types'
+import type { ChatGroup } from '@tg-search/stage'
 
 import { useAuthStore, useChatStore, useSettingsStore, useWebsocketStore } from '@tg-search/stage'
-import { useDark, useLocalStorage } from '@vueuse/core'
+import { useDark } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
@@ -33,9 +33,7 @@ const chatsFiltered = computed(() => {
   return chats.value.filter(chat => chat.name.toLowerCase().includes(searchParams.value.toLowerCase()))
 })
 
-type ChatGroup = DialogType | ''
-const selectedGroup = useLocalStorage<ChatGroup>('selectedGroup', 'user')
-
+const { selectedGroup } = storeToRefs(useSettingsStore())
 const activeChatGroup = computed(() => {
   if (route.params.chatId) {
     const currentChat = chatStore.getChat(route.params.chatId.toString())
