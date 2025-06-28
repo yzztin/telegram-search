@@ -18,6 +18,7 @@ import { useMessageResolverRegistry } from './message-resolvers'
 import { createEmbeddingResolver } from './message-resolvers/embedding-resolver'
 import { createJiebaResolver } from './message-resolvers/jieba-resolver'
 import { createLinkResolver } from './message-resolvers/link-resolver'
+import { createMediaResolver } from './message-resolvers/media-resolver'
 import { createUserResolver } from './message-resolvers/user-resolver'
 import { createConfigService } from './services/config'
 import { createConnectionService } from './services/connection'
@@ -68,6 +69,7 @@ export function afterConnectedEventHandler(
     registry.register('link', createLinkResolver())
     registry.register('user', createUserResolver(ctx))
     registry.register('jieba', createJiebaResolver())
+    registry.register('media', createMediaResolver(ctx))
 
     registerMessageEventHandlers(ctx)(messageService)
     registerDialogEventHandlers(ctx)(dialogService)

@@ -21,8 +21,14 @@ defineProps<{
         <span class="whitespace-nowrap text-primary font-medium">{{ message.fromName }}</span>
         <span class="text-secondary-foreground whitespace-nowrap text-xs">{{ message.createdAt }}</span>
       </div>
+
       <div class="text-foreground">
-        {{ message.content }}
+        <template v-if="message.medias?.length === 0">
+          {{ message.content }}
+        </template>
+        <template v-else>
+          Media
+        </template>
       </div>
     </div>
   </div>
