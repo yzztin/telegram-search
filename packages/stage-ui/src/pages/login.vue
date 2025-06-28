@@ -114,7 +114,7 @@ async function handleLogin() {
           :disabled="state.isLoading"
         >
           <span v-if="state.isLoading" class="mr-2 animate-spin" />
-          {{ state.isLoading ? '处理中...' : '发送验证码' }}
+          {{ state.isLoading ? '处理中...' : '登录' }}
         </button>
       </form>
 
