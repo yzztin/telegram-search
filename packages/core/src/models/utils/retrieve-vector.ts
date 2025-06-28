@@ -2,7 +2,7 @@ import type { CorePagination } from '../../utils/pagination'
 import type { DBRetrievalMessages } from './message'
 
 import { EmbeddingDimension } from '@tg-search/common'
-import { useConfig } from '@tg-search/common/composable'
+import { useConfig } from '../../../../common/src/node'
 import { and, desc, eq, gt, sql } from 'drizzle-orm'
 
 import { withDb } from '../../db'

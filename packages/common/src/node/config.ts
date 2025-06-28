@@ -1,4 +1,4 @@
-import type { Config } from '../helper/config-schema'
+import type { Config } from '../browser/config-schema'
 
 import { readFileSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -8,9 +8,9 @@ import { join } from 'pathe'
 import { safeParse } from 'valibot'
 import { parse, stringify } from 'yaml'
 
-import { configSchema } from '../helper/config-schema'
-import { generateDefaultConfig } from '../helper/default-config'
-import { useLogger } from '../helper/logger'
+import { configSchema } from '../browser/config-schema'
+import { generateDefaultConfig } from '../browser/default-config'
+import { useLogger } from '../browser/logger'
 import { resolveStoragePath, useAssetsPath, useConfigPath } from './path'
 
 let config: Config

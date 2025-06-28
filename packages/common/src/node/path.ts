@@ -1,4 +1,4 @@
-import type { Config } from '../helper'
+import type { Config } from '../browser'
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -7,7 +7,7 @@ import { cwd } from 'node:process'
 import { findWorkspaceDir } from '@pnpm/find-workspace-dir'
 import { dirname, join, resolve } from 'pathe'
 
-import { DatabaseType, generateDefaultConfig, useLogger } from '../helper'
+import { DatabaseType, generateDefaultConfig, useLogger } from '../browser'
 
 const logger = useLogger()
 

@@ -4,7 +4,7 @@ import type { CoreContext } from '../context'
 import type { TakeoutService } from '../services'
 
 import { useLogger } from '@tg-search/common'
-import { useConfig } from '@tg-search/common/composable'
+import { useConfig } from '../../../common/src/node'
 
 import { getChatMessageStatsByChatId } from '../models/chat-message-stats'
 import { usePagination } from '../utils/pagination'

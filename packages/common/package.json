@@ -5,7 +5,7 @@
   "private": true,
   "exports": {
     ".": "./src/index.ts",
-    "./composable": "./src/composable/index.ts"
+    "./node": "./src/node/index.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

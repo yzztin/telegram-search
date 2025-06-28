@@ -2,7 +2,7 @@ import type { CoreContext } from '../context'
 import type { MessageService } from '../services'
 
 import { useLogger } from '@tg-search/common'
-import { useConfig } from '@tg-search/common/composable'
+import { useConfig } from '../../../common/src/node'
 import { Api } from 'telegram/tl'
 
 export function registerMessageEventHandlers(ctx: CoreContext) {

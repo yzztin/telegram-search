@@ -4,7 +4,7 @@ import type { Result } from '../utils/monad'
 import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 
 import { useLogger } from '@tg-search/common'
-import { getSessionPath, useConfig } from '@tg-search/common/composable'
+import { getSessionPath, useConfig } from '../../../common/src/node'
 import path from 'pathe'
 import { StringSession } from 'telegram/sessions'
 
