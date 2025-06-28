@@ -65,6 +65,7 @@ export function createMessageService(ctx: CoreContext) {
 
       // Embedding or resolve messages
       let emitMessages: CoreMessage[] = coreMessages
+      const reEmitMessages: CoreMessage[] = []
       for (const [name, resolver] of resolvers.registry.entries()) {
         logger.withFields({ name }).verbose('Process messages with resolver')
 
@@ -73,6 +74,10 @@ export function createMessageService(ctx: CoreContext) {
 
           if (result.length > 0) {
             emitMessages = result
+
+            if (name === 'media') {
+              reEmitMessages.push(...result.filter(message => message.media?.length && message.media.length > 0))
+            }
           }
         }
         catch (error) {
@@ -80,7 +85,11 @@ export function createMessageService(ctx: CoreContext) {
         }
       }
 
-      emitter.emit('message:data', { messages: emitMessages })
+      if (reEmitMessages.length > 0) {
+        logger.withFields({ count: reEmitMessages.length }).verbose('Re-emit messages with media')
+        emitter.emit('message:data', { messages: reEmitMessages })
+      }
+
       emitter.emit('storage:record:messages', { messages: emitMessages })
     }
 

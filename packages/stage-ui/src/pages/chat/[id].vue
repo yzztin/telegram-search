@@ -110,7 +110,7 @@ const isGlobalSearchOpen = ref(false)
     <!-- Chat Header -->
     <div class="flex items-center justify-between border-b p-4 dark:border-gray-700">
       <h2 class="text-xl font-semibold dark:text-gray-100">
-        {{ currentChat?.name }} | {{ currentChat?.id }}
+        {{ [currentChat?.name, currentChat?.username].filter(Boolean).join('@') }}
       </h2>
       <Button
         icon="i-lucide-search"

@@ -10,46 +10,6 @@ defineProps<{
   message: CoreMessage
 }>()
 
-/**
- * Convert ArrayBuffer to base64 string using browser-native APIs
- */
-function arrayBufferToBase64(arrayBuffer: ArrayBuffer): string {
-  return Buffer.from(arrayBuffer).toString('base64')
-}
-
-/**
- * Convert Uint8Array to base64 string (more efficient for large arrays)
- */
-function uint8ArrayToBase64(uint8Array: Uint8Array): string {
-  try {
-    // For smaller arrays, use the simple approach
-    if (uint8Array.length < 10000) {
-      let binaryString = ''
-      for (let i = 0; i < uint8Array.length; i++) {
-        binaryString += String.fromCharCode(uint8Array[i])
-      }
-      return btoa(binaryString)
-    }
-
-    // For larger arrays, process in chunks to avoid call stack limits
-    const chunkSize = 8192
-    let binaryString = ''
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.subarray(i, i + chunkSize)
-      binaryString += String.fromCharCode(...Array.from(chunk))
-    }
-    return btoa(binaryString)
-  }
-  catch (error) {
-    console.warn('Failed to convert Uint8Array to base64:', error)
-    return ''
-  }
-}
-
-/**
- * Convert various media data formats to base64 data URL
- * Browser-compatible version that doesn't rely on Node.js Buffer
- */
 function getMediaBase64(media: string | { type: 'Buffer', data: number[] } | ArrayBuffer | null | undefined): string | null {
   if (!media)
     return null
@@ -64,7 +24,7 @@ function getMediaBase64(media: string | { type: 'Buffer', data: number[] } | Arr
   }
 
   if (media instanceof ArrayBuffer) {
-    const base64 = arrayBufferToBase64(media)
+    const base64 = Buffer.from(media).toString('base64')
     return base64 ? `data:image/jpeg;base64,${base64}` : null
   }
 
