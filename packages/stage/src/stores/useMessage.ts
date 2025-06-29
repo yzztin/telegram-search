@@ -63,6 +63,7 @@ export const useMessageStore = defineStore('message', () => {
   return {
     messagesByChat,
     pushMessages,
+    useMessageChatMap,
     fetchMessagesWithDatabase,
   }
 })
