@@ -25,7 +25,7 @@ export const useMessageStore = defineStore('message', () => {
   async function pushMessages(messages: CoreMessage[]) {
     messages.forEach((message) => {
       const { chatId } = message
-      
+
       const chatMap = useMessageChatMap(chatId)
       chatMap.set(message.platformMessageId, message)
     })

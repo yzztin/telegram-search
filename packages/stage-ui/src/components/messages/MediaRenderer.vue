@@ -110,7 +110,7 @@ onMounted(() => {
     <img
       v-if="mediaType === 'image'"
       :src="mediaSrc"
-      class="h-auto max-w-full rounded-lg max-w-xs"
+      class="h-auto max-w-full max-w-xs rounded-lg"
       alt="Media content"
       @error="error = 'Image failed to load'"
     >
