@@ -87,8 +87,8 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="bg-background min-h-screen flex items-center justify-center">
-    <div class="bg-card max-w-md w-full rounded-2xl p-10 shadow-2xl">
+  <div class="min-h-screen flex items-center justify-center bg-background">
+    <div class="max-w-md w-full rounded-2xl bg-card p-10 shadow-2xl">
       <h1 class="mb-6 text-center text-3xl font-bold tracking-tight">
         Telegram 登录
       </h1>

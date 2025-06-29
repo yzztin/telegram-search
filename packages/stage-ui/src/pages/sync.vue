@@ -70,7 +70,7 @@ watch(currentTaskProgress, (progress) => {
 </script>
 
 <template>
-  <header class="border-b-secondary dark:border-b-secondary flex items-center border-b p-4 px-4">
+  <header class="flex items-center border-b border-b-secondary p-4 px-4 dark:border-b-secondary">
     <div class="flex items-center gap-2">
       <span class="text-lg font-medium">Sync</span>
     </div>

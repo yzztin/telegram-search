@@ -49,7 +49,7 @@ watch(keywordDebounced, (newKeyword) => {
 
 <template>
   <div v-if="isOpen" class="flex items-center justify-center" @keydown.esc="isOpen = false">
-    <div class="bg-card w-[45%] rounded-xl shadow-lg">
+    <div class="w-[45%] rounded-xl bg-card shadow-lg">
       <!-- 搜索输入框 -->
       <div class="flex items-center gap-2 border-b px-4 py-3">
         <input

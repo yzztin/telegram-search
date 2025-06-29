@@ -59,7 +59,7 @@ function toggleActiveChatGroup(group: ChatGroup) {
 
 <template>
   <div
-    class="bg-background h-screen w-full flex overflow-hidden text-sm font-medium"
+    class="h-screen w-full flex overflow-hidden bg-background text-sm font-medium"
   >
     <!-- Login prompt banner -->
     <div
@@ -80,7 +80,7 @@ function toggleActiveChatGroup(group: ChatGroup) {
       </div>
     </div>
 
-    <div class="border-r-secondary w-[20%] flex flex-col border-r h-dvh md:w-[15%]">
+    <div class="w-[20%] flex flex-col border-r border-r-secondary h-dvh md:w-[15%]">
       <div class="relative p-4">
         <div
           class="i-lucide-search absolute left-7 top-1/2 h-4 w-4 -translate-y-1/2"
@@ -88,7 +88,7 @@ function toggleActiveChatGroup(group: ChatGroup) {
         <input
           v-model="searchParams"
           type="text"
-          class="ring-offset-background w-full border border-neutral-200 rounded-md bg-neutral-100 px-3 py-2 pl-9 dark:border-neutral-700 dark:bg-neutral-800 placeholder:text-complementary-500 focus:outline-none focus:ring-2 focus:ring-primary"
+          class="w-full border border-neutral-200 rounded-md bg-neutral-100 px-3 py-2 pl-9 ring-offset-background dark:border-neutral-700 dark:bg-neutral-800 placeholder:text-complementary-500 focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder="Search"
         >
       </div>
@@ -119,7 +119,7 @@ function toggleActiveChatGroup(group: ChatGroup) {
         />
       </div>
 
-      <div class="border-t-secondary h-full flex flex-1 flex-col justify-start overflow-y-auto border-t pt-4">
+      <div class="h-full flex flex-1 flex-col justify-start overflow-y-auto border-t border-t-secondary pt-4">
         <ChatsCollapse
           class="max-h-[85%] flex flex-col"
           :class="{ 'flex-1': activeChatGroup === 'user' }"
