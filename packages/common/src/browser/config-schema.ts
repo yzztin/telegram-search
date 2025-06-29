@@ -66,6 +66,7 @@ export const telegramConfigSchema = object({
   apiId: optional(string(), ''),
   apiHash: optional(string(), ''),
   proxy: optional(proxyConfigSchema),
+  receiveMessage: optional(boolean(), true),
 })
 
 export const embeddingConfigSchema = object({

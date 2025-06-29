@@ -2,6 +2,7 @@ import type { Api } from 'telegram'
 
 import type { CoreContext } from '../context'
 
+import { useConfig } from '@tg-search/common/node'
 import { NewMessage } from 'telegram/events'
 
 export interface GramEventsEventToCore {}
@@ -18,7 +19,7 @@ export function createGramEventsService(ctx: CoreContext) {
 
   function registerGramEvents() {
     getClient().addEventHandler((event) => {
-      if (event.message) {
+      if (event.message && useConfig().api.telegram.receiveMessage) {
         emitter.emit('gram:message:received', { message: event.message })
       }
     }, new NewMessage({}))
