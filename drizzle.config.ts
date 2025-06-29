@@ -1,7 +1,7 @@
 import process from 'node:process'
 
 export default {
-  schema: './packages/core/src/db/schema.ts',
+  schema: './packages/db/src/schemas/**/*.ts',
   out: './drizzle',
   dialect: 'postgresql',
   dbCredentials: {
