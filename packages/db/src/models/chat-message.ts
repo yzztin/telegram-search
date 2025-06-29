@@ -9,7 +9,7 @@ import { Ok } from '@tg-search/common/utils/monad'
 import { desc, eq } from 'drizzle-orm'
 
 import { withDb } from '../drizzle'
-import { chatMessagesTable } from '../schema'
+import { chatMessagesTable } from '../schemas/chat_messages'
 import { convertToCoreMessageFromDB, convertToDBInsertMessage } from './utils/message'
 import { retrieveJieba } from './utils/retrieve-jieba'
 import { retrieveVector } from './utils/retrieve-vector'

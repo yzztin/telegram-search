@@ -4,7 +4,8 @@ import { Ok } from '@tg-search/common/utils/monad'
 import { desc, eq } from 'drizzle-orm'
 
 import { withDb } from '../drizzle'
-import { recentSentStickersTable, stickersTable } from '../schema'
+import { recentSentStickersTable } from '../schemas/recent_sent_stickers'
+import { stickersTable } from '../schemas/stickers'
 
 export async function findStickerDescription(fileId: string) {
   const sticker = await findStickerByFileId(fileId)

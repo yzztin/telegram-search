@@ -10,7 +10,7 @@ import { useConfig } from '@tg-search/common/node'
 import { and, eq, sql } from 'drizzle-orm'
 
 import { withDb } from '../../drizzle'
-import { chatMessagesTable } from '../../schema'
+import { chatMessagesTable } from '../../schemas/chat_messages'
 
 let jieba: Jieba | undefined
 

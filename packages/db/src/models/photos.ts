@@ -4,7 +4,7 @@ import { Ok } from '@tg-search/common/utils/monad'
 import { eq, inArray } from 'drizzle-orm'
 
 import { withDb } from '../drizzle'
-import { photosTable } from '../schema'
+import { photosTable } from '../schemas/photos'
 
 export async function findPhotoDescription(fileId: string) {
   const photo = (await withDb(db => db

@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 
 import { withDb } from '../drizzle'
-import { chatMessageStatsView } from '../schema'
+import { chatMessageStatsView } from '../schemas/chat_message_stats'
 
 export async function getChatMessagesStats() {
   return (await withDb(db => db

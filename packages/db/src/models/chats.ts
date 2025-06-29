@@ -6,7 +6,7 @@ import { Ok } from '@tg-search/common/utils/monad'
 import { eq, sql } from 'drizzle-orm'
 
 import { withDb } from '../drizzle'
-import { joinedChatsTable } from '../schema'
+import { joinedChatsTable } from '../schemas/joined_chats'
 
 export async function fetchChats() {
   return (await withDb(db => db
