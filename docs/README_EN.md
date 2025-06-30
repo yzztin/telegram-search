@@ -1,9 +1,9 @@
-![preview](./docs/assets/preview.png)
+![preview](./assets/preview.png)
 
 <h1 align="center">Telegram Search</h1>
 
 <p align="center">
-  [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="https://github.com/GramSearch/telegram-search/blob/main/README.md">简体中文</a>]
+  [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="../README.md">简体中文</a>]
 </p>
 
 <p align="center">
