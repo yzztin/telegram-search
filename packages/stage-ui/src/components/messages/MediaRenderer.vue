@@ -1,51 +1,77 @@
 <script setup lang="ts">
 import type { CoreMessage, CoreMessageMediaTypes } from '@tg-search/core/types'
 
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps<{
   message: CoreMessage
 }>()
 
+const runtimeError = ref<string | null>(null)
+
 const isMedia = computed(() => {
   return props.message.media?.length
 })
 
-const mediaSrc = ref<string | null>(null)
-const mediaType = ref<CoreMessageMediaTypes>('unknown')
-const isLoading = computed(() => {
-  return mediaSrc.value === null && isMedia.value
-})
-const error = ref<string | null>(null)
+const processedMedia = computed(() => {
+  if (!isMedia.value) {
+    return {
+      src: null,
+      type: 'unknown' as CoreMessageMediaTypes,
+      error: null,
+    }
+  }
 
-async function processMedia() {
   try {
-    if (!isMedia.value)
-      return
-
     for (const mediaItem of props.message.media!) {
       if (!mediaItem.base64)
         continue
 
-      const base64 = mediaItem.base64
-      if (typeof base64 === 'string') {
-        mediaSrc.value = base64.startsWith('data:') ? base64 : `data:image/jpeg;base64,${base64}`
-        mediaType.value = mediaItem.type
-        return
+      switch (mediaItem.type) {
+        case 'photo':
+          return {
+            src: mediaItem.base64.startsWith('data:') ? mediaItem.base64 : `data:image/jpeg;base64,${mediaItem.base64}`,
+            type: mediaItem.type,
+            error: null,
+          }
+        case 'sticker':
+          return {
+          // video/webm
+            src: mediaItem.base64.startsWith('data:') ? mediaItem.base64 : `data:video/webm;base64,${mediaItem.base64}`,
+            type: mediaItem.type,
+            error: null,
+          }
+        default:
+          return {
+            src: mediaItem.base64.startsWith('data:') ? mediaItem.base64 : `data:application/octet-stream;base64,${mediaItem.base64}`,
+            type: mediaItem.type,
+            error: null,
+          }
       }
-
-      // TODO: Process first valid media item only
-      break
     }
   }
   catch (err) {
     console.error('Error processing media:', err)
-    error.value = 'Failed to process media'
+    return {
+      src: null,
+      type: 'unknown' as CoreMessageMediaTypes,
+      error: 'Failed to process media',
+    }
   }
-}
 
-onMounted(() => {
-  processMedia()
+  return {
+    src: null,
+    type: 'unknown' as CoreMessageMediaTypes,
+    error: null,
+  }
+})
+
+const isLoading = computed(() => {
+  return !processedMedia.value.src && isMedia.value && !processedMedia.value.error && !runtimeError.value
+})
+
+const finalError = computed(() => {
+  return processedMedia.value.error || runtimeError.value
 })
 </script>
 
@@ -62,21 +88,30 @@ onMounted(() => {
   </div>
 
   <!-- Error state -->
-  <div v-else-if="error" class="flex items-center gap-2 rounded bg-red-100 p-2 dark:bg-red-900">
+  <div v-else-if="finalError" class="flex items-center gap-2 rounded bg-red-100 p-2 dark:bg-red-900">
     <div class="i-lucide-alert-circle h-4 w-4 text-red-500" />
-    <span class="text-sm text-red-700 dark:text-red-300">{{ error }}</span>
+    <span class="text-sm text-red-700 dark:text-red-300">{{ finalError }}</span>
   </div>
 
   <!-- Media content -->
-  <div v-else-if="mediaSrc">
+  <div v-else-if="processedMedia.src">
     <!-- Images -->
     <img
-      v-if="mediaType === 'photo'"
-      :src="mediaSrc"
+      v-if="processedMedia.type === 'photo'"
+      :src="processedMedia.src"
       class="h-auto max-w-full max-w-xs rounded-lg"
       alt="Media content"
-      @error="error = 'Image failed to load'"
+      @error="runtimeError = 'Image failed to load'"
     >
+    <video
+      v-else-if="processedMedia.type === 'sticker'"
+      :src="processedMedia.src"
+      class="h-auto max-w-full max-w-xs rounded-lg"
+      alt="Media content"
+
+      autoplay loop muted playsinline
+      @error="runtimeError = 'Video failed to load'"
+    />
 
     <!-- Others -->
     <div
@@ -91,7 +126,7 @@ onMounted(() => {
         </div>
       </div>
       <a
-        :href="mediaSrc"
+        :href="processedMedia.src"
         :download="`file_${message.platformMessageId}`"
         class="rounded bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600"
       >
