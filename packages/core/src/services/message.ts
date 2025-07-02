@@ -75,8 +75,7 @@ export function createMessageService(ctx: CoreContext) {
           if (resolver.run) {
             result = (await resolver.run({ messages: emitMessages })).unwrap()
           }
-
-          if (resolver.stream) {
+          else if (resolver.stream) {
             for await (const message of resolver.stream({ messages: emitMessages })) {
               result.push(message)
               emitter.emit('message:data', { messages: [message] })
@@ -84,7 +83,21 @@ export function createMessageService(ctx: CoreContext) {
           }
 
           if (result.length > 0) {
-            emitMessages = defu(emitMessages, result)
+            // Using defu to merge two arrays of objects (emitMessages and result) is unsafe.
+            // defu merges arrays by index. If a resolver filters some messages and result
+            // becomes shorter than emitMessages, this will lead to incorrect merges and data
+            // corruption. For example, result[1] might be merged into emitMessages[1] even
+            // if they correspond to different original messages.
+
+            // A safer approach is to merge messages based on a unique identifier, like the uuid property.
+            // The general idea is to create a Map from the result array for efficient lookups and then mapping
+            // over emitMessages to merge correctly.
+
+            const resultByUuid = new Map(result.map(m => [m.uuid, m]))
+            emitMessages = emitMessages.map((m) => {
+              const resolved = resultByUuid.get(m.uuid)
+              return resolved ? defu(m, resolved) : m
+            })
           }
         }
         catch (error) {

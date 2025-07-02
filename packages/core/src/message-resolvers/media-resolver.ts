@@ -74,35 +74,36 @@ export function createMediaResolver(ctx: CoreContext): MessageResolver {
           continue
         }
 
-        const fetchedMedia = []
-        for (const media of message.media) {
-          logger.withFields({ media }).debug('Media')
+        const fetchedMedia = await Promise.all(
+          message.media.map(async (media) => {
+            logger.withFields({ media }).debug('Media')
 
-          const userMediaPath = join(await useUserMediaPath(), message.chatId.toString())
-          if (!existsSync(userMediaPath)) {
-            mkdirSync(userMediaPath, { recursive: true })
-          }
+            const userMediaPath = join(await useUserMediaPath(), message.chatId.toString())
+            if (!existsSync(userMediaPath)) {
+              mkdirSync(userMediaPath, { recursive: true })
+            }
 
-          const mediaFetched = await ctx.getClient().downloadMedia(media.apiMedia as Api.TypeMessageMedia)
+            const mediaFetched = await ctx.getClient().downloadMedia(media.apiMedia as Api.TypeMessageMedia)
 
-          const mediaPath = join(userMediaPath, message.platformMessageId)
-          logger.withFields({ mediaPath }).verbose('Media path')
-          if (mediaFetched instanceof Buffer) {
+            const mediaPath = join(userMediaPath, message.platformMessageId)
+            logger.withFields({ mediaPath }).verbose('Media path')
+            if (mediaFetched instanceof Buffer) {
             // write file to disk async
-            void writeFile(mediaPath, mediaFetched)
-          }
+              void writeFile(mediaPath, mediaFetched)
+            }
 
-          const byte = mediaFetched instanceof Buffer ? mediaFetched : undefined
+            const byte = mediaFetched instanceof Buffer ? mediaFetched : undefined
 
-          fetchedMedia.push({
-            apiMedia: media.apiMedia,
-            base64: (await resolveMedia(mediaFetched)).orUndefined(),
-            byte,
-            type: media.type,
-            messageUUID: media.messageUUID,
-            path: mediaPath,
-          } satisfies CoreMessageMedia)
-        }
+            return {
+              apiMedia: media.apiMedia,
+              base64: (await resolveMedia(mediaFetched)).orUndefined(),
+              byte,
+              type: media.type,
+              messageUUID: media.messageUUID,
+              path: mediaPath,
+            } satisfies CoreMessageMedia
+          }),
+        )
 
         yield {
           ...message,
