@@ -137,11 +137,11 @@ export function createCoreContext() {
   }
 
   wrapEmitterOn(emitter, (event) => {
-    useLogger('core:event').withFields({ event }).log('Core event received')
+    useLogger('core:event').withFields({ event }).debug('Core event received')
   })
 
   wrapEmitterEmit(emitter, (event) => {
-    useLogger('core:event').withFields({ event }).log('Core event emitted')
+    useLogger('core:event').withFields({ event }).debug('Core event emitted')
   })
 
   return {

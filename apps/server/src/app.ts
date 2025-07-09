@@ -102,7 +102,7 @@ export function setupWsRoutes(app: App) {
             const eventName = event.data.event as keyof FromCoreEvent
 
             const fn = (data: WsEventToClientData<keyof FromCoreEvent>) => {
-              logger.withFields({ eventName }).log('Sending event to client')
+              logger.withFields({ eventName }).debug('Sending event to client')
               sendWsEvent(peer, eventName, data)
             }
 
