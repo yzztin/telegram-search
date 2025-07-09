@@ -119,7 +119,7 @@ function closeMobileDrawer() {
     >
       <Button
         icon="i-lucide-menu"
-        class="h-10 w-10 flex touch-manipulation items-center justify-center border rounded-lg bg-background shadow-lg"
+        class="h-10 w-10 flex touch-manipulation items-center justify-center border border-neutral-300 rounded-lg bg-white/90 text-gray-600 shadow-md backdrop-blur-sm transition-all dark:border-gray-600 dark:bg-gray-800/90 hover:bg-white dark:text-gray-400 hover:text-gray-700 hover:shadow-lg dark:hover:bg-gray-700 dark:hover:text-gray-200"
         @click="toggleSidebar"
       />
     </div>
