@@ -111,7 +111,7 @@ const isGlobalSearchOpen = ref(false)
   <div class="relative h-full flex flex-col">
     <!-- Chat Header -->
     <div class="flex items-center justify-between border-b p-4 dark:border-gray-700">
-      <h2 class="text-xl font-semibold dark:text-gray-100">
+      <h2 class="text-xl text-gray-900 font-semibold dark:text-gray-100">
         {{ [currentChat?.name, currentChat?.id].filter(Boolean).join('@') }}
       </h2>
       <Button
@@ -126,7 +126,7 @@ const isGlobalSearchOpen = ref(false)
     <!-- Messages Area -->
     <div
       v-bind="containerProps"
-      class="flex-1 overflow-y-auto p-4 space-y-4"
+      class="flex-1 overflow-y-auto bg-white p-4 space-y-4 dark:bg-gray-900"
     >
       <div v-bind="wrapperProps">
         <div v-for="{ data, index } in list" :key="index">
@@ -136,13 +136,13 @@ const isGlobalSearchOpen = ref(false)
     </div>
 
     <!-- Message Input -->
-    <div class="border-t p-4 dark:border-gray-700">
+    <div class="border-t bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
       <div class="flex gap-2">
         <input
           v-model="messageInput"
           type="text"
           placeholder="Type a message..."
-          class="flex-1 border rounded-lg p-2 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+          class="flex-1 border border-gray-300 rounded-lg bg-white p-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary dark:placeholder:text-gray-400 dark:focus:ring-offset-gray-800"
           @keyup.enter="sendMessage"
         >
         <button
@@ -164,7 +164,7 @@ const isGlobalSearchOpen = ref(false)
         <template #settings>
           <div class="flex items-center">
             <input id="searchContent" type="checkbox" class="mr-1 border-border rounded">
-            <label for="searchContent" class="text-sm text-primary-900">搜索内容</label>
+            <label for="searchContent" class="text-sm text-primary-900 dark:text-gray-100">搜索内容</label>
           </div>
         </template>
       </SearchDialog>

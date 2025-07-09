@@ -82,7 +82,7 @@ const finalError = computed(() => {
 </script>
 
 <template>
-  <div v-if="message.content" class="mb-2">
+  <div v-if="message.content" class="mb-2 text-primary-900 dark:text-gray-100">
     {{ message.content }}
   </div>
 
