@@ -7,6 +7,7 @@ const props = defineProps<{
   icon: string
   name: string
 }>()
+
 const router = useRouter()
 const route = useRoute()
 
@@ -22,7 +23,7 @@ const isCurrentPage = computed(() => route.path === props.path)
     <div
       class="w-full flex cursor-pointer items-center gap-4 p-2"
     >
-      <span :class="icon" class="h-5 w-5" />
+      <span :class="icon" class="h-5 w-5 flex-shrink-0" />
       <span>{{ name }}</span>
     </div>
   </div>
