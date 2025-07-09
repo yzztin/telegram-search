@@ -63,13 +63,13 @@ importers:
         version: 5.8.3
       unocss:
         specifier: ^66.3.3
-        version: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+        version: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
       unocss-preset-animations:
         specifier: ^1.2.1
-        version: 1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3)))
+        version: 1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3)))
       unocss-preset-shadcn:
         specifier: ^0.5.0
-        version: 0.5.0(unocss-preset-animations@1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))))(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3)))
+        version: 0.5.0(unocss-preset-animations@1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))))(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3)))
       unplugin-unused:
         specifier: ^0.5.1
         version: 0.5.1
@@ -184,7 +184,7 @@ importers:
         version: 2.0.3
       unocss:
         specifier: ^66.3.3
-        version: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+        version: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
       unplugin-vue-macros:
         specifier: ^2.14.5
         version: 2.14.5(@vueuse/core@13.5.0(vue@3.5.17(typescript@5.8.3)))(esbuild@0.25.5)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(rollup@4.35.0)(typescript@5.8.3)(vue-tsc@3.0.1(typescript@5.8.3))(vue@3.5.17(typescript@5.8.3))
@@ -281,7 +281,7 @@ importers:
         version: 3.0.0-beta.15(typescript@5.8.3)(vue-tsc@3.0.1(typescript@5.8.3))(vue@3.5.17(typescript@5.8.3))
       unocss:
         specifier: ^66.3.3
-        version: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+        version: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
       unplugin-vue-macros:
         specifier: ^2.14.5
         version: 2.14.5(@vueuse/core@13.5.0(vue@3.5.17(typescript@5.8.3)))(esbuild@0.25.5)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(rollup@4.35.0)(typescript@5.8.3)(vue-tsc@3.0.1(typescript@5.8.3))(vue@3.5.17(typescript@5.8.3))
@@ -545,7 +545,7 @@ importers:
         version: 3.0.0-beta.15(typescript@5.8.3)(vue-tsc@3.0.1(typescript@5.8.3))(vue@3.5.17(typescript@5.8.3))
       unocss:
         specifier: ^66.3.3
-        version: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+        version: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
       unplugin-vue-components:
         specifier: ^28.8.0
         version: 28.8.0(@babel/parser@7.28.0)(vue@3.5.17(typescript@5.8.3))
@@ -7742,11 +7742,11 @@ snapshots:
       '@typescript-eslint/types': 8.35.1
       eslint-visitor-keys: 4.2.1
 
-  '@unocss/astro@66.3.3(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))':
+  '@unocss/astro@66.3.3(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))':
     dependencies:
       '@unocss/core': 66.3.3
       '@unocss/reset': 66.3.3
-      '@unocss/vite': 66.3.3(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+      '@unocss/vite': 66.3.3(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
     optionalDependencies:
       vite: rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0)
     transitivePeerDependencies:
@@ -7900,7 +7900,7 @@ snapshots:
     dependencies:
       '@unocss/core': 66.3.3
 
-  '@unocss/vite@66.3.3(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))':
+  '@unocss/vite@66.3.3(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))':
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@unocss/config': 66.3.3
@@ -12167,20 +12167,20 @@ snapshots:
 
   universalify@2.0.1: {}
 
-  unocss-preset-animations@1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))):
+  unocss-preset-animations@1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))):
     dependencies:
-      unocss: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+      unocss: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
     optionalDependencies:
       '@unocss/preset-wind3': 66.3.3
 
-  unocss-preset-shadcn@0.5.0(unocss-preset-animations@1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))))(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))):
+  unocss-preset-shadcn@0.5.0(unocss-preset-animations@1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))))(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))):
     dependencies:
-      unocss: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
-      unocss-preset-animations: 1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3)))
+      unocss: 66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+      unocss-preset-animations: 1.2.1(@unocss/preset-wind3@66.3.3)(unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3)))
 
-  unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3)):
+  unocss@66.3.3(postcss@8.5.6)(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3)):
     dependencies:
-      '@unocss/astro': 66.3.3(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+      '@unocss/astro': 66.3.3(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
       '@unocss/cli': 66.3.3
       '@unocss/core': 66.3.3
       '@unocss/postcss': 66.3.3(postcss@8.5.6)
@@ -12198,7 +12198,7 @@ snapshots:
       '@unocss/transformer-compile-class': 66.3.3
       '@unocss/transformer-directives': 66.3.3
       '@unocss/transformer-variant-group': 66.3.3
-      '@unocss/vite': 66.3.3(rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
+      '@unocss/vite': 66.3.3(rolldown-vite@7.0.4(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0))(vue@3.5.17(typescript@5.8.3))
     optionalDependencies:
       vite: rolldown-vite@7.0.6(@types/node@24.0.10)(esbuild@0.25.5)(jiti@2.4.2)(tsx@4.20.3)(yaml@2.8.0)
     transitivePeerDependencies:
