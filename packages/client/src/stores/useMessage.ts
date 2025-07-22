@@ -80,12 +80,10 @@ export const useMessageStore = defineStore('message', () => {
         websocketStore.waitForEvent('message:data'),
         websocketStore.waitForEvent('storage:messages'),
         createContextWithTimeout(10000),
-      ]).then(() => {
-        isLoading.value = false
-      }).catch(() => {
-        // Handle errors and reset loading state
-        isLoading.value = false
+      ]).catch(() => {
         console.warn('[MessageStore] Message fetch timed out or failed')
+      }).finally(() => {
+        isLoading.value = false
       })
     }
 
@@ -98,8 +96,9 @@ export const useMessageStore = defineStore('message', () => {
   return {
     chatId: computed(() => currentChatId),
     sortedMessageIds: computed(() => messageWindow.value?.getSortedIds() ?? []),
-    sortedMessageArray: computed(() => messageWindow.value?.getSortedIds().map(id => messageWindow.value?.get(id)).filter(Boolean) ?? []),
-    messageWindow,
+    // FIXME: too heavy to compute every time
+    sortedMessageArray: computed(() => messageWindow.value?.getSortedIds().map(id => messageWindow.value!.get(id)!) ?? []),
+    messageWindow: computed(() => messageWindow.value!),
 
     pushMessages,
     useFetchMessages,

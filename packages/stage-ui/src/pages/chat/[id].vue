@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import type { CoreDialog } from '@tg-search/core/types'
 
-import { useChatStore, useMessageStore, useWebsocketStore } from '@tg-search/client'
+import { useChatStore, useMessageStore, useSettingsStore, useWebsocketStore } from '@tg-search/client'
 import { useWindowSize } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import MessageBubble from '../../components/messages/MessageBubble.vue'
 import SearchDialog from '../../components/SearchDialog.vue'
 import { Button } from '../../components/ui/Button'
+import VirtualMessageList from '../../components/VirtualMessageList.vue'
 
 const route = useRoute('/chat/:id')
 const id = route.params.id
@@ -18,6 +18,7 @@ const id = route.params.id
 const chatStore = useChatStore()
 const messageStore = useMessageStore()
 const websocketStore = useWebsocketStore()
+const { debugMode } = storeToRefs(useSettingsStore())
 
 const { sortedMessageIds, messageWindow, sortedMessageArray } = storeToRefs(messageStore)
 const currentChat = computed<CoreDialog | undefined>(() => chatStore.getChat(id.toString()))
@@ -30,6 +31,7 @@ const { height: windowHeight } = useWindowSize()
 
 const isLoadingOlder = ref(false)
 const isLoadingNewer = ref(false)
+const virtualListRef = ref<InstanceType<typeof VirtualMessageList>>()
 
 const searchDialogRef = ref<InstanceType<typeof SearchDialog> | null>(null)
 const isGlobalSearchOpen = ref(false)
@@ -94,6 +96,19 @@ async function loadNewerMessages() {
   }
 }
 
+// Handle virtual list scroll events
+function handleVirtualListScroll({ isAtTop, isAtBottom }: { scrollTop: number, isAtTop: boolean, isAtBottom: boolean }) {
+  // Load older messages when scrolled to top
+  if (isAtTop && !isLoadingOlder.value && !isLoadingMessages.value) {
+    loadOlderMessages()
+  }
+
+  // Load newer messages when scrolled to bottom
+  if (isAtBottom && !isLoadingNewer.value && !isLoadingMessages.value) {
+    loadNewerMessages()
+  }
+}
+
 function sendMessage() {
   if (!messageInput.value.trim())
     return
@@ -111,7 +126,7 @@ function sendMessage() {
 <template>
   <div class="relative h-full flex flex-col">
     <!-- Debug Panel -->
-    <div class="absolute right-4 top-24 w-1/4 flex flex-col justify-left gap-2 rounded-lg bg-neutral-200 p-2 text-sm text-gray-500 font-mono dark:bg-neutral-800">
+    <div v-if="debugMode" class="absolute right-4 top-24 w-1/4 flex flex-col justify-left gap-2 rounded-lg bg-neutral-200 p-2 text-sm text-gray-500 font-mono dark:bg-neutral-800">
       <span>
         Height: {{ windowHeight }} / Messages: {{ sortedMessageArray.length }}
       </span>
@@ -157,10 +172,15 @@ function sendMessage() {
       </Button>
     </div>
 
-    <div class="flex-1 overflow-auto bg-white p-4 dark:bg-gray-900">
-      <template v-for="message in sortedMessageArray">
-        <MessageBubble v-if="message" :key="message.uuid" :message="message" />
-      </template>
+    <!-- Messages Area with Virtual List -->
+    <div class="flex-1 overflow-hidden bg-white dark:bg-gray-900">
+      <VirtualMessageList
+        ref="virtualListRef"
+        :messages="sortedMessageArray"
+        :on-scroll-to-top="loadOlderMessages"
+        :on-scroll-to-bottom="loadNewerMessages"
+        @scroll="handleVirtualListScroll"
+      />
     </div>
 
     <!-- Message Input -->
