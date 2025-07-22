@@ -2,8 +2,9 @@
 import type { CoreDialog } from '@tg-search/core/types'
 
 import { useChatStore, useMessageStore, useWebsocketStore } from '@tg-search/client'
-import { useScroll, useVirtualList, useWindowSize } from '@vueuse/core'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useWindowSize } from '@vueuse/core'
+import { storeToRefs } from 'pinia'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -16,80 +17,82 @@ const id = route.params.id
 
 const chatStore = useChatStore()
 const messageStore = useMessageStore()
-
-// FIXME: the performance issue
-const messagesMap = computed(() => messageStore.useMessageChatMap(id.toString()))
-const sortedChatMessageIds = computed<string[]>(() =>
-  Array.from(messagesMap.value.keys())
-    .sort((a, b) => Number(a) - Number(b)),
-)
-const currentChat = computed<CoreDialog | undefined>(() => chatStore.getChat(id.toString()))
-
-const isGlobalSearch = ref(false)
-const searchDialogRef = ref<InstanceType<typeof SearchDialog> | null>(null)
-const { isLoading: isLoadingMessages, fetchMessages } = messageStore.useFetchMessages(id.toString())
-const messageLimit = ref(50)
-const messageOffset = ref(0)
-
-const { height: windowHeight } = useWindowSize()
-const minimumScrollHeight = computed(() => windowHeight.value * 0.3)
-
-const { list, containerProps, wrapperProps } = useVirtualList(
-  sortedChatMessageIds,
-  {
-    // FIXME: dynamic height
-    itemHeight: () => 80, // Estimated height for message bubble
-
-    // What is this?
-    overscan: 40,
-  },
-)
-
-function handleClickOutside(event: MouseEvent) {
-  if (isGlobalSearch.value && searchDialogRef.value) {
-    const target = event.target as HTMLElement
-    const searchElement = searchDialogRef.value.$el as HTMLElement
-    const searchButton = document.querySelector('[data-search-button]') as HTMLElement
-    if (!searchElement.contains(target) && !searchButton?.contains(target)) {
-      isGlobalSearch.value = false
-    }
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
-
 const websocketStore = useWebsocketStore()
 
+const { sortedMessageIds, messageWindow, sortedMessageArray } = storeToRefs(messageStore)
+const currentChat = computed<CoreDialog | undefined>(() => chatStore.getChat(id.toString()))
+
+const messageLimit = ref(20)
+const messageOffset = ref(0)
+const { isLoading: isLoadingMessages, fetchMessages } = messageStore.useFetchMessages(id.toString(), messageLimit.value)
+
+const { height: windowHeight } = useWindowSize()
+
+const isLoadingOlder = ref(false)
+const isLoadingNewer = ref(false)
+
+const searchDialogRef = ref<InstanceType<typeof SearchDialog> | null>(null)
+const isGlobalSearchOpen = ref(false)
+
 const messageInput = ref('')
-const { y } = useScroll(containerProps.ref)
-const lastMessagePosition = ref(0)
 
-watch(() => sortedChatMessageIds.value.length, () => {
-  lastMessagePosition.value = containerProps.ref.value?.scrollHeight ?? 0
-
-  nextTick(() => {
-    y.value = (containerProps.ref.value?.scrollHeight ?? 0) - lastMessagePosition.value
-
-    // Due to chatMessages length change, we can infer that the messages is loaded
-    messageOffset.value += messageLimit.value
-  })
+// Initial load when component mounts
+onMounted(async () => {
+  // Only load if there are no messages yet
+  if (sortedMessageIds.value.length === 0) {
+    await loadOlderMessages()
+  }
 })
 
-// TODO: useInfiniteScroll?
-watch(y, async () => {
-  if (y.value <= minimumScrollHeight.value && !isLoadingMessages.value) {
+// Load older messages when scrolling to top
+async function loadOlderMessages() {
+  if (isLoadingOlder.value || isLoadingMessages.value)
+    return
+
+  isLoadingOlder.value = true
+
+  try {
     fetchMessages({
       offset: messageOffset.value,
       limit: messageLimit.value,
-    })
+    }, 'older')
+    messageOffset.value += messageLimit.value
   }
-}, { immediate: true })
+  finally {
+    isLoadingOlder.value = false
+  }
+}
+
+// Load newer messages when scrolling to bottom
+async function loadNewerMessages() {
+  if (isLoadingNewer.value || isLoadingMessages.value)
+    return
+
+  // Get the current max message ID to fetch messages after it
+  const currentMaxId = messageWindow.value?.maxId
+  if (!currentMaxId || currentMaxId === -Infinity) {
+    // eslint-disable-next-line no-console
+    console.log('No messages loaded yet, cannot fetch newer messages')
+    return
+  }
+
+  isLoadingNewer.value = true
+
+  try {
+    // Use a separate fetch function for newer messages with minId
+    fetchMessages(
+      {
+        offset: 0,
+        limit: messageLimit.value,
+        minId: currentMaxId,
+      },
+      'newer',
+    )
+  }
+  finally {
+    isLoadingNewer.value = false
+  }
+}
 
 function sendMessage() {
   if (!messageInput.value.trim())
@@ -103,16 +106,47 @@ function sendMessage() {
 
   toast.success('Message sent')
 }
-
-const isGlobalSearchOpen = ref(false)
 </script>
 
 <template>
   <div class="relative h-full flex flex-col">
+    <!-- Debug Panel -->
+    <div class="absolute right-4 top-24 w-1/4 flex flex-col justify-left gap-2 rounded-lg bg-neutral-200 p-2 text-sm text-gray-500 font-mono dark:bg-neutral-800">
+      <span>
+        Height: {{ windowHeight }} / Messages: {{ sortedMessageArray.length }}
+      </span>
+      <span>
+        IDs: {{ sortedMessageIds[0] }} - {{ sortedMessageIds[sortedMessageIds.length - 1] }}
+      </span>
+      <span>
+        MinId: {{ messageWindow?.minId }} / MaxId: {{ messageWindow?.maxId }}
+      </span>
+      <span>
+        Loading: {{ isLoadingMessages }} / Older: {{ isLoadingOlder }} / Newer: {{ isLoadingNewer }}
+      </span>
+      <span>
+        Offset: {{ messageOffset }}
+      </span>
+      <button
+        class="rounded bg-blue-500 px-2 py-1 text-xs text-white"
+        :disabled="isLoadingOlder || isLoadingMessages"
+        @click="loadOlderMessages"
+      >
+        Force Load Older
+      </button>
+      <button
+        class="rounded bg-green-500 px-2 py-1 text-xs text-white"
+        :disabled="isLoadingNewer || isLoadingMessages"
+        @click="loadNewerMessages"
+      >
+        Force Load Newer
+      </button>
+    </div>
+
     <!-- Chat Header -->
     <div class="flex items-center justify-between border-b p-4 dark:border-gray-700">
       <h2 class="text-xl text-gray-900 font-semibold dark:text-gray-100">
-        {{ [currentChat?.name, currentChat?.id].filter(Boolean).join('@') }}
+        {{ [currentChat?.name, currentChat?.id].filter(Boolean).join(' @ ') }}
       </h2>
       <Button
         icon="i-lucide-search"
@@ -123,16 +157,10 @@ const isGlobalSearchOpen = ref(false)
       </Button>
     </div>
 
-    <!-- Messages Area -->
-    <div
-      v-bind="containerProps"
-      class="flex-1 overflow-y-auto bg-white p-4 space-y-4 dark:bg-gray-900"
-    >
-      <div v-bind="wrapperProps">
-        <div v-for="{ data, index } in list" :key="index">
-          <MessageBubble :message="messagesMap.get(data)!" />
-        </div>
-      </div>
+    <div class="flex-1 overflow-auto bg-white p-4 dark:bg-gray-900">
+      <template v-for="message in sortedMessageArray">
+        <MessageBubble v-if="message" :key="message.uuid" :message="message" />
+      </template>
     </div>
 
     <!-- Message Input -->

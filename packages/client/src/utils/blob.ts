@@ -14,7 +14,6 @@ export function createMediaBlob(media: CoreMessageMediaFromBlob) {
     else {
       const blob = new Blob([buffer], { type: media.mimeType })
       const url = URL.createObjectURL(blob)
-      // FIXME: URL.revokeObjectURL()
       media.blobUrl = url
 
       // eslint-disable-next-line no-console
@@ -27,4 +26,19 @@ export function createMediaBlob(media: CoreMessageMediaFromBlob) {
 
   media.byte = undefined
   return media
+}
+
+export function cleanupMediaBlob(media: CoreMessageMediaFromBlob): void {
+  if (media.blobUrl) {
+    URL.revokeObjectURL(media.blobUrl)
+
+    // eslint-disable-next-line no-console
+    console.log('[Blob] Blob URL revoked:', { url: media.blobUrl })
+
+    media.blobUrl = undefined
+  }
+}
+
+export function cleanupMediaBlobs(mediaArray: CoreMessageMediaFromBlob[]): void {
+  mediaArray.forEach(cleanupMediaBlob)
 }

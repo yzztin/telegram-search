@@ -11,7 +11,7 @@ import { Api } from 'telegram'
 import { convertToCoreMessage } from '../utils/message'
 
 export interface MessageEventToCore {
-  'message:fetch': (data: { chatId: string, pagination: CorePagination }) => void
+  'message:fetch': (data: FetchMessageOpts) => void
   'message:fetch:abort': (data: { taskId: string }) => void
   'message:process': (data: { messages: Api.Message[] }) => void
   'message:send': (data: { chatId: string, content: string }) => void

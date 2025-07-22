@@ -45,6 +45,8 @@ watch(keywordDebounced, (newKeyword) => {
     isLoading.value = false
   })
 })
+
+// TODO: handle click outside to close the dialog
 </script>
 
 <template>
