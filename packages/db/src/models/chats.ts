@@ -2,7 +2,7 @@
 
 import type { CoreDialog } from '../../../core/src'
 
-import { eq, sql } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 
 import { withDb } from '../drizzle'
 import { joinedChatsTable } from '../schemas/joined_chats'
@@ -11,10 +11,8 @@ export async function fetchChats() {
   return withDb(db => db
     .select()
     .from(joinedChatsTable)
-    .where(eq(joinedChatsTable.platform, 'telegram')),
-
-    // TODO: sort by telegram client
-    // .orderBy(desc(joinedChatsTable.updated_at)),
+    .where(eq(joinedChatsTable.platform, 'telegram'))
+    .orderBy(desc(joinedChatsTable.updated_at)), // TODO: sort by telegram client date
   )
 }
 
