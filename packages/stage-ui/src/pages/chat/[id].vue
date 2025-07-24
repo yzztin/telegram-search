@@ -23,7 +23,7 @@ const { debugMode } = storeToRefs(useSettingsStore())
 const { sortedMessageIds, messageWindow, sortedMessageArray } = storeToRefs(messageStore)
 const currentChat = computed<CoreDialog | undefined>(() => chatStore.getChat(id.toString()))
 
-const messageLimit = ref(20)
+const messageLimit = ref(100)
 const messageOffset = ref(0)
 const { isLoading: isLoadingMessages, fetchMessages } = messageStore.useFetchMessages(id.toString(), messageLimit.value)
 
