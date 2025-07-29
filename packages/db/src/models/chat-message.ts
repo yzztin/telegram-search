@@ -147,15 +147,19 @@ export async function retrieveMessages(
   },
   pagination?: CorePagination,
 ) {
+  const logger = useLogger('models:chat-message:retrieveMessages')
+
   const retrievalMessages: DBRetrievalMessages[] = []
 
   if (content.text) {
     const relevantMessages = await retrieveJieba(chatId, content.text, pagination)
+    logger.withFields({ relevantMessages: relevantMessages.length }).verbose('Retrieved jieba messages')
     retrievalMessages.push(...relevantMessages)
   }
 
   if (content.embedding && content.embedding.length !== 0) {
     const relevantMessages = await retrieveVector(chatId, content.embedding, pagination)
+    logger.withFields({ relevantMessages: relevantMessages.length }).verbose('Retrieved vector messages')
     retrievalMessages.push(...relevantMessages)
   }
 

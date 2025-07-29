@@ -13,7 +13,7 @@ import { setupWsRoutes } from './app'
 
 async function initCore(): Promise<ReturnType<typeof useLogger>> {
   parseEnvFlags(process.env as Record<string, string>)
-  initLogger()
+  initLogger(flags.logLevel, flags.logFormat)
   const logger = useLogger()
   await initConfig()
 
