@@ -1,3 +1,4 @@
+import type { Logger } from '@tg-search/logg'
 import type { PgliteDatabase } from 'drizzle-orm/pglite'
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js'
 
@@ -5,7 +6,6 @@ import { PGlite } from '@electric-sql/pglite'
 import { vector } from '@electric-sql/pglite/vector'
 import { DatabaseType, flags } from '@tg-search/common'
 import { getDatabaseDSN, getDatabaseFilePath, getDrizzlePath, useConfig } from '@tg-search/common/node'
-import { useLogger } from '@tg-search/logg'
 import { Err, Ok } from '@tg-search/result'
 import { sql } from 'drizzle-orm'
 import { drizzle as drizzlePGlite } from 'drizzle-orm/pglite'
@@ -24,8 +24,7 @@ export type CoreDB
 
 let dbInstance: CoreDB
 
-async function applyMigrations(db: CoreDB, dbType: DatabaseType) {
-  const logger = useLogger()
+async function applyMigrations(logger: Logger, db: CoreDB, dbType: DatabaseType) {
   const migrationsFolder = await getDrizzlePath()
   logger.log(`Running migrations from: ${migrationsFolder}`)
 
@@ -46,8 +45,7 @@ async function applyMigrations(db: CoreDB, dbType: DatabaseType) {
   }
 }
 
-export async function initDrizzle() {
-  const logger = useLogger()
+export async function initDrizzle(logger: Logger) {
   logger.log('Initializing database...')
 
   // Get configuration
@@ -109,7 +107,7 @@ export async function initDrizzle() {
     logger.log('Database connection established successfully')
 
     // Migrate database
-    await applyMigrations(dbInstance, dbType)
+    await applyMigrations(logger, dbInstance, dbType)
   }
   catch (error) {
     logger.withError(error).error('Failed to connect to database')
