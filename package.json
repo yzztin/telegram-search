@@ -26,9 +26,9 @@
   },
   "devDependencies": {
     "@proj-airi/unocss-preset-chromatic": "^1.0.0",
-    "@tg-search/eslint-config": "catalog:",
-    "@tg-search/logg": "catalog:",
     "@types/node": "^24.1.0",
+    "@unbird/eslint-config": "catalog:",
+    "@unbird/logg": "catalog:",
     "bumpp": "^10.2.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
