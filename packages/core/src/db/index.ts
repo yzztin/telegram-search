@@ -13,12 +13,8 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import migrations from 'virtual:drizzle-migrations.sql'
 
-interface BaseDB {
-  execute: (query: any) => Promise<any>
-}
-
-type PostgresDB = ReturnType<typeof drizzle> & BaseDB
-type PgliteDB = ReturnType<typeof drizzlePGlite> & BaseDB
+type PostgresDB = ReturnType<typeof drizzle>
+type PgliteDB = ReturnType<typeof drizzlePGlite>
 export type CoreDB = PostgresDB | PgliteDB
 
 let dbInstance: CoreDB
