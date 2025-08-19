@@ -4,10 +4,10 @@ import type { CoreContext } from '../context'
 
 import { access, mkdir, readFile, unlink, writeFile } from 'node:fs/promises'
 
-import { getSessionPath, useConfig } from '@tg-search/common/node'
+import { getSessionPath } from '@tg-search/common/node'
 import { useLogger } from '@unbird/logg'
 import { Err, Ok } from '@unbird/result'
-import path from 'pathe'
+import { dirname, join } from 'pathe'
 import { StringSession } from 'telegram/sessions'
 
 export interface SessionEventToCore {
@@ -28,10 +28,8 @@ export function createSessionService(ctx: CoreContext) {
   const logger = useLogger()
 
   function getSessionFilePath(phoneNumber: string) {
-    const config = useConfig()
-    const sessionPath = getSessionPath(config.path.storage)
-
-    return path.join(sessionPath, `${phoneNumber.replace('+', '')}.session`)
+    const sessionPath = getSessionPath()
+    return join(sessionPath, `${phoneNumber.replace('+', '')}.session`)
   }
 
   async function cleanSession(phoneNumber: string) {
@@ -55,7 +53,7 @@ export function createSessionService(ctx: CoreContext) {
 
       try {
         // Ensure session directory exists
-        await mkdir(path.dirname(sessionFilePath), { recursive: true })
+        await mkdir(dirname(sessionFilePath), { recursive: true })
 
         try {
           const session = await readFile(sessionFilePath, 'utf-8')
@@ -79,10 +77,10 @@ export function createSessionService(ctx: CoreContext) {
 
       try {
         try {
-          await access(path.dirname(sessionFilePath))
+          await access(dirname(sessionFilePath))
         }
         catch {
-          await mkdir(path.dirname(sessionFilePath), { recursive: true })
+          await mkdir(dirname(sessionFilePath), { recursive: true })
         }
 
         await writeFile(sessionFilePath, session, 'utf-8')

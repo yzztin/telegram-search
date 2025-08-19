@@ -8,10 +8,11 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "dev:server": "pnpm -F @tg-search/server dev",
+    "dev:server": "pnpm run packages:build && pnpm -F @tg-search/server dev",
     "dev:frontend": "pnpm -F @tg-search/frontend dev",
-    "dev:electron": "pnpm -F @tg-search/electron dev",
+    "dev:electron": "pnpm run packages:build && pnpm -F @tg-search/electron dev",
     "build:packages": "pnpm -rF=\"./packages/*\" --parallel build",
+    "packages:build": "pnpm -rF=\"./packages/*\" --parallel build",
     "test": "vitest",
     "lint": "eslint --cache .",
     "lint:fix": "eslint --cache . --fix",
@@ -22,7 +23,7 @@
     "db:migrate": "tsx scripts/db.ts migrate",
     "db:push": "tsx scripts/db.ts push",
     "db:kit": "tsx scripts/db.ts",
-    "postinstall": "pnpm build:packages"
+    "postinstall": "pnpm run packages:build"
   },
   "devDependencies": {
     "@proj-airi/unocss-preset-chromatic": "^1.0.0",

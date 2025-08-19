@@ -5,14 +5,14 @@ import type { DBRetrievalMessages } from './message'
 import { useLogger } from '@unbird/logg'
 import { and, eq, sql } from 'drizzle-orm'
 
-import { ensureJieba } from '../../../../core/src/utils/jieba'
 import { withDb } from '../../db'
 import { chatMessagesTable } from '../../schemas/chat_messages'
+import { ensureJieba } from '../../utils/jieba'
 
 export async function retrieveJieba(chatId: string | undefined, content: string, pagination?: CorePagination): Promise<DBRetrievalMessages[]> {
   const logger = useLogger('models:retrieve-jieba')
 
-  const jieba = ensureJieba()
+  const jieba = await ensureJieba()
   const jiebaTokens = jieba?.cut(content) || []
   if (jiebaTokens.length === 0) {
     return []
