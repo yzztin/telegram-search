@@ -23,84 +23,83 @@
 
 A powerful Telegram chat history search tool that supports vector search and semantic matching. Based on OpenAI's semantic vector technology, it makes your Telegram message retrieval smarter and more precise.
 
-- PR are welcome!
-- Due to the project being in a rapid iteration phase, database incompatibility may occur. It's recommended to back up your data regularly.
-
 ## 💖 Sponsors
 
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
 
-## 🚀 Quick Start
+Quick Start
 
-This is the simplest way to start Telegram Search, which will launch all necessary services (including the database and application server) via Docker.
+The simplest way to start Telegram Search is using Docker to launch all necessary services (database and application server).
 
-1.  **Clone the repository:**
+1. Clone the repository:
 
-    ```bash
-    git clone https://github.com/GramSearch/telegram-search.git
-    cd telegram-search
-    ```
+```bash
+git clone https://github.com/GramSearch/telegram-search.git
+cd telegram-search
+```
 
-2.  **Configure settings:**
-    Modify the settings in `config/config.yaml` as needed.\
-    Make sure to change the `database.host` value in the configuration to the database container service name "pgvector".
-    ```bash
-    cp config/config.example.yaml config/config.yaml
-    ```
+2. Configure settings:
 
-3.  **Start the services:**
+```bash
+# Modify settings in config/config.yaml as needed.
+# Make sure to change database.host value to "pgvector" in the configuration.
 
-    ```bash
-    docker compose up -d
-    ```
+cp config/config.example.yaml config/config.yaml
+```
 
-Access `http://localhost:3333` to open the search interface.
+3. Start services:
 
-## 💻 Local Run
+```bash
+docker compose up -d
+```
 
-1.  **Clone the repository**
+Access http://localhost:3333 to open the search interface.
 
-    ```bash
-    git clone https://github.com/GramSearch/telegram-search.git
-    cd telegram-search
-    ```
+Local Run
 
-2.  **Install dependencies:**
+1. Clone repository:
 
-    ```bash
-    pnpm install
-    ```
+```bash
+git clone https://github.com/GramSearch/telegram-search.git
+cd telegram-search
+```
 
-3.  **Configure environment**:
+2. Install dependencies:
 
-    ```bash
-    cp config/config.example.yaml config/config.yaml
-    ```
+```bash
+pnpm install
+```
 
-4.  **Start the database container:**
-    In local development mode, Docker is only used to start the database container.
+3. Configure environment:
 
-    ```bash
-    docker compose up -d pgvector
-    ```
+```bash
+cp config/config.example.yaml config/config.yaml
+```
 
-5.  **Synchronize database schema:**
+4. Start database container:
+Docker is only used for database container in local development.
 
-    ```bash
-    pnpm run db:migrate
-    ```
+```bash
+docker compose up -d pgvector
+```
 
-6.  **Start services:**
+5. Sync database schema:
 
-    ```bash
-    # Start backend service
-    pnpm run dev:server
+```bash
+pnpm run db:migrate
+```
 
-    # Start frontend interface
-    pnpm run dev:frontend
-    ```
+6. Start services:
 
-Visit `http://localhost:3333` to open the search interface.
+```bash
+# Start backend
+pnpm run dev:server
+
+# Start frontend
+pnpm run dev:frontend
+```
+
+Access http://localhost:3333 to open the search interface.
 
 ## 🚀 Activity
 

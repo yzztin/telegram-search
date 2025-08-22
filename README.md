@@ -23,84 +23,73 @@
 
 一个功能强大的 Telegram 聊天记录搜索工具，支持向量搜索和语义匹配。基于 OpenAI 的语义向量技术，让你的 Telegram 消息检索更智能、更精准。
 
-- 欢迎 PR 贡献！
-- 由于项目处于快速迭代阶段，可能会出现数据库不兼容的情况，建议定期备份数据。
-
 ## 💖 赞助者
 
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
 
 ## 🚀 快速开始
 
-这是启动 Telegram Search 的最简便的方式，它会通过 Docker 启动所有必需的服务（包括数据库和应用服务器）。
+1. 克隆仓库
 
-1.  **克隆仓库：**
+```bash
+git clone https://github.com/GramSearch/telegram-search.git
+cd telegram-search
 
-    ```bash
-    git clone https://github.com/GramSearch/telegram-search.git
-    cd telegram-search
-    ```
+# 切换到 release 分支
+git switch release
+```
 
-2.  **设定配置：**
-    根据需要，修改 `config/config.yaml` 中的设置。\
-    务必修改配置中的 `database.host` 的值为数据库容器的服务名称 "pgvector"。
-    ```bash
-    cp config/config.example.yaml config/config.yaml
-    ```
+2. 修改配置文件
 
-3.  **启动服务：**
+```bash
+# 根据需要，修改 `config/config.yaml` 中的设置
+# 务必修改配置中的 `database.host` 的值为数据库容器的服务名称 "pgvector"
 
-    ```bash
-    docker compose up -d
-    ```
+cp config/config.example.yaml config/config.yaml
+```
 
-访问 `http://localhost:3333` 即可打开搜索界面。
+3. 启动服务
 
-## 💻 本地运行
-
-1.  **克隆仓库**
-
-    ```bash
-    git clone https://github.com/GramSearch/telegram-search.git
-    cd telegram-search
-    ```
-
-2.  **安装依赖：**
-
-    ```bash
-    pnpm install
-    ```
-
-3.  **配置环境**:
-
-    ```bash
-    cp config/config.example.yaml config/config.yaml
-    ```
-
-4.  **启动数据库容器：**
-    在本地开发模式下， Docker 只用来启动数据库容器。
-
-    ```bash
-    docker compose up -d pgvector
-    ```
-
-5.  **同步数据库表结构：**
-
-    ```bash
-    pnpm run db:migrate
-    ```
-
-6.  **启动服务：**
-
-    ```bash
-    # 启动后端服务
-    pnpm run dev:server
-
-    # 启动前端界面
-    pnpm run dev:frontend
-    ```
+```bash
+docker compose up -d
+```
 
 访问 `http://localhost:3333` 即可打开搜索界面。
+
+## 💻 开发教程
+
+1. 克隆仓库
+
+2. 安装依赖
+
+```bash
+pnpm install
+```
+
+3. 修改配置文件
+
+4. 启动数据库容器：
+
+```bash
+# 在本地开发模式下， Docker 只用来启动数据库容器
+docker compose up -d pgvector
+```
+
+5. 同步数据库表结构：
+
+```bash
+pnpm run db:migrate
+```
+
+6. 启动服务：
+
+```bash
+# 启动后端服务
+pnpm run dev:server
+
+# 启动前端界面
+pnpm run dev:frontend
+```
 
 ## 🚀 Activity
 
