@@ -2,7 +2,7 @@
   "name": "@tg-search/stage-ui",
   "type": "module",
   "private": true,
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.15.0",
   "exports": {
     ".": "./src/index.ts",
     "./App.vue": "./src/App.vue",
@@ -14,13 +14,13 @@
   },
   "dependencies": {
     "@formkit/auto-animate": "^0.8.2",
-    "@iconify-json/lucide": "^1.2.62",
+    "@iconify-json/lucide": "^1.2.63",
     "@iconify/vue": "^5.0.0",
-    "@tanstack/vue-query": "^5.85.1",
+    "@tanstack/vue-query": "^5.85.5",
     "@tanstack/vue-table": "^8.21.3",
     "@tg-search/client": "workspace:^",
     "@tg-search/core": "workspace:^",
-    "@vueuse/core": "^13.6.0",
+    "@vueuse/core": "^13.7.0",
     "defu": "^6.1.4",
     "lottie-web": "^5.13.0",
     "ofetch": "^1.4.1",
@@ -28,10 +28,10 @@
     "radix-vue": "^1.9.17",
     "reka-ui": "^2.4.1",
     "uuid": "^11.1.0",
-    "vue": "^3.5.18",
+    "vue": "^3.5.19",
     "vue-i18n": "^11.1.11",
     "vue-router": "^4.5.1",
-    "vue-sonner": "^2.0.2"
+    "vue-sonner": "^2.0.8"
   },
   "devDependencies": {
     "@unocss/eslint-config": "^66.4.2",
@@ -43,9 +43,9 @@
     "unplugin-vue-components": "^29.0.0",
     "unplugin-vue-macros": "^2.14.5",
     "unplugin-vue-router": "^0.15.0",
-    "vite-plugin-inspect": "^11.3.2",
-    "vite-plugin-vue-devtools": "^8.0.0",
+    "vite-plugin-inspect": "^11.3.3",
+    "vite-plugin-vue-devtools": "^8.0.1",
     "vite-plugin-vue-layouts": "^0.11.0",
-    "vue-tsc": "^3.0.5"
+    "vue-tsc": "^3.0.6"
   }
 }

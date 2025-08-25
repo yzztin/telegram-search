@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0-beta.22",
   "private": true,
-  "packageManager": "pnpm@10.14.0",
+  "packageManager": "pnpm@10.15.0",
   "engines": {
     "node": ">=22.18.0"
   },
@@ -27,22 +27,22 @@
   },
   "devDependencies": {
     "@proj-airi/unocss-preset-chromatic": "^1.0.0",
-    "@types/node": "^24.2.1",
+    "@types/node": "^24.3.0",
     "@unbird/eslint-config": "catalog:",
     "@unbird/logg": "catalog:",
     "bumpp": "^10.2.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-kit": "^0.31.4",
-    "eslint": "^9.33.0",
+    "eslint": "^9.34.0",
     "tailwind-merge": "^3.3.1",
-    "taze": "^19.1.0",
-    "tsx": "^4.20.4",
+    "taze": "^19.3.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.9.2",
     "unocss": "^66.4.2",
     "unocss-preset-animations": "^1.2.1",
     "unocss-preset-shadcn": "^0.5.0",
-    "unplugin-unused": "^0.5.1",
+    "unplugin-unused": "^0.5.2",
     "vite": "npm:rolldown-vite@latest",
     "vitest": "^3.2.4"
   }
