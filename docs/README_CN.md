@@ -91,6 +91,190 @@ pnpm run dev:server
 pnpm run dev:frontend
 ```
 
+## 🏗️ 系统架构
+
+```mermaid
+graph TB
+    subgraph "🖥️ 前端层"
+        Frontend["Web Frontend<br/>(Vue 3 + Pinia)"]
+        Electron["Electron Desktop"]
+        
+        subgraph "Client Event Handlers"
+            ClientAuth["Auth Handler"]
+            ClientMessage["Message Handler"] 
+            ClientStorage["Storage Handler"]
+            ClientEntity["Entity Handler"]
+            ClientServer["Server Handler"]
+        end
+    end
+
+    subgraph "🌐 通信层"
+        WS["WebSocket 事件桥接<br/>实时双向通信<br/>• 事件注册<br/>• 事件转发<br/>• 会话管理"]
+    end
+
+    subgraph "🚀 后端服务层"
+        Server["Backend Server<br/>(REST API)"]
+        
+        subgraph "Session Management"
+            SessionMgr["会话管理器<br/>• 客户端状态<br/>• CoreContext 实例<br/>• 事件监听器"]
+        end
+    end
+
+    subgraph "🎯 核心事件系统"
+        Context["CoreContext<br/>🔥 中央事件总线<br/>(EventEmitter3)<br/>• ToCoreEvent<br/>• FromCoreEvent<br/>• 事件包装器<br/>• 错误处理"]
+        
+        subgraph "Core Event Handlers"
+            AuthHandler["🔐 Auth Handler"]
+            MessageHandler["📝 Message Handler"]
+            DialogHandler["💬 Dialog Handler"]
+            StorageHandler["📦 Storage Handler"]
+            ConfigHandler["⚙️ Config Handler"]
+            EntityHandler["👤 Entity Handler"]
+            GramEventsHandler["📡 Gram Events Handler"]
+            MessageResolverHandler["🔄 Message Resolver Handler"]
+        end
+    end
+
+    subgraph "🔧 业务服务层"
+        subgraph "Services"
+            AuthService["Authentication<br/>Service"]
+            MessageService["Message<br/>Service"]
+            DialogService["Dialog<br/>Service"]
+            StorageService["Storage<br/>Service"]
+            ConfigService["Config<br/>Service"]
+            EntityService["Entity<br/>Service"]
+            ConnectionService["Connection<br/>Service"]
+            TakeoutService["Takeout<br/>Service"]
+        end
+        
+        subgraph "消息处理管道"
+            MsgResolverService["Message Resolver<br/>Service"]
+            
+            subgraph "Message Resolvers"
+                EmbeddingResolver["🤖 Embedding<br/>Resolver<br/>(OpenAI)"]
+                JiebaResolver["📚 Jieba<br/>Resolver<br/>（中文分词）"]
+                LinkResolver["🔗 Link<br/>Resolver"]
+                MediaResolver["📸 Media<br/>Resolver"]
+                UserResolver["👤 User<br/>Resolver"]
+            end
+        end
+    end
+
+    subgraph "🗄️ 数据层"
+        DB["PostgreSQL<br/>+ pgvector"]
+        Drizzle["Drizzle ORM"]
+    end
+
+    subgraph "📡 外部 API"
+        TelegramAPI["Telegram API<br/>(gram.js)"]
+        OpenAI["OpenAI API<br/>Vector Embeddings"]
+    end
+
+    %% WebSocket Event Flow
+    Frontend -.->|"WsEventToServer<br/>• auth:login<br/>• message:query<br/>• dialog:fetch"| WS
+    WS -.->|"WsEventToClient<br/>• message:data<br/>• auth:status<br/>• storage:progress"| Frontend
+    
+    Electron -.->|"WebSocket Events"| WS
+    WS -.->|"Real-time Updates"| Electron
+
+    %% Server Layer
+    WS <--> Server
+    Server --> SessionMgr
+    SessionMgr --> Context
+
+    %% Core Event System （主要突出的部分）
+    Context <==> AuthHandler
+    Context <==> MessageHandler
+    Context <==> DialogHandler
+    Context <==> StorageHandler
+    Context <==> ConfigHandler
+    Context <==> EntityHandler
+    Context <==> GramEventsHandler
+    Context <==> MessageResolverHandler
+
+    %% Event Handlers to Services
+    AuthHandler --> AuthService
+    MessageHandler --> MessageService
+    DialogHandler --> DialogService
+    StorageHandler --> StorageService
+    ConfigHandler --> ConfigService
+    EntityHandler --> EntityService
+    GramEventsHandler --> ConnectionService
+    MessageResolverHandler --> MsgResolverService
+
+    %% Message Processing Pipeline
+    MessageService --> MsgResolverService
+    MsgResolverService --> EmbeddingResolver
+    MsgResolverService --> JiebaResolver
+    MsgResolverService --> LinkResolver
+    MsgResolverService --> MediaResolver
+    MsgResolverService --> UserResolver
+
+    %% Data Layer
+    StorageService --> Drizzle
+    Drizzle --> DB
+
+    %% External APIs
+    AuthService --> TelegramAPI
+    MessageService --> TelegramAPI
+    DialogService --> TelegramAPI
+    EntityService --> TelegramAPI
+    EmbeddingResolver --> OpenAI
+
+    %% Client Event System
+    Frontend --> ClientAuth
+    Frontend --> ClientMessage
+    Frontend --> ClientStorage
+    Frontend --> ClientEntity
+    Frontend --> ClientServer
+
+    %% Styling
+    classDef frontend fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+    classDef websocket fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    classDef server fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    classDef context fill:#E91E63,stroke:#AD1457,color:#fff,stroke-width:4px
+    classDef handler fill:#9C27B0,stroke:#6A1B9A,color:#fff,stroke-width:2px
+    classDef service fill:#607D8B,stroke:#37474F,color:#fff,stroke-width:2px
+    classDef resolver fill:#795548,stroke:#3E2723,color:#fff,stroke-width:2px
+    classDef data fill:#3F51B5,stroke:#1A237E,color:#fff,stroke-width:2px
+    classDef external fill:#F44336,stroke:#C62828,color:#fff,stroke-width:2px
+
+    class Frontend,Electron,ClientAuth,ClientMessage,ClientStorage,ClientEntity,ClientServer frontend
+    class WS websocket
+    class Server,SessionMgr server
+    class Context context
+    class AuthHandler,MessageHandler,DialogHandler,StorageHandler,ConfigHandler,EntityHandler,GramEventsHandler,MessageResolverHandler handler
+    class AuthService,MessageService,DialogService,StorageService,ConfigService,EntityService,ConnectionService,TakeoutService,MsgResolverService service
+    class EmbeddingResolver,JiebaResolver,LinkResolver,MediaResolver,UserResolver resolver
+    class DB,Drizzle data
+    class TelegramAPI,OpenAI external
+```
+
+### 事件驱动架构概述
+
+- **🎯 CoreContext - 中央事件总线**：系统核心，使用 EventEmitter3 管理所有事件
+  - **ToCoreEvent**：发送到核心系统的事件（如 auth:login, message:query 等）
+  - **FromCoreEvent**：从核心系统发出的事件（如 message:data, auth:status 等）
+  - **事件包装器**：为所有事件提供自动错误处理和日志记录
+  - **会话管理**：每个客户端会话都有独立的 CoreContext 实例
+
+- **🌐 WebSocket 事件桥接**：实时双向通信层
+  - **事件注册**：客户端注册想要接收的特定事件
+  - **事件转发**：在前端和 CoreContext 之间无缝转发事件
+  - **会话持久化**：跨连接维护客户端状态和事件监听器
+
+- **🔄 消息处理管道**：通过多个解析器进行基于流的消息处理
+  - **Embedding 解析器**：使用 OpenAI 生成向量嵌入，用于语义搜索
+  - **Jieba 解析器**：中文分词，提升搜索能力
+  - **链接/媒体/用户解析器**：提取和处理各种消息内容类型
+
+- **📡 事件流程**：
+  1. 前端通过 WebSocket 发送事件（如 `auth:login`, `message:query`）
+  2. 服务器将事件转发到相应的 CoreContext 实例
+  3. 事件处理器处理事件并调用相应的服务
+  4. 服务通过 CoreContext 发出结果事件
+  5. WebSocket 将事件转发到前端进行实时更新
+
 ## 🚀 Activity
 
 [![Star History Chart](https://api.star-history.com/svg?repos=luoling8192/telegram-search&type=Date)](https://star-history.com/#luoling8192/telegram-search&Date)
