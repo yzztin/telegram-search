@@ -1,9 +1,9 @@
-![preview](./docs/assets/preview.png)
+![preview](./assets/preview.png)
 
 <h1 align="center">Telegram Search</h1>
 
 <p align="center">
-  [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="./docs/README_EN.md">English</a>]
+  [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="./docs/README_CN.md">简体中文</a>]
 </p>
 
 <p align="center">
@@ -13,83 +13,93 @@
   <a href="https://t.me/+Gs3SH2qAPeFhYmU9"><img src="https://img.shields.io/badge/Telegram-%235AA9E6?logo=telegram&labelColor=FFFFFF"></a>
 </p>
 
-> 唯一官方网站为 `intentchat.app`，其他网站均为诈骗。
+> The only official website is `intentchat.app`, all other websites are scams.
 >
-> 我们未发行任何虚拟货币，请勿上当受骗。
+> We have not issued any virtual currency, please do not be deceived.
 >
-> 本软件仅可导出您自己的聊天记录以便搜索，请勿用于非法用途。
+> This software can only export your own chat records for search, please do not use it for illegal purposes.
 
 <a href="https://trendshift.io/repositories/13868" target="_blank"><img src="https://trendshift.io/api/badge/repositories/13868" alt="groupultra%2Ftelegram-search | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-一个功能强大的 Telegram 聊天记录搜索工具，支持向量搜索和语义匹配。基于 OpenAI 的语义向量技术，让你的 Telegram 消息检索更智能、更精准。
+A powerful Telegram chat history search tool that supports vector search and semantic matching. Based on OpenAI's semantic vector technology, it makes your Telegram message retrieval smarter and more precise.
 
-## 💖 赞助者
+## 💖 Sponsors
 
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
 
-## 🚀 快速开始
+Quick Start
 
-1. 克隆仓库
+The simplest way to start Telegram Search is using Docker to launch all necessary services (database and application server).
+
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/GramSearch/telegram-search.git
 cd telegram-search
-
-# 切换到 release 分支
-git switch release
 ```
 
-2. 修改配置文件
+2. Configure settings:
 
 ```bash
-# 根据需要，修改 `config/config.yaml` 中的设置
-# 务必修改配置中的 `database.host` 的值为数据库容器的服务名称 "pgvector"
+# Modify settings in config/config.yaml as needed.
+# Make sure to change database.host value to "pgvector" in the configuration.
 
 cp config/config.example.yaml config/config.yaml
 ```
 
-3. 启动服务
+3. Start services:
 
 ```bash
 docker compose up -d
 ```
 
-访问 `http://localhost:3333` 即可打开搜索界面。
+Access http://localhost:3333 to open the search interface.
 
-## 💻 开发教程
+Local Run
 
-1. 克隆仓库
+1. Clone repository:
 
-2. 安装依赖
+```bash
+git clone https://github.com/GramSearch/telegram-search.git
+cd telegram-search
+```
+
+2. Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-3. 修改配置文件
-
-4. 启动数据库容器：
+3. Configure environment:
 
 ```bash
-# 在本地开发模式下， Docker 只用来启动数据库容器
+cp config/config.example.yaml config/config.yaml
+```
+
+4. Start database container:
+Docker is only used for database container in local development.
+
+```bash
 docker compose up -d pgvector
 ```
 
-5. 同步数据库表结构：
+5. Sync database schema:
 
 ```bash
 pnpm run db:migrate
 ```
 
-6. 启动服务：
+6. Start services:
 
 ```bash
-# 启动后端服务
+# Start backend
 pnpm run dev:server
 
-# 启动前端界面
+# Start frontend
 pnpm run dev:frontend
 ```
+
+Access http://localhost:3333 to open the search interface.
 
 ## 🚀 Activity
 
