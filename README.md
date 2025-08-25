@@ -27,15 +27,16 @@ A powerful Telegram chat history search tool that supports vector search and sem
 
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
 
-Quick Start
-
-The simplest way to start Telegram Search is using Docker to launch all necessary services (database and application server).
+## 🚀 Quick Start
 
 1. Clone the repository:
 
 ```bash
 git clone https://github.com/GramSearch/telegram-search.git
 cd telegram-search
+
+# Switch to release branch
+git switch release
 ```
 
 2. Configure settings:
@@ -55,31 +56,22 @@ docker compose up -d
 
 Access http://localhost:3333 to open the search interface.
 
-Local Run
+## 💻 Development Guide
 
-1. Clone repository:
+1. Clone repository
 
-```bash
-git clone https://github.com/GramSearch/telegram-search.git
-cd telegram-search
-```
-
-2. Install dependencies:
+2. Install dependencies
 
 ```bash
 pnpm install
 ```
 
-3. Configure environment:
-
-```bash
-cp config/config.example.yaml config/config.yaml
-```
+3. Configure environment
 
 4. Start database container:
-Docker is only used for database container in local development.
 
 ```bash
+# Docker is only used for database container in local development.
 docker compose up -d pgvector
 ```
 
@@ -98,8 +90,6 @@ pnpm run dev:server
 # Start frontend
 pnpm run dev:frontend
 ```
-
-Access http://localhost:3333 to open the search interface.
 
 ## 🏗️ Architecture
 
