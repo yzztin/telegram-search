@@ -13,6 +13,7 @@ catalog:
   '@xsai-ext/providers-cloud': ^0.4.0-beta.1
   '@xsai-ext/providers-local': ^0.4.0-beta.1
   '@xsai/embed': ^0.4.0-beta.1
+  vue-sonner: ^2.0.2
 
 onlyBuiltDependencies:
   - '@parcel/watcher'
