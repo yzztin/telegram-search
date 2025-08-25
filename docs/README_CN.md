@@ -1,4 +1,4 @@
-![preview](./docs/assets/preview.png)
+![preview](./assets/preview.png)
 
 <h1 align="center">Telegram Search</h1>
 
