@@ -153,12 +153,6 @@ function closeMobileDrawer() {
       <!-- Navigation -->
       <div class="mb-4">
         <SidebarSelector
-          path="/"
-          icon="i-lucide-home"
-          :name="t('home.home')"
-        />
-
-        <SidebarSelector
           path="/sync"
           icon="i-lucide-refresh-cw"
           :name="t('sync.sync')"

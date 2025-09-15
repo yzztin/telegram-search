@@ -92,8 +92,9 @@ watch(currentTaskProgress, (progress) => {
   <div class="p-6">
     <div class="flex items-center justify-between">
       <h3 class="text-lg text-gray-900 font-medium dark:text-gray-100">
-        {{ t('sync.selectChats') }}
+        {{ t('sync.syncPrompt') }}
       </h3>
+
       <div class="flex items-center gap-2">
         <div>
           <Switch

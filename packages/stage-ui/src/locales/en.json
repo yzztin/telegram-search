@@ -1,113 +1,114 @@
 {
-  "chatSelector": {
-    "user": "User",
-    "group": "Group",
-    "channel": "Channel",
-    "type": "Type",
+  "chat": {
+    "forceLoadNewer": "Force load newer messages",
+    "forceLoadOlder": "Force load older messages",
+    "messageSent": "Message sent",
     "search": "Search",
+    "searchContent": "Search content",
+    "send": "Send",
+    "typeAMessage": "Type a message..."
+  },
+  "chatGroups": {
+    "channel": "Channels",
+    "group": "Groups",
+    "user": "Users"
+  },
+  "chatSelector": {
+    "channel": "Channel",
     "chat": "Chat {id}",
+    "group": "Group",
     "id": "ID: {id}",
-    "noChatsFound": "No chats found"
+    "noChatsFound": "No chats found",
+    "search": "Search",
+    "type": "Type",
+    "user": "User"
   },
-  "searchDialog": {
-    "searchMessages": "Search messages...",
-    "searching": "Searching...",
-    "noRelatedMessages": "No related messages found"
+  "home": {
+    "home": "Home"
   },
-  "virtualMessageList": {
-    "scrolling": "Scrolling..."
-  },
-  "settings": {
-    "settings": "Settings",
+  "login": {
+    "code": "Code",
+    "codeDescription": "Please enter the verification code you received",
+    "complete": "Complete",
+    "completeDescription": "Login successful!",
+    "enterHome": "Go to Home",
     "login": "Login",
-    "logout": "Logout",
-    "debugMode": "Debug Mode",
-    "useCachedMessage": "Use cached messages from database",
-    "open": "Open",
-    "close": "Close",
-    "connected": "Connected",
-    "disconnected": "Disconnected",
-    "switchToLightMode": "Switch to light mode",
-    "switchToDarkMode": "Switch to dark mode",
-    "settingsSavedSuccessfully": "Settings saved successfully",
-    "edit": "Edit",
-    "save": "Save",
-    "databaseSettings": "Database Settings",
-    "apiSettings": "API Settings",
-    "telegramApi": "Telegram API",
-    "embedding": "Embedding Model",
-    "model": "Model",
-    "dimension": "Dimension",
-    "apiKey": "API Key",
-    "apiBaseUrl": "API Base URL",
-    "language": "Language",
-    "chinese": "中文",
-    "english": "English"
+    "loginSuccess": "Login successful!",
+    "loginSuccessDescription": "You have successfully logged into your Telegram account",
+    "password": "Two-factor Password",
+    "passwordDescription": "Please enter your two-factor authentication password",
+    "phone": "Phone",
+    "phoneDescription": "Please enter your phone number",
+    "phoneNumber": "Phone Number",
+    "phoneNumberPlaceholder": "Enter your phone number",
+    "processing": "Processing...",
+    "telegramLogin": "Telegram Login",
+    "twoFactorPassword": "Two-factor Password",
+    "twoFactorPasswordPlaceholder": "Enter your two-factor password",
+    "verificationCode": "Verification Code",
+    "verificationCodeDescription": "Please enter the verification code you received",
+    "verificationCodePlaceholder": "Enter verification code",
+    "verify": "Verify"
+  },
+  "loginPromptBanner": {
+    "login": "Login",
+    "pleaseLoginToUseFullFeatures": "Please login to your Telegram account to use full features"
   },
   "messages": {
     "copied": "Copied",
     "copyMessageLink": "Press to copy message link"
   },
-  "loginPromptBanner": {
-    "pleaseLoginToUseFullFeatures": "Please login to your Telegram account to use full features",
-    "login": "Login"
-  },
   "search": {
+    "noRelatedMessages": "No related messages found",
     "search": "Search",
     "searchMessages": "Search messages...",
-    "searching": "Searching...",
-    "noRelatedMessages": "No related messages found"
+    "searching": "Searching..."
   },
-  "home": {
-    "home": "Home"
+  "searchDialog": {
+    "noRelatedMessages": "No related messages found",
+    "searchMessages": "Search messages...",
+    "searching": "Searching..."
+  },
+  "settings": {
+    "apiBaseUrl": "API Base URL",
+    "apiKey": "API Key",
+    "apiSettings": "API Settings",
+    "chinese": "中文",
+    "close": "Close",
+    "connected": "Connected",
+    "databaseSettings": "Database Settings",
+    "debugMode": "Debug Mode",
+    "dimension": "Dimension",
+    "disconnected": "Disconnected",
+    "edit": "Edit",
+    "embedding": "Embedding Model",
+    "english": "English",
+    "language": "Language",
+    "login": "Login",
+    "logout": "Logout",
+    "model": "Model",
+    "open": "Open",
+    "save": "Save",
+    "settings": "Settings",
+    "settingsSavedSuccessfully": "Settings saved successfully",
+    "switchToDarkMode": "Switch to dark mode",
+    "switchToLightMode": "Switch to light mode",
+    "telegramApi": "Telegram API",
+    "useCachedMessage": "Use cached messages from database"
   },
   "sync": {
-    "sync": "Sync",
-    "startSync": "Start Sync",
-    "noInProgressTask": "No task in progress",
-    "syncCompleted": "Sync completed",
-    "syncing": "Syncing...",
     "cancel": "Cancel",
-    "selectChats": "Select Chats",
     "incrementalSync": "Incremental Sync",
-    "selectedChats": "{count} chats selected"
+    "noInProgressTask": "No task in progress",
+    "selectChats": "Select Chats",
+    "selectedChats": "{count} chats selected",
+    "startSync": "Start Sync",
+    "sync": "Sync",
+    "syncCompleted": "Sync completed",
+    "syncPrompt": "After a synchronized conversation, you can search all chat records.",
+    "syncing": "Syncing..."
   },
-  "chatGroups": {
-    "user": "Users",
-    "group": "Groups",
-    "channel": "Channels"
-  },
-  "login": {
-    "telegramLogin": "Telegram Login",
-    "phone": "Phone",
-    "phoneDescription": "Please enter your phone number",
-    "code": "Code",
-    "codeDescription": "Please enter the verification code you received",
-    "password": "Two-factor Password",
-    "passwordDescription": "Please enter your two-factor authentication password",
-    "complete": "Complete",
-    "completeDescription": "Login successful!",
-    "loginSuccess": "Login successful!",
-    "phoneNumber": "Phone Number",
-    "phoneNumberPlaceholder": "Enter your phone number",
-    "processing": "Processing...",
-    "login": "Login",
-    "verificationCode": "Verification Code",
-    "verificationCodePlaceholder": "Enter verification code",
-    "verificationCodeDescription": "Please enter the verification code you received",
-    "verify": "Verify",
-    "twoFactorPassword": "Two-factor Password",
-    "twoFactorPasswordPlaceholder": "Enter your two-factor password",
-    "loginSuccessDescription": "You have successfully logged into your Telegram account",
-    "enterHome": "Go to Home"
-  },
-  "chat": {
-    "messageSent": "Message sent",
-    "forceLoadOlder": "Force load older messages",
-    "forceLoadNewer": "Force load newer messages",
-    "search": "Search",
-    "typeAMessage": "Type a message...",
-    "send": "Send",
-    "searchContent": "Search content"
+  "virtualMessageList": {
+    "scrolling": "Scrolling..."
   }
 }
