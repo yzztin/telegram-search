@@ -29,6 +29,13 @@
 
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
 
+## 🌐 すぐに使用
+
+我々はオンラインバージョンを提供しており、Telegram Searchのすべての機能を体験できます。以下のURLから開始してください:
+> 我々はあなたのプライバシーを尊重します。
+
+https://tgsearch.netlify.app
+
 ## 🚀 クイックスタート
 
 1. リポジトリをクローン:
@@ -59,6 +66,24 @@ docker compose up -d
 http://localhost:3333 にアクセスして検索インターフェースを開きます。
 
 ## 💻 開発ガイド
+
+### ウェブモード
+
+1. リポジトリをクローン
+
+2. 依存関係をインストール
+
+```bash
+pnpm install
+```
+
+3. 開発サーバーを起動:
+
+```bash
+pnpm run dev
+```
+
+### バックエンドモード
 
 1. リポジトリをクローン
 

@@ -28,8 +28,16 @@ A powerful Telegram chat history search tool that supports vector search and sem
 ## 💖 Sponsors
 
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
+## 🌐 Try it Now
+
+We provide an online version where you can experience all features of Telegram Search without self-deployment. Visit:
+> We promise not to collect any user privacy data, you can use it with confidence
+
+https://tgsearch.netlify.app
 
 ## 🚀 Quick Start
+
+### Docker
 
 1. Clone the repository:
 
@@ -59,6 +67,24 @@ docker compose up -d
 Access http://localhost:3333 to open the search interface.
 
 ## 💻 Development Guide
+
+### Browser Only
+
+1. Clone repository
+
+2. Install dependencies
+
+```bash
+pnpm install
+```
+
+3. Start development server:
+
+```bash
+pnpm run dev
+```
+
+### With Backend
 
 1. Clone repository
 

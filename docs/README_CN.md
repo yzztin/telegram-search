@@ -29,6 +29,14 @@
 
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
 
+## 🌐 立即使用
+
+我们提供了一个在线版本，无需自行部署，即可体验 Telegram Search 的全部功能。访问以下网址开始使用:
+
+> 我们承诺不会收集任何用户隐私数据，您可以放心使用
+
+https://tgsearch.netlify.app
+
 ## 🚀 快速开始
 
 1. 克隆仓库
@@ -59,6 +67,24 @@ docker compose up -d
 访问 `http://localhost:3333` 即可打开搜索界面。
 
 ## 💻 开发教程
+
+### 网页模式
+
+1. 克隆仓库
+
+2. 安装依赖
+
+```bash
+pnpm install
+```
+
+3. 启动开发服务器：
+
+```bash
+pnpm run dev
+```
+
+### 后端模式
 
 1. 克隆仓库
 
