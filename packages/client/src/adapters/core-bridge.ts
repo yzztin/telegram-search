@@ -6,7 +6,7 @@ import type { SessionContext } from '../stores/useAuth'
 
 import { initConfig, useConfig } from '@tg-search/common'
 import { createCoreInstance, initDrizzle } from '@tg-search/core'
-import { initLogger, useLogger } from '@unbird/logg'
+import { initLogger, LoggerLevel, useLogger } from '@unbird/logg'
 import { useLocalStorage } from '@vueuse/core'
 import defu from 'defu'
 import { defineStore } from 'pinia'
@@ -27,7 +27,8 @@ export const useCoreBridgeStore = defineStore('core-bridge', () => {
 
   function ensureCtx() {
     if (!ctx) {
-      initLogger()
+      const isDebug = import.meta.env.DEV
+      initLogger(isDebug ? LoggerLevel.Debug : LoggerLevel.Verbose)
 
       const config = useConfig()
       config.api.telegram.apiId ||= import.meta.env.VITE_TELEGRAM_APP_ID

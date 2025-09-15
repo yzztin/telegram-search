@@ -74,7 +74,7 @@ export const useAuthStore = defineStore('session', () => {
 
   function init() {
     // Auto login
-    useConfig().api.telegram.autoReconnect && attemptLogin()
+    // useConfig().api.telegram.autoReconnect && attemptLogin()
   }
 
   return {

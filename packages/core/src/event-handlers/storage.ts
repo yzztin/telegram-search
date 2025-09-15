@@ -74,9 +74,12 @@ export function registerStorageEventHandlers(ctx: CoreContext) {
 
     let dbMessages: DBRetrievalMessages[] = []
     if (params.useVector) {
-      const { embeddings } = (await embedContents([params.content])).expect('Failed to embed content')
+      let embedding: number[] = []
+      const embeddingResult = (await embedContents([params.content])).orUndefined()
+      if (embeddingResult)
+        embedding = embeddingResult.embeddings[0]
 
-      dbMessages = (await retrieveMessages(params.chatId, { embedding: embeddings[0], text: params.content }, params.pagination)).expect('Failed to retrieve messages')
+      dbMessages = (await retrieveMessages(params.chatId, { embedding, text: params.content }, params.pagination)).expect('Failed to retrieve messages')
     }
     else {
       dbMessages = (await retrieveMessages(params.chatId, { text: params.content }, params.pagination)).expect('Failed to retrieve messages')
