@@ -4,12 +4,12 @@ import pako from 'pako'
 
 export function createMediaBlob(media: CoreMessageMediaFromBlob) {
   if (media.byte) {    
-    if (media.byte.type === 'Buffer') {
-      media.byte = Uint8Array.from(media.byte.data);
+    if ('data' in media.byte) {
+        media.byte = Uint8Array.from(media.byte.data as Iterable<number>) as Buffer;
     }
     if (media.type === 'sticker' && media.mimeType === 'application/gzip') {
       try {
-        media.tgsAnimationData = pako.inflate(media.byte, { to: 'string' })
+        media.tgsAnimationData = pako.inflate(media.byte as Uint8Array, { to: 'string' })
       }
       catch {
         console.error('Failed to inflate TGS data')
