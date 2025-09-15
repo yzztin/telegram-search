@@ -15,5 +15,5 @@
   ],
   "rangeStrategy": "bump",
   "labels": ["dependencies"],
-  "ignoreDeps":["telegram"]
+  "ignoreDeps": ["telegram"]
 }
