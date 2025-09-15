@@ -111,7 +111,7 @@ function closeMobileDrawer() {
     <!-- Mobile backdrop -->
     <div
       v-if="sidebarClasses.backdrop"
-      class="fixed inset-0 z-30 bg-black bg-opacity-50 transition-opacity"
+      class="fixed inset-0 z-30 bg-black/40 backdrop-blur-[2px] transition-opacity"
       @click="closeMobileDrawer"
     />
 
@@ -130,7 +130,7 @@ function closeMobileDrawer() {
     <!-- Sidebar -->
     <div
       :class="sidebarClasses.container"
-      class="flex flex-col border-r border-r-secondary bg-background h-dvh dark:border-r-gray-700 dark:bg-gray-800"
+      class="flex flex-col border-r border-r-secondary bg-background/95 backdrop-blur-sm h-dvh dark:border-r-gray-700 dark:bg-gray-800/90"
     >
       <!-- Search section -->
       <div
@@ -144,7 +144,7 @@ function closeMobileDrawer() {
           <input
             v-model="searchParams"
             type="text"
-            class="w-full border border-neutral-200 rounded-md bg-neutral-100 px-3 py-2 pl-9 ring-offset-background transition-all dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary dark:ring-offset-gray-800 dark:placeholder:text-gray-400"
+            class="w-full border border-neutral-200 rounded-full bg-neutral-100/80 px-3 py-2 pl-9 ring-offset-background transition-all dark:border-gray-600 dark:bg-gray-700/80 hover:bg-neutral-100 dark:text-gray-100 placeholder:text-gray-500 focus:(outline-none ring-2 ring-primary/50) dark:ring-offset-gray-800 dark:placeholder:text-gray-400"
             :placeholder="t('search.search')"
           >
         </div>
@@ -174,7 +174,7 @@ function closeMobileDrawer() {
       <!-- Chat groups -->
       <div
         v-if="!isMobile || mobileDrawerOpen"
-        class="h-full flex flex-1 flex-col justify-start overflow-y-auto border-t border-t-secondary pt-4 dark:border-t-gray-700"
+        class="h-full flex flex-1 flex-col justify-start overflow-y-auto border-t border-t-secondary pt-2 dark:border-t-gray-700"
       >
         <ChatsCollapse
           class="max-h-[85%] flex flex-col"
@@ -229,14 +229,14 @@ function closeMobileDrawer() {
         <div class="flex items-center gap-2">
           <Button
             :icon="isDark ? 'i-lucide-sun' : 'i-lucide-moon'"
-            class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-gray-900 transition-colors hover:bg-neutral-100 dark:text-gray-100 dark:hover:bg-gray-700"
+            class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-gray-900 transition-colors hover:bg-neutral-100/80 dark:text-gray-100 dark:hover:bg-gray-700/70"
             :title="isDark ? t('settings.switchToLightMode') : t('settings.switchToDarkMode')"
             @click="() => { isDark = !isDark }"
           />
 
           <Button
             icon="i-lucide-settings"
-            class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-gray-900 transition-colors hover:bg-neutral-100 dark:text-gray-100 dark:hover:bg-gray-700"
+            class="h-8 w-8 flex items-center justify-center rounded-md p-1 text-gray-900 transition-colors hover:bg-neutral-100/80 dark:text-gray-100 dark:hover:bg-gray-700/70"
             :title="t('settings.settings')"
             @click="toggleSettingsDialog"
           />
