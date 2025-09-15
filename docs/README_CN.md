@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="../README.md">English</a>] [<a href="./README_JA.md">日本語</a>]
+  [<a href="https://tgsearch.netlify.app">立即体验</a>] [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="../README.md">English</a>] [<a href="./README_JA.md">日本語</a>]
 </p>
 
 <p align="center">
