@@ -2,8 +2,8 @@ import type { ClientRegisterEventHandler } from '.'
 
 import { toast } from 'vue-sonner'
 
+import { useBridgeStore } from '../composables/useBridge'
 import { useAuthStore } from '../stores/useAuth'
-import { useWebsocketStore } from '../stores/useWebsocket'
 
 export function registerBasicEventHandlers(
   registerEventHandler: ClientRegisterEventHandler,
@@ -17,7 +17,7 @@ export function registerBasicEventHandlers(
   })
 
   registerEventHandler('auth:connected', () => {
-    useWebsocketStore().getActiveSession()!.isConnected = true
+    useBridgeStore().getActiveSession()!.isConnected = true
   })
 
   registerEventHandler('auth:error', ({ error }) => {

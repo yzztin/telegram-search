@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CoreDialog } from '@tg-search/core/types'
 
-import { useChatStore, useMessageStore, useSettingsStore, useWebsocketStore } from '@tg-search/client'
+import { useBridgeStore, useChatStore, useMessageStore, useSettingsStore } from '@tg-search/client'
 import { useWindowSize } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, onMounted, ref } from 'vue'
@@ -20,7 +20,7 @@ const id = route.params.id
 
 const chatStore = useChatStore()
 const messageStore = useMessageStore()
-const websocketStore = useWebsocketStore()
+const websocketStore = useBridgeStore()
 const { debugMode } = storeToRefs(useSettingsStore())
 
 const { sortedMessageIds, messageWindow, sortedMessageArray } = storeToRefs(messageStore)

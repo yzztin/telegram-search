@@ -1,6 +1,6 @@
 import type { InferOutput } from 'valibot'
 
-import { boolean, enum as enumType, number, object, optional, string } from 'valibot'
+import { boolean, enum as enumType, number, object, optional, safeParse, string } from 'valibot'
 
 export enum SocksType {
   SOCKS4 = 4,
@@ -35,7 +35,7 @@ export const proxyConfigSchema = object({
 })
 
 export const databaseConfigSchema = object({
-  type: optional(enumType(DatabaseType), DatabaseType.POSTGRES),
+  type: optional(enumType(DatabaseType), DatabaseType.PGLITE),
   host: optional(string()),
   port: optional(number()),
   user: optional(string()),
@@ -45,10 +45,11 @@ export const databaseConfigSchema = object({
 })
 
 export const telegramConfigSchema = object({
-  apiId: optional(string(), ''),
-  apiHash: optional(string(), ''),
+  apiId: optional(string()),
+  apiHash: optional(string()),
   proxy: optional(proxyConfigSchema),
-  receiveMessage: optional(boolean(), true),
+  receiveMessage: optional(boolean(), false),
+  autoReconnect: optional(boolean(), true),
 })
 
 export const embeddingConfigSchema = object({
@@ -71,3 +72,13 @@ export const configSchema = object({
 
 export type Config = InferOutput<typeof configSchema>
 export type ProxyConfig = InferOutput<typeof proxyConfigSchema>
+
+export function generateDefaultConfig(): Config {
+  const defaultConfig = safeParse(configSchema, {})
+
+  if (!defaultConfig.success) {
+    throw new Error('Failed to generate default config', { cause: defaultConfig.issues })
+  }
+
+  return defaultConfig.output
+}

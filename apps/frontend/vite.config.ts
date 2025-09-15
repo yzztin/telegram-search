@@ -1,5 +1,7 @@
+import { resolve } from 'node:path'
 import { env } from 'node:process'
 
+import DrizzleORMMigrations from '@proj-airi/unplugin-drizzle-orm-migrations/vite'
 import Vue from '@vitejs/plugin-vue'
 import UnoCSS from 'unocss/vite'
 import Unused from 'unplugin-unused/vite'
@@ -14,7 +16,12 @@ export default defineConfig({
   plugins: [
     Inspect(),
 
-    Unused(),
+    Unused({
+      ignore: [
+        '@iconify-json/lucide',
+        '@node-rs/jieba-wasm32-wasi',
+      ],
+    }),
 
     Devtools(),
 
@@ -43,7 +50,35 @@ export default defineConfig({
     // https://github.com/antfu/unocss
     // see uno.config.ts for config
     UnoCSS(),
+
+    DrizzleORMMigrations({
+      root: '../..',
+    }),
   ],
+
+  resolve: {
+    alias: {
+      '@tg-search/common': resolve(import.meta.dirname, '../../packages/common/src'),
+      '@tg-search/core': resolve(import.meta.dirname, '../../packages/core/src'),
+      '@tg-search/client': resolve(import.meta.dirname, '../../packages/client/src'),
+
+      // telegram browser version, more detail -> https://t.me/gramjs/13
+      'telegram': resolve(import.meta.dirname, './node_modules/telegram'),
+    },
+  },
+
+  optimizeDeps: {
+    exclude: ['@electric-sql/pglite'],
+  },
+
+  build: {
+    rollupOptions: {
+      // https://github.com/rollup/rollup/issues/6012#issuecomment-3065953828
+      external: ['postgres'],
+    },
+  },
+
+  envDir: '../..',
 
   // Proxy API requests to local development server
   server: {

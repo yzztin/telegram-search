@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { ChatGroup } from '@tg-search/client'
 
-import { useAuthStore, useChatStore, useSettingsStore, useWebsocketStore } from '@tg-search/client'
+import { useAuthStore, useBridgeStore, useChatStore, useSettingsStore } from '@tg-search/client'
 import { breakpointsTailwind, useBreakpoints, useDark } from '@vueuse/core'
 import { storeToRefs } from 'pinia'
 import { computed, ref, watch } from 'vue'
@@ -18,7 +18,7 @@ const settingsStore = useSettingsStore()
 const { theme } = storeToRefs(settingsStore)
 const isDark = useDark()
 
-const websocketStore = useWebsocketStore()
+const websocketStore = useBridgeStore()
 const authStore = useAuthStore()
 const { isLoggedIn } = storeToRefs(authStore)
 
@@ -125,26 +125,6 @@ function closeMobileDrawer() {
         class="h-10 w-10 flex touch-manipulation items-center justify-center border border-neutral-300 rounded-lg bg-white/90 text-gray-600 shadow-md backdrop-blur-sm transition-all dark:border-gray-600 dark:bg-gray-800/90 hover:bg-white dark:text-gray-400 hover:text-gray-700 hover:shadow-lg dark:hover:bg-gray-700 dark:hover:text-gray-200"
         @click="toggleSidebar"
       />
-    </div>
-
-    <!-- Login prompt banner -->
-    <div
-      v-if="!isLoggedIn"
-      class="fixed left-0 right-0 top-0 z-50 bg-yellow-500 px-4 py-2 text-center text-sm text-yellow-900 font-medium transition-all duration-300 ease-in-out"
-      :class="{ 'left-80': !isMobile }"
-    >
-      <div class="flex items-center justify-center gap-2">
-        <div class="i-lucide-alert-triangle" />
-        <span>{{ t('loginPromptBanner.pleaseLoginToUseFullFeatures') }}</span>
-        <Button
-          size="sm"
-          icon="i-lucide-user"
-          class="ml-2 border border-yellow-700 bg-yellow-600 text-yellow-100 hover:bg-yellow-700"
-          @click="router.push('/login')"
-        >
-          {{ t('loginPromptBanner.login') }}
-        </Button>
-      </div>
     </div>
 
     <!-- Sidebar -->
@@ -275,6 +255,25 @@ function closeMobileDrawer() {
       class="flex flex-1 flex-col overflow-auto bg-background transition-all duration-300 ease-in-out dark:bg-gray-900"
       :class="{ 'ml-0': isMobile }"
     >
+      <!-- Login prompt banner -->
+      <div
+        v-if="!isLoggedIn"
+        class="bg-yellow-500 px-4 py-2 text-center text-sm text-yellow-900 font-medium transition-all duration-300 ease-in-out"
+        :class="{ 'left-80': !isMobile }"
+      >
+        <div class="flex items-center justify-center gap-2">
+          <div class="i-lucide-alert-triangle" />
+          <span>{{ t('loginPromptBanner.pleaseLoginToUseFullFeatures') }}</span>
+          <Button
+            size="sm"
+            icon="i-lucide-user"
+            class="ml-2 border border-yellow-700 bg-yellow-600 text-yellow-100 hover:bg-yellow-700"
+            @click="router.push('/login')"
+          >
+            {{ t('loginPromptBanner.login') }}
+          </Button>
+        </div>
+      </div>
       <RouterView :key="$route.fullPath" />
     </div>
 

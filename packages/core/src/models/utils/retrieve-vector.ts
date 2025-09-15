@@ -1,9 +1,8 @@
-import type { CorePagination } from '@tg-search/common/utils/pagination'
+import type { CorePagination } from '@tg-search/common'
 
 import type { DBRetrievalMessages } from './message'
 
-import { EmbeddingDimension } from '@tg-search/common'
-import { useConfig } from '@tg-search/common/node'
+import { EmbeddingDimension, useConfig } from '@tg-search/common'
 import { and, desc, eq, gt, sql } from 'drizzle-orm'
 
 import { withDb } from '../../db'

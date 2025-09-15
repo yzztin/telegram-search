@@ -14,6 +14,7 @@ import 'vue-sonner/style.css'
 import '@tg-search/stage-ui/styles/main.css'
 
 const app = createApp(App)
+
 const pinia = createPinia()
 const routes = setupLayouts(generatedRoutes)
 const router = createRouter({

@@ -41,6 +41,10 @@ export async function recordPhotos(media: CoreMessageMediaPhoto[]) {
       } satisfies DBInsertPhoto),
     )
 
+  if (dataToInsert.length === 0) {
+    return
+  }
+
   return withDb(async db => db
     .insert(photosTable)
     .values(dataToInsert)

@@ -1,10 +1,11 @@
 import type { CoreUserEntity } from '@tg-search/core'
 
+import { useConfig } from '@tg-search/common'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
+import { useBridgeStore } from '../composables/useBridge'
 import { useChatStore } from './useChat'
-import { useWebsocketStore } from './useWebsocket'
 
 export interface SessionContext {
   phoneNumber?: string
@@ -13,7 +14,7 @@ export interface SessionContext {
 }
 
 export const useAuthStore = defineStore('session', () => {
-  const websocketStore = useWebsocketStore()
+  const websocketStore = useBridgeStore()
 
   const authStatus = ref({
     needCode: false,
@@ -71,7 +72,13 @@ export const useAuthStore = defineStore('session', () => {
     return { login, submitCode, submitPassword, logout }
   }
 
+  function init() {
+    // Auto login
+    useConfig().api.telegram.autoReconnect && attemptLogin()
+  }
+
   return {
+    init,
     activeSessionComputed,
     auth: authStatus,
     handleAuth,

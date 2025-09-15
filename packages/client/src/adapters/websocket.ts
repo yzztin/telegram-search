@@ -1,7 +1,7 @@
 import type { WsEventToClient, WsEventToClientData, WsEventToServer, WsEventToServerData, WsMessageToClient, WsMessageToServer } from '@tg-search/server/types'
 
 import type { ClientEventHandlerMap, ClientEventHandlerQueueMap } from '../event-handlers'
-import type { SessionContext } from './useAuth'
+import type { SessionContext } from '../stores/useAuth'
 
 import { useLocalStorage, useWebSocket } from '@vueuse/core'
 import { defu } from 'defu'
@@ -64,7 +64,10 @@ export const useWebsocketStore = defineStore('websocket', () => {
   const eventHandlers: ClientEventHandlerMap = new Map()
   const eventHandlersQueue: ClientEventHandlerQueueMap = new Map()
   const registerEventHandler = getRegisterEventHandler(eventHandlers, sendEvent)
-  registerAllEventHandlers(registerEventHandler)
+
+  function init() {
+    registerAllEventHandlers(registerEventHandler)
+  }
 
   function waitForEvent<T extends keyof WsEventToClient>(event: T) {
     // eslint-disable-next-line no-console
@@ -127,13 +130,14 @@ export const useWebsocketStore = defineStore('websocket', () => {
   })
 
   return {
+    init,
+
     sessions: storageSessions,
     activeSessionId: storageActiveSessionId,
     getActiveSession,
     updateActiveSession,
     cleanup,
 
-    // WebSocket
     sendEvent,
     waitForEvent,
   }

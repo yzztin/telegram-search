@@ -1,13 +1,13 @@
-import type { CorePagination } from '@tg-search/common/utils/pagination'
+import type { CorePagination } from '@tg-search/common'
 import type { CoreMessage } from '@tg-search/core'
 
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
+import { useBridgeStore } from '../composables/useBridge'
 import { MessageWindow } from '../composables/useMessageWindow'
 import { createMediaBlob } from '../utils/blob'
 import { determineMessageDirection } from '../utils/message'
-import { useWebsocketStore } from './useWebsocket'
 
 function createContextWithTimeout(timeout: number) {
   return new Promise((_, reject) =>
@@ -19,7 +19,7 @@ export const useMessageStore = defineStore('message', () => {
   const currentChatId = ref<string>()
   const messageWindow = ref<MessageWindow>()
 
-  const websocketStore = useWebsocketStore()
+  const websocketStore = useBridgeStore()
 
   async function pushMessages(messages: CoreMessage[]) {
     const filteredMessages = messages.filter(msg => msg.chatId === currentChatId.value)
@@ -29,7 +29,16 @@ export const useMessageStore = defineStore('message', () => {
     // eslint-disable-next-line no-console
     console.log(`[MessageStore] Push ${filteredMessages.length} messages (${direction})`, filteredMessages)
 
-    messageWindow.value!.addBatch(
+    if (messages.length === 0) {
+      return
+    }
+
+    if (!messageWindow.value) {
+      console.warn('[MessageStore] Message window not initialized')
+      return
+    }
+
+    messageWindow.value.addBatch(
       filteredMessages.map(message => ({
         ...message,
         media: message.media?.map(createMediaBlob),

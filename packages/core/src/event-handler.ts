@@ -4,6 +4,7 @@ import type { CoreContext } from './context'
 import type { SessionService } from './services/session'
 
 import { useLogger } from '@unbird/logg'
+import { isBrowser } from '@unbird/logg/utils'
 
 import { useService } from './context'
 import { registerBasicEventHandlers } from './event-handlers/auth'
@@ -33,10 +34,6 @@ import { createTakeoutService } from './services/takeout'
 
 type EventHandler<T = void> = (ctx: CoreContext, config: Config) => T
 
-function isBrowser() {
-  return typeof window !== 'undefined'
-}
-
 export function basicEventHandler(
   ctx: CoreContext,
   config: Config,
@@ -44,8 +41,8 @@ export function basicEventHandler(
   const registry = useMessageResolverRegistry()
 
   const connectionService = useService(ctx, createConnectionService)({
-    apiId: Number(config.api.telegram.apiId),
-    apiHash: config.api.telegram.apiHash,
+    apiId: Number(config.api.telegram.apiId!),
+    apiHash: config.api.telegram.apiHash!,
     proxy: config.api.telegram.proxy,
   })
   const configService = useService(ctx, createConfigService)
