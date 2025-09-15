@@ -16,6 +16,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Rebase main
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+          git switch release
+          git rebase origin/main
+          git push origin release
+
       - name: Set node
         uses: actions/setup-node@v4
         with:
