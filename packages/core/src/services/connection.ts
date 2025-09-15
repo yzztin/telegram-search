@@ -77,6 +77,13 @@ export function createConnectionService(ctx: CoreContext) {
         logger.withFields({ proxy }).verbose('Using proxy')
       }
 
+      let useWSS = true
+
+      // Use node and proxy
+      if (!isBrowser() && proxy) {
+        useWSS = false
+      }
+
       const client = new TelegramClient(
         session,
         options.apiId,
@@ -84,7 +91,7 @@ export function createConnectionService(ctx: CoreContext) {
         {
           connectionRetries: 3,
           retryDelay: 10000,
-          useWSS: !!(!isBrowser() && proxy !== undefined),
+          useWSS,
           proxy: isBrowser() ? undefined : proxy,
         },
       )
