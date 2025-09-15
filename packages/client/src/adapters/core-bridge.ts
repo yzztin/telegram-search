@@ -27,7 +27,8 @@ export const useCoreBridgeStore = defineStore('core-bridge', () => {
 
   function ensureCtx() {
     if (!ctx) {
-      const isDebug = import.meta.env.DEV
+      // TODO: use flags
+      const isDebug = !!import.meta.env.VITE_DEBUG
       initLogger(isDebug ? LoggerLevel.Debug : LoggerLevel.Verbose)
 
       const config = useConfig()
