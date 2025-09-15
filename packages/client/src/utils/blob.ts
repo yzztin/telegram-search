@@ -3,7 +3,10 @@ import type { CoreMessageMediaFromBlob } from '@tg-search/core'
 import pako from 'pako'
 
 export function createMediaBlob(media: CoreMessageMediaFromBlob) {
-  if (media.byte) {
+  if (media.byte) {    
+    if (media.byte.type === 'Buffer') {
+      media.byte = Uint8Array.from(media.byte.data);
+    }
     if (media.type === 'sticker' && media.mimeType === 'application/gzip') {
       try {
         media.tgsAnimationData = pako.inflate(media.byte, { to: 'string' })

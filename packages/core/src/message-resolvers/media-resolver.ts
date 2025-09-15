@@ -37,7 +37,7 @@ export function createMediaResolver(ctx: CoreContext): MessageResolver {
               if (sticker && sticker.sticker_bytes) {
                 return {
                   messageUUID: message.uuid,
-                  byte: sticker.sticker_bytes,
+                  byte: Buffer.from(sticker.sticker_bytes),
                   type: media.type,
                   platformId: media.platformId,
                   mimeType: (await fileTypeFromBuffer(sticker.sticker_bytes))?.mime,
@@ -48,11 +48,10 @@ export function createMediaResolver(ctx: CoreContext): MessageResolver {
             // FIXME: move it to storage
             if (media.type === 'photo') {
               const photo = (await findPhotoByFileId(media.platformId)).unwrap()
-
               if (photo && photo.image_bytes) {
                 return {
                   messageUUID: message.uuid,
-                  byte: photo.image_bytes,
+                  byte: Buffer.from(photo.image_bytes),
                   type: media.type,
                   platformId: media.platformId,
                   mimeType: (await fileTypeFromBuffer(photo.image_bytes))?.mime,
