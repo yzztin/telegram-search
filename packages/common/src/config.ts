@@ -104,6 +104,9 @@ export async function updateConfig(newConfig: Partial<Config>) {
 }
 
 export function useConfig(): Config {
-  initConfig()
+  if (!config) {
+    throw new Error('Config not initialized')
+  }
+
   return config
 }

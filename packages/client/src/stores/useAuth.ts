@@ -1,6 +1,6 @@
 import type { CoreUserEntity } from '@tg-search/core'
 
-import { initConfig, useConfig } from '@tg-search/common'
+import { useConfig } from '@tg-search/common'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
@@ -72,9 +72,8 @@ export const useAuthStore = defineStore('session', () => {
     return { login, submitCode, submitPassword, logout }
   }
 
-  async function init() {
+  function init() {
     // Auto login
-    await initConfig();
     useConfig().api.telegram.autoReconnect && attemptLogin()
   }
 
