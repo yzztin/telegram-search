@@ -3,38 +3,28 @@ import type { CoreMessageMediaFromBlob } from '@tg-search/core'
 import pako from 'pako'
 
 export function createMediaBlob(media: CoreMessageMediaFromBlob) {
-  if (media.byte) {    
-    if ('data' in media.byte) {
-        media.byte = Uint8Array.from(media.byte.data as Iterable<number>) as Buffer;
-    }
+  // when media.type is 'webpage'
+  // media.byte (preview image) might be an empty buffer
+  if (media.byte && (media.byte as any).data?.length) {
+    const buffer = new Uint8Array((media.byte as any).data)
+
     if (media.type === 'sticker' && media.mimeType === 'application/gzip') {
-      try {
-        media.tgsAnimationData = pako.inflate(media.byte as Uint8Array, { to: 'string' })
-      }
-      catch {
-        console.error('Failed to inflate TGS data')
-      }
+      media.tgsAnimationData = pako.inflate(buffer, { to: 'string' })
     }
     else {
-      try {
-        const blob = new Blob([media.byte as ArrayBufferView<ArrayBuffer>], { type: media.mimeType })
-        media.blobUrl = URL.createObjectURL(blob)
+      const blob = new Blob([buffer], { type: media.mimeType })
+      const url = URL.createObjectURL(blob)
+      media.blobUrl = url
 
-        // eslint-disable-next-line no-console
-        console.log('[Blob] Blob URL created:', {
-          url: media.blobUrl,
-          blobSize: blob.size,
-        })
-      }
-      catch {
-        console.error('Failed to create blob URL')
-      }
+      // eslint-disable-next-line no-console
+      console.log('[Blob] Blob URL created:', {
+        url,
+        blobSize: blob.size,
+      })
     }
-
-    // Since we don't need the byte anymore, we can free up the memory
-    media.byte = undefined
   }
 
+  media.byte = undefined
   return media
 }
 
