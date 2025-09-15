@@ -9,9 +9,9 @@ import { Toaster } from 'vue-sonner'
 
 const settings = storeToRefs(useSettingsStore())
 
-onMounted(() => {
+onMounted(async () => {
   useBridgeStore().init()
-  useAuthStore().init()
+  await useAuthStore().init()
 })
 
 // const isDark = useDark()
