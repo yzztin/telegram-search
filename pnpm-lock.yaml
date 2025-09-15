@@ -123,11 +123,8 @@ importers:
         specifier: ^3.0.3
         version: 3.0.3(typescript@5.9.2)(vue@3.5.19(typescript@5.9.2))
       telegram:
-        specifier: ^2.26.21
+        specifier: 2.26.21
         version: 2.26.21
-      uuid:
-        specifier: ^11.1.0
-        version: 11.1.0
       vue:
         specifier: ^3.5.19
         version: 3.5.19(typescript@5.9.2)
