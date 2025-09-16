@@ -25,6 +25,16 @@ export const useCoreBridgeStore = defineStore('core-bridge', () => {
   const eventHandlersQueue: ClientEventHandlerQueueMap = new Map()
   const registerEventHandler = getRegisterEventHandler(eventHandlers, sendEvent)
 
+  function deepClone<T>(data: T): T {
+    try {
+      return JSON.parse(JSON.stringify(data)) as T
+    }
+    catch (error) {
+      logger.withError(error).error('Failed to deep clone data')
+      return data
+    }
+  }
+
   function ensureCtx() {
     if (!ctx) {
       // TODO: use flags
@@ -81,7 +91,7 @@ export const useCoreBridgeStore = defineStore('core-bridge', () => {
       }
       else {
         logger.withFields({ event, data }).debug('Emit event to core')
-        ctx.emitter.emit(event, data as CoreEventData<keyof ToCoreEvent>)
+        ctx.emitter.emit(event, deepClone(data) as CoreEventData<keyof ToCoreEvent>)
       }
     }
     catch (error) {
@@ -103,7 +113,7 @@ export const useCoreBridgeStore = defineStore('core-bridge', () => {
       const handlers = eventHandlersQueue.get(event) ?? []
 
       handlers.push((data) => {
-        resolve(data)
+        resolve(deepClone(data) as WsEventToClientData<T>)
       })
 
       eventHandlersQueue.set(event, handlers)
@@ -119,7 +129,7 @@ export const useCoreBridgeStore = defineStore('core-bridge', () => {
     if (eventHandlers.has(event.type)) {
       const fn = eventHandlers.get(event.type)
       try {
-        fn?.(event.data)
+        fn?.(deepClone(event.data) as WsEventToClientData<keyof WsEventToClient>)
       }
       catch (error) {
         logger.withError(error).error('Failed to handle event')
@@ -131,7 +141,7 @@ export const useCoreBridgeStore = defineStore('core-bridge', () => {
 
       try {
         fnQueue.forEach((inQueueFn) => {
-          inQueueFn(event.data)
+          inQueueFn(deepClone(event.data) as WsEventToClientData<keyof WsEventToClient>)
           fnQueue.pop()
         })
       }
