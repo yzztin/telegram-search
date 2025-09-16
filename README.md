@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-   [<a href="https://tgsearch.netlify.app">Try it Now</a>] [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="./docs/README_CN.md">简体中文</a>] [<a href="./docs/README_JA.md">日本語</a>]
+   [<a href="https://search.lingogram.app">Try it Now</a>] [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="./docs/README_CN.md">简体中文</a>] [<a href="./docs/README_JA.md">日本語</a>]
 </p>
 
 <p align="center">
@@ -18,8 +18,6 @@
   <a href="https://t.me/+Gs3SH2qAPeFhYmU9"><img src="https://img.shields.io/badge/Telegram-%235AA9E6?logo=telegram&labelColor=FFFFFF"></a>
 </p>
 
-> The only official website is `intentchat.app`, all other websites are scams.
->
 > We have not issued any virtual currency, please do not be deceived.
 >
 > This software can only export your own chat records for search, please do not use it for illegal purposes.
@@ -31,10 +29,10 @@ A powerful Telegram chat history search tool that supports vector search and sem
 ![Sponsors](https://github.com/luoling8192/luoling8192/raw/master/sponsorkit/sponsors.svg)
 ## 🌐 Try it Now
 
-We provide an online version where you can experience all features of Telegram Search without self-deployment. Visit:
+We provide an online version where you can experience all features of Telegram Search without self-deployment.
 > We promise not to collect any user privacy data, you can use it with confidence
 
-https://tgsearch.netlify.app
+Visit: https://search.lingogram.app
 
 ## 🚀 Quick Start
 

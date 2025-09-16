@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  [<a href="https://tgsearch.netlify.app">立即体验</a>] [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="../README.md">English</a>] [<a href="./README_JA.md">日本語</a>]
+  [<a href="https://search.lingogram.app">立即体验</a>] [<a href="https://discord.gg/NzYsmJSgCT">Join Discord Server</a>] [<a href="../README.md">English</a>] [<a href="./README_JA.md">日本語</a>]
 </p>
 
 <p align="center">
@@ -32,11 +32,11 @@
 
 ## 🌐 立即使用
 
-我们提供了一个在线版本，无需自行部署，即可体验 Telegram Search 的全部功能。访问以下网址开始使用:
+我们提供了一个在线版本，无需自行部署，即可体验 Telegram Search 的全部功能。
 
 > 我们承诺不会收集任何用户隐私数据，您可以放心使用
 
-https://tgsearch.netlify.app
+访问以下网址开始使用: https://search.lingogram.app
 
 ## 🚀 快速开始
 
