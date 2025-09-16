@@ -7,7 +7,7 @@ export function createMediaBlob(media: CoreMessageMediaFromBlob) {
   // media.byte (preview image) might be an empty buffer
   if (media.byte) {
     let buffer
-    if ((media.byte as any).data?.lengt) {
+    if ((media.byte as any).data?.length) {
       buffer = new Uint8Array((media.byte as any).data)
     }
     else {
