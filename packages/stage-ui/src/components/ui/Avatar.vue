@@ -50,7 +50,7 @@ const backgroundColor = computed(() => {
     'bg-yellow-500',
     'bg-orange-500',
   ]
-  const index = props.name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
+  const index = props.name.trim().split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)
   return colors[index % colors.length]
 })
 </script>

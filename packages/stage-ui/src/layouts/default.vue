@@ -215,12 +215,12 @@ function closeMobileDrawer() {
         <div class="mr-3 flex items-center gap-3">
           <div class="h-8 w-8 flex items-center justify-center overflow-hidden rounded-full bg-neutral-100 ring-2 ring-offset-1 ring-primary/10 dark:bg-gray-700">
             <Avatar
-              :name="websocketStore.getActiveSession()?.me?.username"
+              :name="websocketStore.getActiveSession()?.me?.name"
               size="sm"
             />
           </div>
           <div class="flex flex-col">
-            <span class="whitespace-nowrap text-sm text-gray-900 font-medium dark:text-gray-100">{{ websocketStore.getActiveSession()?.me?.username }}</span>
+            <span class="whitespace-nowrap text-sm text-gray-900 font-medium dark:text-gray-100">{{ websocketStore.getActiveSession()?.me?.name }}</span>
             <span class="whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">{{ websocketStore.getActiveSession()?.isConnected ? t('settings.connected') : t('settings.disconnected') }}</span>
           </div>
         </div>
