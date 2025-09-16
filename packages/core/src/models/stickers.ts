@@ -49,6 +49,10 @@ export async function recordStickers(stickers: CoreMessageMediaSticker[]) {
     // TODO: Emoji
     }))
 
+  if (dataToInsert.length === 0) {
+    return
+  }
+
   return withDb(async db => db
     .insert(stickersTable)
     .values(dataToInsert)
