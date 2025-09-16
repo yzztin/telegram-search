@@ -45,6 +45,10 @@ export async function initPgliteDrizzleInBrowser(logger: Logger, options?: { deb
 
       defineInvokeHandler(context, queryInvoke, async ({ statement, parameters }) => {
         const res = await pglite.query(statement, parameters)
+
+        // eslint-disable-next-line no-console
+        console.debug(statement, parameters, res)
+
         return { result: res }
       })
     }

@@ -40,11 +40,11 @@ export async function recordMessages(messages: CoreMessage[]) {
         content_vector_768: sql`COALESCE(excluded.content_vector_768, ${chatMessagesTable.content_vector_768})`,
 
         // Jieba tokens: update only if new array is not empty
-        jieba_tokens: sql`CASE 
-          WHEN excluded.jieba_tokens IS NOT NULL 
-               AND jsonb_array_length(excluded.jieba_tokens) > 0 
-          THEN excluded.jieba_tokens 
-          ELSE ${chatMessagesTable.jieba_tokens} 
+        jieba_tokens: sql`CASE
+          WHEN excluded.jieba_tokens IS NOT NULL
+               AND jsonb_array_length(excluded.jieba_tokens) > 0
+          THEN excluded.jieba_tokens
+          ELSE ${chatMessagesTable.jieba_tokens}
         END`,
 
         // Platform timestamp: always update
@@ -97,6 +97,7 @@ export async function recordMessagesWithMedia(messages: CoreMessage[]): Promise<
   if (allPhotoMedia.length > 0) {
     (await recordPhotos(allPhotoMedia))?.expect('Failed to record photos')
   }
+
   if (allStickerMedia.length > 0) {
     (await recordStickers(allStickerMedia))?.expect('Failed to record stickers')
   }
