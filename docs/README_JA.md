@@ -18,8 +18,6 @@
   <a href="https://t.me/+Gs3SH2qAPeFhYmU9"><img src="https://img.shields.io/badge/Telegram-%235AA9E6?logo=telegram&labelColor=FFFFFF"></a>
 </p>
 
-> 公式ウェブサイトは `intentchat.app` のみです。他のウェブサイトはすべて詐欺です。
->
 > 仮想通貨は一切発行していません。詐欺にご注意ください。
 >
 > このソフトウェアは自分のチャット履歴をエクスポートして検索するためのものです。違法な目的で使用しないでください。

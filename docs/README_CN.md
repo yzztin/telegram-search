@@ -18,8 +18,6 @@
   <a href="https://t.me/+Gs3SH2qAPeFhYmU9"><img src="https://img.shields.io/badge/Telegram-%235AA9E6?logo=telegram&labelColor=FFFFFF"></a>
 </p>
 
-> 唯一官方网站为 `intentchat.app`，其他网站均为诈骗。
->
 > 我们未发行任何虚拟货币，请勿上当受骗。
 >
 > 本软件仅可导出您自己的聊天记录以便搜索，请勿用于非法用途。
