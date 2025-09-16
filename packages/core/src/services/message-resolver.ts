@@ -2,7 +2,6 @@ import type { Api } from 'telegram'
 
 import type { CoreContext } from '../context'
 import type { MessageResolverRegistryFn } from '../message-resolvers'
-import type { CoreMessage } from '../utils/message'
 
 import { useLogger } from '@unbird/logg'
 
@@ -19,7 +18,7 @@ export type MessageResolverEvent = MessageResolverEventFromCore & MessageResolve
 export type MessageResolverService = ReturnType<ReturnType<typeof createMessageResolverService>>
 
 export function createMessageResolverService(ctx: CoreContext) {
-  const logger = useLogger('core:message:service')
+  const logger = useLogger('core:message-resolver:service')
 
   return (resolvers: MessageResolverRegistryFn) => {
     const { emitter } = ctx
@@ -43,30 +42,31 @@ export function createMessageResolverService(ctx: CoreContext) {
       emitter.emit('storage:record:messages', { messages: coreMessages })
 
       // Embedding or resolve messages
-      for (const [name, resolver] of resolvers.registry.entries()) {
-        logger.withFields({ name }).verbose('Process messages with resolver')
+      const promises = Array.from(resolvers.registry.entries())
+        .map(([name, resolver]) => (async () => {
+          logger.withFields({ name }).verbose('Process messages with resolver')
 
-        try {
-          let result: CoreMessage[] = []
+          try {
+            if (resolver.run) {
+              const result = (await resolver.run({ messages: coreMessages })).unwrap()
 
-          if (resolver.run) {
-            result = (await resolver.run({ messages: coreMessages })).unwrap()
-          }
-          else if (resolver.stream) {
-            for await (const message of resolver.stream({ messages: coreMessages })) {
-              result.push(message)
-              emitter.emit('message:data', { messages: [message] })
+              if (result.length > 0) {
+                emitter.emit('storage:record:messages', { messages: result })
+              }
+            }
+            else if (resolver.stream) {
+              for await (const message of resolver.stream({ messages: coreMessages })) {
+                emitter.emit('message:data', { messages: [message] })
+                emitter.emit('storage:record:messages', { messages: [message] })
+              }
             }
           }
-
-          if (result.length > 0) {
-            emitter.emit('storage:record:messages', { messages: result })
+          catch (error) {
+            logger.withError(error).warn('Failed to process messages')
           }
-        }
-        catch (error) {
-          logger.withFields({ error }).warn('Failed to process messages')
-        }
-      }
+        })())
+
+      await Promise.allSettled(promises)
     }
 
     return {
