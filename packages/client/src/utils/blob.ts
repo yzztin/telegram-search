@@ -5,8 +5,14 @@ import pako from 'pako'
 export function createMediaBlob(media: CoreMessageMediaFromBlob) {
   // when media.type is 'webpage'
   // media.byte (preview image) might be an empty buffer
-  if (media.byte && (media.byte as any).data?.length) {
-    const buffer = new Uint8Array((media.byte as any).data)
+  if (media.byte) {
+    let buffer
+    if ((media.byte as any).data?.lengt) {
+      buffer = new Uint8Array((media.byte as any).data)
+    }
+    else {
+      buffer = media.byte as Uint8Array
+    }
 
     if (media.type === 'sticker' && media.mimeType === 'application/gzip') {
       media.tgsAnimationData = pako.inflate(buffer, { to: 'string' })
