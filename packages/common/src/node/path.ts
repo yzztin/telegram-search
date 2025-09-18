@@ -10,8 +10,7 @@ import { DatabaseType, generateDefaultConfig } from '../config-schema'
 
 const logger = useLogger()
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-export const ROOT_DIR = resolve(__dirname, '../../../..')
+export const ROOT_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..')
 
 export function getRootPath(): string {
   return ROOT_DIR
