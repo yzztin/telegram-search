@@ -9,7 +9,7 @@ WORKDIR /app
 COPY . .
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN CI=true pnpm install --frozen-lockfile --ignore-scripts
 
 # RUN pnpm run build
 

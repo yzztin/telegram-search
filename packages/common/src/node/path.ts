@@ -1,6 +1,7 @@
 import type { Config } from '../config-schema'
 
 import fs from 'node:fs'
+import { fileURLToPath } from 'node:url'
 
 import { useLogger } from '@unbird/logg'
 import { dirname, resolve } from 'pathe'
@@ -9,7 +10,8 @@ import { DatabaseType, generateDefaultConfig } from '../config-schema'
 
 const logger = useLogger()
 
-export const ROOT_DIR = resolve('../../')
+const __dirname = dirname(fileURLToPath(import.meta.url))
+export const ROOT_DIR = resolve(__dirname, '../../../..')
 
 export function getRootPath(): string {
   return ROOT_DIR
